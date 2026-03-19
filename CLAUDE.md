@@ -24,7 +24,11 @@
    - patch 修复：0.1.x → 0.1.(x+1)
    - 新功能：0.1.x → 0.2.0
 
-3. **提交版本号变更**（由用户自行 commit，或由 Claude 执行前告知）
+3. **更新 `docs/changelog.md`**
+   - 在文件顶部添加新版本条目，将 `<Badge type="tip" text="最新" />` 移到新版本
+   - CI 会从 changelog.md 提取 release notes，**不写则 Release 没有更新日志**
+
+4. **提交版本号变更**（由用户自行 commit，或由 Claude 执行前告知）
    ```bash
    git add Cargo.toml Cargo.lock
    git commit -m "bump version to x.y.z"
