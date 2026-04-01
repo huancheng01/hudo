@@ -2,20 +2,49 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'hudo',
-  description: '开发环境一键引导工具',
+  description: 'Windows 开发环境一键引导工具，支持 Git/Node.js/Rust/Go/JDK/Python 等 20+ 工具自动安装配置，告别手动折腾环境变量。',
   lang: 'zh-CN',
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
-    ['meta', { name: 'keywords', content: 'hudo, dev tools, development environment, bootstrap, Windows, Linux, macOS, 开发环境, 一键安装' }],
-    ['meta', { property: 'og:title', content: 'hudo - Dev Environment Bootstrap Tool' }],
-    ['meta', { property: 'og:description', content: 'Dev environment bootstrap tool for Windows, Linux and macOS. Install Git, Node.js, Rust, Go, JDK, Python and more with one command.' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    // SEO meta
+    ['meta', { name: 'keywords', content: 'hudo, Windows开发环境, 一键安装, 开发工具, Git安装, Node.js安装, JDK安装, Rust安装, Python环境, Go开发环境, MySQL安装, 包管理器, dev tools, Windows development' }],
+    ['meta', { name: 'author', content: 'Zexa' }],
+    // Open Graph
+    ['meta', { property: 'og:title', content: 'hudo - Windows 开发环境一键引导工具' }],
+    ['meta', { property: 'og:description', content: '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 20+ 开发工具，自动配置环境变量，支持国内镜像加速。' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://hudo.zexa.cc' }],
     ['meta', { property: 'og:site_name', content: 'hudo' }],
-    ['meta', { name: 'twitter:card', content: 'summary' }],
-    ['meta', { name: 'twitter:title', content: 'hudo - Dev Environment Bootstrap Tool' }],
-    ['meta', { name: 'twitter:description', content: 'Dev environment bootstrap tool for Windows, Linux and macOS. One command to install all your dev tools.' }],
+    ['meta', { property: 'og:image', content: 'https://hudo.zexa.cc/og-image.svg' }],
+    ['meta', { property: 'og:locale', content: 'zh_CN' }],
+    // Twitter Card
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'hudo - Windows 开发环境一键引导工具' }],
+    ['meta', { name: 'twitter:description', content: '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 20+ 开发工具，告别手动折腾环境变量。' }],
+    ['meta', { name: 'twitter:image', content: 'https://hudo.zexa.cc/og-image.svg' }],
+    // Schema.org 结构化数据
+    ['script', { type: 'application/ld+json' }, JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      'name': 'hudo',
+      'applicationCategory': 'DeveloperApplication',
+      'operatingSystem': 'Windows',
+      'description': 'Windows 开发环境一键引导工具，支持 Git/Node.js/Rust/Go/JDK/Python 等 20+ 工具自动安装配置。',
+      'url': 'https://hudo.zexa.cc',
+      'downloadUrl': 'https://github.com/zexadev/hudo/releases',
+      'author': {
+        '@type': 'Organization',
+        'name': 'Zexa',
+        'url': 'https://zexa.cc'
+      },
+      'license': 'https://opensource.org/licenses/MIT',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'CNY'
+      }
+    })],
   ],
 
   sitemap: {
@@ -23,14 +52,14 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/logo.png',
     siteTitle: 'hudo',
 
     nav: [
       { text: '指南', link: '/guide/what-is-hudo' },
       { text: '工具列表', link: '/tools/' },
+      { text: '博客', link: '/blog/' },
       {
-        text: 'v0.2.3',
+        text: 'v0.2.7',
         items: [
           { text: '更新日志', link: '/changelog' },
           { text: 'GitHub', link: 'https://github.com/zexadev/hudo' },
@@ -81,6 +110,19 @@ export default defineConfig({
             { text: 'MinGW', link: '/tools/mingw' },
             { text: 'Google Chrome', link: '/tools/chrome' },
             { text: 'Claude Code', link: '/tools/claude-code' },
+          ]
+        }
+      ],
+      '/blog/': [
+        {
+          text: '博客',
+          items: [
+            { text: '全部文章', link: '/blog/' },
+            { text: 'Windows Git 一键安装', link: '/blog/windows-git-install' },
+            { text: 'Windows Node.js 环境搭建', link: '/blog/windows-nodejs-install' },
+            { text: 'Windows JDK 一键安装', link: '/blog/windows-jdk-install' },
+            { text: 'Windows MySQL 一键部署', link: '/blog/windows-mysql-install' },
+            { text: 'Windows Rust 安装不踩坑', link: '/blog/windows-rust-install' },
           ]
         }
       ]
