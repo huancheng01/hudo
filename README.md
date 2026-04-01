@@ -2,14 +2,14 @@
 
 **Windows 开发环境一键引导工具**
 
-用一条命令装好开发所需的全部工具，并自动配置好环境变量。
+用一条命令装好开发所需的全部工具，并自动配置好环境变量。支持国内镜像自动回退，大陆用户也能流畅安装。
 
 ---
 
 ## 安装
 
 ```powershell
-irm https://raw.githubusercontent.com/zexadev/hudo/master/install.ps1 | iex
+irm hudo.zexa.cc/install.ps1 | iex
 ```
 
 安装到 `%USERPROFILE%\.hudo\bin\`，自动写入用户 PATH，无需管理员权限。
@@ -45,38 +45,77 @@ hudo
 
 ---
 
-## 支持的工具
+## 支持的工具（20 个）
 
 ### 工具
 | ID | 工具 | 说明 |
 |----|------|------|
 | `git` | Git | 分布式版本控制系统 |
+| `gh` | GitHub CLI | GitHub 命令行工具 |
+| `claude-code` | Claude Code | Anthropic AI 编程助手 |
 
 ### 语言 & 运行时
 | ID | 工具 | 说明 |
 |----|------|------|
-| `uv` | uv | Python 包管理器与项目管理工具 |
-| `nodejs` | Node.js | Node.js 运行时（via fnm） |
-| `bun` | Bun | JavaScript/TypeScript 运行时与包管理器 |
+| `nodejs` | Node.js | Node.js 运行时 |
+| `bun` | Bun | JavaScript/TypeScript 运行时 |
+| `uv` | uv | Python 包管理器 |
+| `miniconda` | Miniconda | Conda 包管理器（最小安装） |
 | `rust` | Rust | Rust 编程语言（via rustup） |
 | `go` | Go | Go 编程语言 |
 | `jdk` | Java JDK | Adoptium Temurin JDK |
 | `c` | C/C++ | GCC 编译器（MinGW-w64） |
-| `miniconda` | Miniconda | Conda 包管理器（最小安装） |
 | `maven` | Maven | Apache Maven 构建工具 |
 | `gradle` | Gradle | Gradle 构建工具 |
 
 ### 数据库
 | ID | 工具 | 说明 |
 |----|------|------|
-| `mysql` | MySQL | MySQL Community Server（zip 解压 + 服务注册） |
-| `pgsql` | PostgreSQL | PostgreSQL 数据库（zip 解压 + 服务注册） |
+| `mysql` | MySQL | MySQL Community Server |
+| `pgsql` | PostgreSQL | PostgreSQL 数据库 |
+| `redis` | Redis | Redis 内存数据库 |
 
-### IDE
+### IDE & 浏览器
 | ID | 工具 | 说明 |
 |----|------|------|
 | `vscode` | VS Code | Visual Studio Code 编辑器 |
 | `pycharm` | PyCharm | PyCharm Community IDE |
+| `chrome` | Chrome | Google Chrome 浏览器 |
+
+---
+
+## 特色功能
+
+### 国内镜像自动回退
+
+原地址连接失败时，自动切换到国内镜像下载，无需手动配置：
+
+- Git / Node.js → npmmirror
+- Go → golang.google.cn
+- JDK / Maven / Gradle → 华为云
+- Rust → USTC
+- Miniconda → TUNA
+- VS Code → Azure 中国 CDN
+- Claude Code → npm + npmmirror
+
+### 安装后自动配置
+
+- Maven → 自动生成 `~/.m2/settings.xml`（阿里云镜像）
+- Gradle → 自动生成 `~/.gradle/init.gradle`（阿里云仓库）
+- Miniconda → 自动 `conda init`（cmd + PowerShell）
+- Git → 自动设置 `core.autocrlf=true`
+- PostgreSQL → 自动设置 `PGDATA` 环境变量
+- Rust → 自动配置 USTC 工具链镜像
+
+### 环境档案迁移
+
+```powershell
+# 旧电脑导出
+hudo export mysetup.toml
+
+# 新电脑一键恢复
+hudo import mysetup.toml
+```
 
 ---
 
@@ -85,122 +124,44 @@ hudo
 配置文件路径：`%USERPROFILE%\.hudo\config.toml`
 
 ```toml
-# 所有工具的安装根目录
 root_dir = "D:\\hudo"
 
 [java]
-version = "21"          # JDK 版本
+version = "21"
 
 [go]
-version = "latest"      # Go 版本，"latest" 自动获取最新
+version = "latest"
 
 [versions]
-# 锁定特定工具版本，不填则自动获取最新
-git     = "2.47.1.2"
-fnm     = "1.38.1"
+git     = "2.53.0"
+nodejs  = "24.14.1"
 mysql   = "8.4.8"
 pgsql   = "17.8"
-pycharm = "2024.3.5"
-maven   = "3.9.9"
-gradle  = "8.12.1"
 
 [mirrors]
-# 自定义下载镜像（不填使用官方源）
-uv      = "https://mirror.example.com/uv"
-go      = "https://mirrors.aliyun.com/golang"
-java    = "https://mirrors.tuna.tsinghua.edu.cn/Adoptium"
-mysql   = "https://mirrors.aliyun.com/mysql/Downloads"
-maven   = "https://mirrors.aliyun.com/apache/maven"
-```
-
-### 常用配置命令
-
-```powershell
-# 锁定 JDK 版本为 17
-hudo config set java.version 17
-
-# 使用阿里云 Go 镜像
-hudo config set mirrors.go https://mirrors.aliyun.com/golang
-
-# 锁定 MySQL 版本
-hudo config set versions.mysql 8.0.40
+# 自定义下载镜像（不填使用官方源 + 自动回退国内镜像）
+go   = "https://golang.google.cn/dl"
+java = "https://mirrors.huaweicloud.com/openjdk"
 ```
 
 ---
 
 ## 安装路径
 
-所有工具安装在 `root_dir` 下的固定目录：
-
 ```
 D:\hudo\
-├── tools\        # git, mysql, pgsql
-├── lang\         # go, jdk, mingw, miniconda, maven, gradle
+├── tools\        # git, gh, mysql, pgsql, redis, maven, gradle, miniconda, claude-code
+├── lang\         # go, java, node, cargo, gopath
 ├── ide\          # vscode, pycharm
 └── cache\        # 下载缓存
 ```
 
-Node.js（fnm）、Rust（rustup）、uv、Bun 使用其官方安装路径。
-
 ---
 
-## 环境档案
+## 文档 & 博客
 
-将当前环境导出为 TOML 文件，可在新机器上一键还原：
-
-```powershell
-# 导出
-hudo export hudo-profile.toml
-
-# 在新机器上还原
-hudo import hudo-profile.toml
-```
-
-档案示例：
-
-```toml
-[hudo]
-version = "0.1.0"
-exported_at = "2026-02-24 10:00:00"
-
-[tools]
-git     = "2.47.1.2"
-rust    = "1.85.0"
-nodejs  = "v22.14.0"
-uv      = "0.6.0"
-
-[tool_config.git]
-user_name  = "yourname"
-user_email = "you@example.com"
-```
-
----
-
-## 数据库说明
-
-### MySQL
-- 安装方式：zip 解压 + 自动初始化（`--initialize-insecure`，root 无密码）
-- 服务名：`MySQL`，端口 `3306`
-- 连接：`mysql -u root`
-- 停止服务：`net stop MySQL`
-
-### PostgreSQL
-- 安装方式：zip 解压 + `initdb`（用户 `postgres`，UTF-8，无密码）
-- 服务名：`PostgreSQL`，端口 `5432`
-- 连接：`psql -U postgres`
-- 停止服务：`net stop PostgreSQL`
-
-服务注册需要管理员权限，hudo 会自动弹出 UAC 提示。
-
----
-
-## 自更新
-
-```powershell
-hudo update
-```
-
-检查 GitHub Releases 最新版本，有更新时自动下载并替换当前程序。
+- 📖 文档站：[hudo.zexa.cc](https://hudo.zexa.cc)
+- 📝 博客教程：[hudo.zexa.cc/blog](https://hudo.zexa.cc/blog/)
 
 ---
 

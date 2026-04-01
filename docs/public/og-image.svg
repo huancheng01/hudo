@@ -1,7 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#0f172a"/>
-  <text x="600" y="250" font-family="system-ui,sans-serif" font-size="96" font-weight="bold" fill="#06b6d4" text-anchor="middle">hudo</text>
-  <text x="600" y="340" font-family="system-ui,sans-serif" font-size="36" fill="#94a3b8" text-anchor="middle">Windows 开发环境一键引导工具</text>
-  <text x="600" y="420" font-family="system-ui,sans-serif" font-size="24" fill="#64748b" text-anchor="middle">Git / Node.js / Rust / Go / JDK / Python / MySQL 等 20+ 工具</text>
-  <text x="600" y="540" font-family="system-ui,sans-serif" font-size="20" fill="#475569" text-anchor="middle">hudo.zexa.cc</text>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+  <text x="600" y="220" font-family="system-ui,-apple-system,sans-serif" font-size="120" font-weight="800" fill="url(#accent)" text-anchor="middle">hudo</text>
+  <text x="600" y="310" font-family="system-ui,-apple-system,sans-serif" font-size="36" fill="#e2e8f0" text-anchor="middle">Windows 开发环境一键引导工具</text>
+  <text x="600" y="380" font-family="system-ui,-apple-system,sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">Git · Node.js · Rust · Go · JDK · Python · MySQL · Redis · VS Code 等 20+ 工具</text>
+  <text x="600" y="440" font-family="ui-monospace,monospace" font-size="20" fill="#64748b" text-anchor="middle">irm hudo.zexa.cc/install.ps1 | iex</text>
+  <text x="600" y="560" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#475569" text-anchor="middle">hudo.zexa.cc · Open Source · MIT License</text>
 </svg>
