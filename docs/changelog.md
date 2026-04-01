@@ -1,6 +1,11 @@
 # 更新日志
 
-## v0.2.5 <Badge type="tip" text="最新" />
+## v0.2.6 <Badge type="tip" text="最新" />
+
+**改进**
+- Node.js 安装改为直接下载官方预编译包，移除 fnm 依赖，CMD/PowerShell/Git Bash 均可直接使用
+
+## v0.2.5
 
 **新增**
 - 新增 Redis 安装器：使用 redis-windows 预编译包，自动注册 Windows 服务
