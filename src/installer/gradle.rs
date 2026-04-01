@@ -80,7 +80,12 @@ impl Installer for GradleInstaller {
         };
 
         let (url, filename) = build_url(config, &version);
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载（回退华为云）
+        let fallback_url = format!(
+            "https://mirrors.huaweicloud.com/gradle/gradle-{}-bin.zip",
+            version
+        );
+        let zip_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         crate::ui::print_action("解压 Gradle...");
         let tmp_dir = config.cache_dir().join("gradle-extract");
@@ -101,6 +106,32 @@ impl Installer for GradleInstaller {
             install_path: install_dir,
             version,
         })
+    }
+
+    async fn configure(&self, _ctx: &InstallContext<'_>) -> Result<()> {
+        // 生成 ~/.gradle/init.gradle 配置国内镜像仓库（已存在则跳过）
+        if let Some(home) = dirs::home_dir() {
+            let gradle_dir = home.join(".gradle");
+            let init_path = gradle_dir.join("init.gradle");
+            if !init_path.exists() {
+                std::fs::create_dir_all(&gradle_dir).ok();
+                let init_script = r#"allprojects {
+    repositories {
+        mavenLocal()
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
+    }
+}
+"#;
+                if std::fs::write(&init_path, init_script).is_ok() {
+                    crate::ui::print_success("已生成 Gradle 配置 (~/.gradle/init.gradle)，使用阿里云镜像");
+                }
+            } else {
+                crate::ui::print_info("~/.gradle/init.gradle 已存在，跳过");
+            }
+        }
+        Ok(())
     }
 
     fn env_actions(&self, install_path: &PathBuf, _config: &HudoConfig) -> Vec<EnvAction> {

@@ -66,8 +66,9 @@ impl Installer for RustupInstaller {
         std::fs::create_dir_all(&rustup_home).ok();
         std::fs::create_dir_all(&cargo_home).ok();
 
-        // 下载 rustup-init.exe
-        let exe_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载 rustup-init.exe（回退 USTC 镜像）
+        let fallback_url = "https://mirrors.ustc.edu.cn/rust-static/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe";
+        let exe_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
 
         // 使用 GNU 工具链（依赖 MinGW-w64 的 gcc，无需 MSVC）
         crate::ui::print_action("安装 Rust (GNU 工具链)...");
@@ -82,6 +83,8 @@ impl Installer for RustupInstaller {
             ])
             .env("RUSTUP_HOME", &rustup_home)
             .env("CARGO_HOME", &cargo_home)
+            .env("RUSTUP_DIST_SERVER", "https://mirrors.ustc.edu.cn/rust-static")
+            .env("RUSTUP_UPDATE_ROOT", "https://mirrors.ustc.edu.cn/rust-static/rustup")
             .status()
             .context("启动 rustup-init 失败")?;
 

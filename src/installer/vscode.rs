@@ -115,7 +115,9 @@ impl Installer for VscodeInstaller {
             std::fs::remove_file(&cached).ok();
         }
 
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载（回退 Azure 中国 CDN）
+        let fallback_url = "https://vscode.cdn.azure.cn/stable/latest/vscode-win32-x64.zip";
+        let zip_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
 
         crate::ui::print_action("解压 VS Code...");
         if install_dir.exists() {

@@ -190,44 +190,56 @@ impl Installer for ClaudeCodeInstaller {
         let filename = format!("claude-{}-{}{}", version, platform,
             if cfg!(windows) { ".exe" } else { "" });
         let url = format!("{}/{}/{}/{}", GCS_BUCKET, version, platform, exe);
-        let cached_path = download::download(&url, &config.cache_dir(), &filename).await?;
 
-        // 4. SHA256 校验（失败时清除缓存自动重试一次）
-        ui::print_action("校验文件完整性...");
-        let actual_sha = sha256_file(&cached_path)?;
-        let cached_path = if actual_sha != expected_sha {
-            ui::print_action("SHA256 不匹配，清除缓存重新下载...");
-            std::fs::remove_file(&cached_path).ok();
-            let retry_path = download::download(&url, &config.cache_dir(), &filename).await?;
-            let retry_sha = sha256_file(&retry_path)?;
-            if retry_sha != expected_sha {
-                std::fs::remove_file(&retry_path).ok();
-                bail!(
-                    "SHA256 校验失败！\n  预期: {}\n  实际: {}\n已删除损坏文件，请检查网络后重试",
-                    expected_sha,
-                    retry_sha
-                );
+        // 尝试直接下载，失败则回退 npm + npmmirror
+        let use_npm_fallback = match download::download(&url, &config.cache_dir(), &filename).await {
+            Ok(cached_path) => {
+                // SHA256 校验
+                ui::print_action("校验文件完整性...");
+                let actual_sha = sha256_file(&cached_path)?;
+                let cached_path = if actual_sha != expected_sha {
+                    ui::print_action("SHA256 不匹配，清除缓存重新下载...");
+                    std::fs::remove_file(&cached_path).ok();
+                    let retry_path = download::download(&url, &config.cache_dir(), &filename).await?;
+                    let retry_sha = sha256_file(&retry_path)?;
+                    if retry_sha != expected_sha {
+                        std::fs::remove_file(&retry_path).ok();
+                        bail!(
+                            "SHA256 校验失败！\n  预期: {}\n  实际: {}\n已删除损坏文件，请检查网络后重试",
+                            expected_sha,
+                            retry_sha
+                        );
+                    }
+                    retry_path
+                } else {
+                    cached_path
+                };
+                ui::print_success("SHA256 校验通过");
+
+                // 安装到 tools/claude-code/
+                std::fs::create_dir_all(&install_dir)
+                    .with_context(|| format!("无法创建目录: {}", install_dir.display()))?;
+                let dest_exe = install_dir.join(exe);
+                std::fs::copy(&cached_path, &dest_exe)
+                    .with_context(|| format!("复制文件失败: {}", dest_exe.display()))?;
+
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    std::fs::set_permissions(&dest_exe, std::fs::Permissions::from_mode(0o755))
+                        .with_context(|| format!("设置执行权限失败: {}", dest_exe.display()))?;
+                }
+
+                false
             }
-            retry_path
-        } else {
-            cached_path
+            Err(_) => {
+                ui::print_warning("直接下载失败，尝试通过 npm 镜像安装...");
+                true
+            }
         };
-        ui::print_success("SHA256 校验通过");
 
-        // 5. 安装到 tools/claude-code/
-        std::fs::create_dir_all(&install_dir)
-            .with_context(|| format!("无法创建目录: {}", install_dir.display()))?;
-
-        let dest_exe = install_dir.join(exe);
-        std::fs::copy(&cached_path, &dest_exe)
-            .with_context(|| format!("复制文件失败: {}", dest_exe.display()))?;
-
-        // Linux/macOS 需要设置可执行权限
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&dest_exe, std::fs::Permissions::from_mode(0o755))
-                .with_context(|| format!("设置执行权限失败: {}", dest_exe.display()))?;
+        if use_npm_fallback {
+            install_via_npm(&install_dir)?;
         }
 
         Ok(InstallResult {
@@ -248,5 +260,41 @@ impl Installer for ClaudeCodeInstaller {
         ui::print_info("  claude login");
         ui::print_info("或设置环境变量 ANTHROPIC_API_KEY");
         Ok(())
+    }
+}
+
+/// 通过 npm + npmmirror 安装 Claude Code（GCS 不可达时的回退方案）
+fn install_via_npm(install_dir: &std::path::Path) -> Result<()> {
+    // 检测 npm 是否可用
+    let npm_cmd = if cfg!(windows) { "npm.cmd" } else { "npm" };
+    if std::process::Command::new(npm_cmd)
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
+        ui::print_action("通过 npm 镜像安装 Claude Code...");
+        std::fs::create_dir_all(install_dir).ok();
+        let status = std::process::Command::new(npm_cmd)
+            .args([
+                "install",
+                "-g",
+                "@anthropic-ai/claude-code",
+                "--registry=https://registry.npmmirror.com",
+                &format!("--prefix={}", install_dir.display()),
+            ])
+            .status()
+            .context("npm install 执行失败")?;
+
+        if !status.success() {
+            bail!("npm 安装 Claude Code 失败，退出码: {}", status.code().unwrap_or(-1));
+        }
+
+        ui::print_success("通过 npm 镜像安装成功");
+        Ok(())
+    } else {
+        bail!(
+            "直接下载失败且未检测到 npm。请先安装 Node.js（hudo install nodejs），或配置网络后重试"
+        );
     }
 }

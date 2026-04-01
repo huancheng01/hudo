@@ -108,9 +108,15 @@ impl Installer for PgsqlInstaller {
     }
 
     fn env_actions(&self, install_path: &PathBuf, _config: &HudoConfig) -> Vec<EnvAction> {
-        vec![EnvAction::AppendPath {
-            path: install_path.join("bin").to_string_lossy().to_string(),
-        }]
+        vec![
+            EnvAction::Set {
+                name: "PGDATA".to_string(),
+                value: install_path.join("data").to_string_lossy().to_string(),
+            },
+            EnvAction::AppendPath {
+                path: install_path.join("bin").to_string_lossy().to_string(),
+            },
+        ]
     }
 
     async fn configure(&self, ctx: &InstallContext<'_>) -> Result<()> {

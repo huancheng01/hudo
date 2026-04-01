@@ -1,6 +1,18 @@
 # 更新日志
 
-## v0.2.6 <Badge type="tip" text="最新" />
+## v0.2.7 <Badge type="tip" text="最新" />
+
+**改进**
+- 下载自动回退国内镜像：Git/Node.js/Go/JDK/Maven/Gradle/Rust/Miniconda/VS Code，原地址连接失败时自动切换
+- Claude Code 安装支持 npm 镜像回退，GCS 不可达时通过 npmmirror 安装
+- Miniconda 安装后自动执行 `conda init`，`conda activate` 开箱即用
+- Maven 安装后自动生成 `settings.xml`，配置阿里云中央仓库镜像
+- Gradle 安装后自动生成 `init.gradle`，配置阿里云仓库镜像
+- PostgreSQL 安装后自动设置 `PGDATA` 环境变量
+- Git 安装后自动设置 `core.autocrlf=true`
+- Rust 安装时自动使用 USTC 镜像下载工具链
+
+## v0.2.6
 
 **改进**
 - Node.js 安装改为直接下载官方预编译包，移除 fnm 依赖，CMD/PowerShell/Git Bash 均可直接使用

@@ -75,8 +75,12 @@ impl Installer for GitInstaller {
             tag, filename
         );
 
-        // 下载安装包
-        let exe_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载安装包（GitHub 回退 npmmirror）
+        let fallback_url = format!(
+            "https://registry.npmmirror.com/-/binary/git-for-windows/{}/{}",
+            tag, filename
+        );
+        let exe_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         // 静默安装到指定目录
         crate::ui::print_action("安装 Git（静默模式）...");
@@ -146,6 +150,7 @@ impl Installer for GitInstaller {
         // 写入 git global config
         git_config_set(&git, "user.name", &name)?;
         git_config_set(&git, "user.email", &email)?;
+        git_config_set(&git, "core.autocrlf", "true")?;
 
         ui::print_success("Git 配置成功");
 

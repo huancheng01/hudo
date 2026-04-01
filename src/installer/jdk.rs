@@ -78,7 +78,16 @@ impl Installer for JdkInstaller {
             std::fs::remove_file(&cached).ok();
         }
 
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载（回退华为云）
+        let major = match config.java.version.as_str() {
+            "" => JDK_MAJOR_DEFAULT,
+            v => v,
+        };
+        let fallback_url = format!(
+            "https://mirrors.huaweicloud.com/openjdk/{}/openjdk-{}_windows-x64_bin.zip",
+            major, major
+        );
+        let zip_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         // 解压到临时目录
         crate::ui::print_action("解压 JDK...");

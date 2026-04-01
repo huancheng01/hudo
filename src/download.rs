@@ -71,6 +71,87 @@ async fn download_to_tmp(tmp_dest: &Path, resp: reqwest::Response) -> Result<()>
     Ok(())
 }
 
+/// 带镜像回退的下载：先尝试原地址，连接失败自动回退镜像
+/// 仅在网络连接失败时回退（超时/DNS/连接拒绝），HTTP 404 等不回退
+pub async fn download_with_fallback(
+    url: &str,
+    fallback_url: &str,
+    cache_dir: &Path,
+    filename: &str,
+) -> Result<PathBuf> {
+    let dest = cache_dir.join(filename);
+
+    if dest.exists() {
+        println!("  {} 使用缓存: {}", console::style("↓").cyan(), filename);
+        return Ok(dest);
+    }
+
+    std::fs::create_dir_all(cache_dir)
+        .with_context(|| format!("无法创建缓存目录: {}", cache_dir.display()))?;
+
+    // 先尝试原地址
+    match try_download(url, cache_dir, filename).await {
+        Ok(path) => return Ok(path),
+        Err(e) => {
+            // 仅在连接级别失败时回退，HTTP 错误（如 404）不回退
+            if is_connection_error(&e) {
+                crate::ui::print_warning(&format!("原地址连接失败，尝试镜像下载..."));
+            } else {
+                return Err(e);
+            }
+        }
+    }
+
+    // 回退到镜像
+    try_download(fallback_url, cache_dir, filename).await
+}
+
+/// 尝试下载，不使用缓存检查（由调用方负责）
+async fn try_download(url: &str, cache_dir: &Path, filename: &str) -> Result<PathBuf> {
+    let dest = cache_dir.join(filename);
+
+    println!("  {} {}", console::style("↓").cyan(), console::style(url).dim());
+
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
+
+    let resp = client
+        .get(url)
+        .send()
+        .await
+        .with_context(|| format!("请求失败: {}", url))?
+        .error_for_status()
+        .with_context(|| format!("HTTP 错误: {}", url))?;
+
+    let tmp_dest = cache_dir.join(format!("{}.tmp", filename));
+    let result = download_to_tmp(&tmp_dest, resp).await;
+
+    if let Err(e) = result {
+        std::fs::remove_file(&tmp_dest).ok();
+        return Err(e);
+    }
+
+    std::fs::rename(&tmp_dest, &dest)
+        .with_context(|| format!("重命名临时文件失败: {}", tmp_dest.display()))?;
+
+    println!("  {} {}", console::style("✓").green(), filename);
+    Ok(dest)
+}
+
+/// 判断是否为连接级别错误（超时/DNS/连接拒绝），这类错误值得回退镜像
+fn is_connection_error(err: &anyhow::Error) -> bool {
+    let msg = format!("{:?}", err);
+    msg.contains("connect")
+        || msg.contains("timeout")
+        || msg.contains("dns")
+        || msg.contains("timed out")
+        || msg.contains("Connection refused")
+        || msg.contains("No address")
+        || msg.contains("request")
+}
+
 /// 解压 zip 文件到目标目录
 #[allow(dead_code)]
 pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<()> {

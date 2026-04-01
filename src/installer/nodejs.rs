@@ -76,8 +76,12 @@ impl Installer for NodejsInstaller {
         let base = config.mirrors.nodejs.as_deref().unwrap_or(&default_base);
         let url = format!("{}/{}", base.trim_end_matches('/'), filename);
 
-        // 下载 zip
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载 zip（回退 npmmirror）
+        let fallback_url = format!(
+            "https://npmmirror.com/mirrors/node/v{}/{}",
+            version, filename
+        );
+        let zip_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         // 解压到临时目录，再移到 lang/node/
         crate::ui::print_action("解压 Node.js...");

@@ -81,7 +81,12 @@ impl Installer for MavenInstaller {
         };
 
         let (url, filename) = build_url(config, &version);
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载（回退华为云）
+        let fallback_url = format!(
+            "https://mirrors.huaweicloud.com/apache/maven/maven-3/{}/binaries/{}",
+            version, filename
+        );
+        let zip_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         crate::ui::print_action("解压 Maven...");
         let tmp_dir = config.cache_dir().join("maven-extract");
@@ -102,6 +107,37 @@ impl Installer for MavenInstaller {
             install_path: install_dir,
             version,
         })
+    }
+
+    async fn configure(&self, _ctx: &InstallContext<'_>) -> Result<()> {
+        // 生成 ~/.m2/settings.xml 配置阿里云镜像（已存在则跳过）
+        if let Some(home) = dirs::home_dir() {
+            let m2_dir = home.join(".m2");
+            let settings_path = m2_dir.join("settings.xml");
+            if !settings_path.exists() {
+                std::fs::create_dir_all(&m2_dir).ok();
+                let settings = r#"<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>aliyun</id>
+      <mirrorOf>central</mirrorOf>
+      <name>Aliyun Maven Central Mirror</name>
+      <url>https://maven.aliyun.com/repository/central</url>
+    </mirror>
+  </mirrors>
+</settings>
+"#;
+                if std::fs::write(&settings_path, settings).is_ok() {
+                    crate::ui::print_success("已生成 Maven 配置 (~/.m2/settings.xml)，使用阿里云镜像");
+                }
+            } else {
+                crate::ui::print_info("~/.m2/settings.xml 已存在，跳过");
+            }
+        }
+        Ok(())
     }
 
     fn env_actions(&self, install_path: &PathBuf, _config: &HudoConfig) -> Vec<EnvAction> {

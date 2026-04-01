@@ -73,8 +73,9 @@ impl Installer for GoInstaller {
         let base = config.mirrors.go.as_deref().unwrap_or("https://go.dev/dl");
         let url = format!("{}/{}", base.trim_end_matches('/'), filename);
 
-        // 下载 zip
-        let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载 zip（回退 golang.google.cn）
+        let fallback_url = format!("https://golang.google.cn/dl/{}", filename);
+        let zip_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         // 解压到 lang/ 目录（zip 内有 go/ 顶层目录，解压后即为 lang/go/）
         crate::ui::print_action("解压 Go...");

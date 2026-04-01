@@ -51,7 +51,9 @@ impl Installer for MinicondaInstaller {
         let install_dir = config.tools_dir().join("miniconda");
         let (url, filename) = self.resolve_download(config);
 
-        let exe_path = download::download(&url, &config.cache_dir(), &filename).await?;
+        // 下载（回退 TUNA 镜像）
+        let fallback_url = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Windows-x86_64.exe";
+        let exe_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
 
         // Miniconda 支持静默安装到指定目录
         crate::ui::print_action("安装 Miniconda（静默模式）...");
@@ -79,6 +81,28 @@ impl Installer for MinicondaInstaller {
             install_path: install_dir,
             version,
         })
+    }
+
+    async fn configure(&self, ctx: &InstallContext<'_>) -> Result<()> {
+        let install_dir = ctx.config.tools_dir().join("miniconda");
+        let conda_exe = install_dir.join("Scripts").join("conda.exe");
+
+        // 初始化 cmd.exe 和 PowerShell，使 conda activate 可用
+        for shell in &["cmd.exe", "powershell"] {
+            let status = std::process::Command::new(&conda_exe)
+                .args(["init", shell])
+                .status();
+            match status {
+                Ok(s) if s.success() => {
+                    crate::ui::print_success(&format!("已初始化 conda ({})", shell));
+                }
+                _ => {
+                    crate::ui::print_warning(&format!("conda init {} 失败，可手动执行", shell));
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn env_actions(&self, install_path: &PathBuf, _config: &HudoConfig) -> Vec<EnvAction> {
