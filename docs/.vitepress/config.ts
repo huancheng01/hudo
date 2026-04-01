@@ -138,6 +138,7 @@ export default defineConfig({
             { text: 'PostgreSQL 快速安装', link: '/blog/windows-postgresql-install' },
             { text: 'Claude Code AI 编程助手', link: '/blog/windows-claude-code-install' },
             { text: 'GitHub CLI 实用命令', link: '/blog/windows-gh-install' },
+            { text: '一键迁移开发环境', link: '/blog/windows-dev-env-migration' },
           ]
         }
       ]

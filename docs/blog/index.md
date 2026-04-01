@@ -9,6 +9,7 @@ Windows 开发环境搭建教程与工具使用指南。
 
 ## 最新文章
 
+- [换电脑不再重装一天：hudo 配置档案一键迁移开发环境](./windows-dev-env-migration)
 - [Claude Code 完整安装教程：Windows 上的 AI 编程助手](./windows-claude-code-install)
 - [新电脑到手后，用 hudo 20 分钟配好完整 Windows 开发环境](./windows-dev-environment-setup)
 - [Miniconda vs Anaconda：Windows 轻量 Python 环境 5 分钟搭建指南](./windows-miniconda-install)
