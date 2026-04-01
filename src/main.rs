@@ -560,7 +560,7 @@ fn uninstall_from_system(tool_id: &str) -> Result<()> {
         "miniconda" => uninstall_miniconda(),
         "vscode" => uninstall_vscode(),
         // 绿色安装的工具：通过 where 找到旧二进制，移除 PATH
-        "nodejs" => uninstall_green(&["fnm", "node"], &["FNM_DIR"]),
+        "nodejs" => uninstall_green(&["node"], &[]),
         "bun" => uninstall_green(&["bun"], &[]),
         "jdk" => uninstall_green(&["java"], &["JAVA_HOME"]),
         "c" => uninstall_green(&["gcc"], &[]),
@@ -949,7 +949,7 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
     for (key, value) in &prof.settings.mirrors {
         match key.as_str() {
             "uv" => config.mirrors.uv = Some(value.clone()),
-            "fnm" => config.mirrors.fnm = Some(value.clone()),
+            "nodejs" => config.mirrors.nodejs = Some(value.clone()),
             "go" => config.mirrors.go = Some(value.clone()),
             "java" => config.mirrors.java = Some(value.clone()),
             "vscode" => config.mirrors.vscode = Some(value.clone()),
@@ -968,7 +968,7 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
         match key.as_str() {
             "git" => config.versions.git = Some(value.clone()),
             "gh" => config.versions.gh = Some(value.clone()),
-            "fnm" => config.versions.fnm = Some(value.clone()),
+            "nodejs" => config.versions.nodejs = Some(value.clone()),
             "mysql" => config.versions.mysql = Some(value.clone()),
             "pgsql" => config.versions.pgsql = Some(value.clone()),
             "pycharm" => config.versions.pycharm = Some(value.clone()),
@@ -1477,7 +1477,7 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
 
     let versions = [
         ("versions.git", &config.versions.git),
-        ("versions.fnm", &config.versions.fnm),
+        ("versions.nodejs", &config.versions.nodejs),
         ("versions.mysql", &config.versions.mysql),
         ("versions.pgsql", &config.versions.pgsql),
         ("versions.pycharm", &config.versions.pycharm),
@@ -1494,7 +1494,7 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
 
     let mirrors = [
         ("mirrors.uv", &config.mirrors.uv),
-        ("mirrors.fnm", &config.mirrors.fnm),
+        ("mirrors.nodejs", &config.mirrors.nodejs),
         ("mirrors.go", &config.mirrors.go),
         ("mirrors.java", &config.mirrors.java),
         ("mirrors.vscode", &config.mirrors.vscode),
@@ -1518,12 +1518,12 @@ fn cmd_config_set(config: &mut HudoConfig, key: &str, value: &str) -> Result<()>
         "java.version" => config.java.version = value.to_string(),
         "go.version" => config.go.version = value.to_string(),
         "versions.git" => config.versions.git = Some(value.to_string()),
-        "versions.fnm" => config.versions.fnm = Some(value.to_string()),
+        "versions.nodejs" => config.versions.nodejs = Some(value.to_string()),
         "versions.mysql" => config.versions.mysql = Some(value.to_string()),
         "versions.pgsql" => config.versions.pgsql = Some(value.to_string()),
         "versions.pycharm" => config.versions.pycharm = Some(value.to_string()),
         "mirrors.uv" => config.mirrors.uv = Some(value.to_string()),
-        "mirrors.fnm" => config.mirrors.fnm = Some(value.to_string()),
+        "mirrors.nodejs" => config.mirrors.nodejs = Some(value.to_string()),
         "mirrors.go" => config.mirrors.go = Some(value.to_string()),
         "mirrors.java" => config.mirrors.java = Some(value.to_string()),
         "mirrors.vscode" => config.mirrors.vscode = Some(value.to_string()),
@@ -1725,7 +1725,7 @@ async fn interactive_config(config: &HudoConfig) -> Result<()> {
             Some(1) => {
                 let mirror_keys = &[
                     "mirrors.uv",
-                    "mirrors.fnm",
+                    "mirrors.nodejs",
                     "mirrors.go",
                     "mirrors.java",
                     "mirrors.vscode",

@@ -126,8 +126,8 @@ irm hudo.zexa.cc/install.ps1 | iex
 ### 目录约定
 - 配置文件：`%USERPROFILE%\.hudo\config.toml`
 - 安装根目录：`{用户选的盘}:\hudo\`
-  - `tools/` — CLI 工具（git, gh, fnm, rustup, uv, bun, mingw64, claude-code）
-  - `lang/` — 语言环境（go, java, cargo, gopath, pgsql, mysql）
+  - `tools/` — CLI 工具（git, gh, rustup, uv, bun, mingw64, claude-code）
+  - `lang/` — 语言环境（go, java, node, cargo, gopath, pgsql, mysql）
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 

@@ -177,6 +177,23 @@ pub async fn redis_latest() -> Option<String> {
     }
 }
 
+/// Node.js: nodejs.org API → 最新 LTS 版本号（如 "22.14.0"）
+pub async fn nodejs_lts_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: Vec<serde_json::Value> = client
+        .get("https://nodejs.org/dist/index.json")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    // 找第一个 lts 不为 false 的条目
+    let entry = resp.iter().find(|v| !v["lts"].is_boolean() || v["lts"].as_bool() == Some(true))?;
+    let ver = entry["version"].as_str()?; // "v22.14.0"
+    Some(ver.trim_start_matches('v').to_string())
+}
+
 /// MinGW-w64 via winlibs：GitHub Releases → (tag, filename, gcc_version)
 /// tag 格式: "15.2.0posix-13.0.0-ucrt-r6"
 /// 文件格式: "winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r6.zip"

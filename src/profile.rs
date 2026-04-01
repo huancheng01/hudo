@@ -85,8 +85,8 @@ impl HudoProfile {
         if let Some(ref v) = config.mirrors.uv {
             mirrors.insert("uv".to_string(), v.clone());
         }
-        if let Some(ref v) = config.mirrors.fnm {
-            mirrors.insert("fnm".to_string(), v.clone());
+        if let Some(ref v) = config.mirrors.nodejs {
+            mirrors.insert("nodejs".to_string(), v.clone());
         }
         if let Some(ref v) = config.mirrors.go {
             mirrors.insert("go".to_string(), v.clone());
@@ -120,8 +120,8 @@ impl HudoProfile {
         if let Some(ref v) = config.versions.gh {
             versions.insert("gh".to_string(), v.clone());
         }
-        if let Some(ref v) = config.versions.fnm {
-            versions.insert("fnm".to_string(), v.clone());
+        if let Some(ref v) = config.versions.nodejs {
+            versions.insert("nodejs".to_string(), v.clone());
         }
         if let Some(ref v) = config.versions.mysql {
             versions.insert("mysql".to_string(), v.clone());
