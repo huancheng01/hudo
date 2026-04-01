@@ -123,6 +123,11 @@ export default defineConfig({
             { text: 'Windows JDK 一键安装', link: '/blog/windows-jdk-install' },
             { text: 'Windows MySQL 一键部署', link: '/blog/windows-mysql-install' },
             { text: 'Windows Rust 安装不踩坑', link: '/blog/windows-rust-install' },
+            { text: 'Windows Redis 安装 + 开机自启', link: '/blog/windows-redis-install' },
+            { text: 'uv 一键管理 Python 环境', link: '/blog/windows-python-uv-install' },
+            { text: 'MinGW-w64 一键安装', link: '/blog/windows-mingw-install' },
+            { text: 'Maven 安装配置一条龙', link: '/blog/windows-maven-install' },
+            { text: '20 分钟配好完整开发环境', link: '/blog/windows-dev-environment-setup' },
           ]
         }
       ]
