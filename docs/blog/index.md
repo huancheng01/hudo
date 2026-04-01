@@ -9,6 +9,7 @@ Windows 开发环境搭建教程与工具使用指南。
 
 ## 最新文章
 
+- [Claude Code 完整安装教程：Windows 上的 AI 编程助手](./windows-claude-code-install)
 - [新电脑到手后，用 hudo 20 分钟配好完整 Windows 开发环境](./windows-dev-environment-setup)
 - [Miniconda vs Anaconda：Windows 轻量 Python 环境 5 分钟搭建指南](./windows-miniconda-install)
 - [pip 太慢？uv 一键管理 Python 版本和虚拟环境（Windows 实战）](./windows-python-uv-install)
@@ -24,3 +25,7 @@ Windows 开发环境搭建教程与工具使用指南。
 - [VS Code 便携版安装：免安装器 + 右键菜单 + 数据隔离](./windows-vscode-install)
 - [Bun：比 Node.js 快数倍的 JS 运行时，一分钟上手](./windows-bun-install)
 - [Scoop vs Winget vs Chocolatey vs hudo：包管理器横评](./windows-package-manager-compare)
+- [Windows Go 开发环境配置避坑指南](./windows-go-install)
+- [Gradle vs Maven：Windows 上如何选择与快速安装](./windows-gradle-install)
+- [Windows PostgreSQL 快速安装指南](./windows-postgresql-install)
+- [告别网页操作：GitHub CLI 安装与十个最实用命令](./windows-gh-install)

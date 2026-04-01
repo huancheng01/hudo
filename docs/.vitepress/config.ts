@@ -133,6 +133,11 @@ export default defineConfig({
             { text: 'VS Code 便携版安装', link: '/blog/windows-vscode-install' },
             { text: 'Bun 快速上手', link: '/blog/windows-bun-install' },
             { text: '包管理器横评', link: '/blog/windows-package-manager-compare' },
+            { text: 'Go 开发环境配置', link: '/blog/windows-go-install' },
+            { text: 'Gradle 安装与选择', link: '/blog/windows-gradle-install' },
+            { text: 'PostgreSQL 快速安装', link: '/blog/windows-postgresql-install' },
+            { text: 'Claude Code AI 编程助手', link: '/blog/windows-claude-code-install' },
+            { text: 'GitHub CLI 实用命令', link: '/blog/windows-gh-install' },
           ]
         }
       ]
