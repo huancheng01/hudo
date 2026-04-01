@@ -125,9 +125,14 @@ export default defineConfig({
             { text: 'Windows Rust 安装不踩坑', link: '/blog/windows-rust-install' },
             { text: 'Windows Redis 安装 + 开机自启', link: '/blog/windows-redis-install' },
             { text: 'uv 一键管理 Python 环境', link: '/blog/windows-python-uv-install' },
+            { text: 'Miniconda 轻量 Python 环境搭建', link: '/blog/windows-miniconda-install' },
             { text: 'MinGW-w64 一键安装', link: '/blog/windows-mingw-install' },
             { text: 'Maven 安装配置一条龙', link: '/blog/windows-maven-install' },
             { text: '20 分钟配好完整开发环境', link: '/blog/windows-dev-environment-setup' },
+            { text: 'PyCharm 社区版安装配置', link: '/blog/windows-pycharm-install' },
+            { text: 'VS Code 便携版安装', link: '/blog/windows-vscode-install' },
+            { text: 'Bun 快速上手', link: '/blog/windows-bun-install' },
+            { text: '包管理器横评', link: '/blog/windows-package-manager-compare' },
           ]
         }
       ]
