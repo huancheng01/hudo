@@ -319,20 +319,17 @@ async fn setup_category(
         }
     }
 
-    // 汇总
-    println!();
-    println!("{}", console::style("─".repeat(40)).cyan());
+    // 汇总（boxed 面板）
+    let mut summary_lines = Vec::new();
     if fail_names.is_empty() {
-        ui::print_success(&format!("全部 {} 个工具安装完成", success_count));
+        summary_lines.push(format!(" {} {} 个工具安装完成", console::style("✓").green().bold(), success_count));
     } else {
-        ui::print_success(&format!("{} 个工具安装成功", success_count));
-        ui::print_warning(&format!(
-            "{} 个工具安装失败: {}",
-            fail_names.len(),
-            fail_names.join(", ")
-        ));
+        summary_lines.push(format!(" {} {} 个工具安装成功", console::style("✓").green().bold(), success_count));
+        summary_lines.push(format!(" {} {} 个失败: {}", console::style("✗").red().bold(), fail_names.len(), fail_names.join(", ")));
     }
-    ui::print_info("请打开新终端以使环境变量生效");
+    summary_lines.push(String::new());
+    summary_lines.push(format!(" {}", console::style("请打开新终端以使环境变量生效").dim()));
+    ui::print_box(&summary_lines);
     ui::wait_for_key();
     Ok(())
 }
@@ -1374,18 +1371,8 @@ async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
         installers.iter().map(|i| i.as_ref()).collect();
     let all_results = detect_all_parallel(&tool_refs, config, &reg);
 
-    // 计算已安装工具的动态列宽（仅基于要显示的工具）
-    let mut name_width = 0usize;
-    let mut desc_width = 0usize;
-    for (info, detect) in &all_results {
-        let is_installed = matches!(detect, Ok(DetectResult::InstalledByHudo(_)) | Ok(DetectResult::InstalledExternal(_)));
-        if show_all || is_installed {
-            name_width = name_width.max(console::measure_text_width(info.name));
-            desc_width = desc_width.max(console::measure_text_width(info.description));
-        }
-    }
-    name_width += 2;
-    desc_width += 2;
+    // 点线连接的总宽度
+    let dot_width = 50usize;
 
     let mut hudo_count = 0u32;
     let mut external_count = 0u32;
@@ -1416,35 +1403,31 @@ async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
         any_displayed = true;
 
         for (info, detect) in &cat_entries {
-            let status = match detect {
+            let (version_text, extra) = match detect {
                 Ok(DetectResult::InstalledByHudo(ver)) => {
                     hudo_count += 1;
-                    let extra = reg
+                    let date = reg
                         .get(info.id)
-                        .map(|s| {
-                            format!("  {}", console::style(format!("({})", s.installed_at)).dim())
-                        })
+                        .map(|s| format!("  {}", console::style(&s.installed_at).dim()))
                         .unwrap_or_default();
-                    format!("{}{}", console::style(ver).green(), extra)
+                    (console::style(ver).green().to_string(), date)
                 }
                 Ok(DetectResult::InstalledExternal(ver)) => {
                     external_count += 1;
-                    format!(
-                        "{} {}",
-                        console::style(ver).green(),
-                        console::style("(非 hudo)").yellow()
+                    (
+                        console::style(ver).green().to_string(),
+                        format!("  {}", console::style("(非 hudo)").yellow()),
                     )
                 }
                 Ok(DetectResult::NotInstalled) => {
-                    console::style("·").dim().to_string()
+                    (console::style("·").dim().to_string(), String::new())
                 }
-                Err(_) => console::style("检测失败").red().to_string(),
+                Err(_) => (console::style("检测失败").red().to_string(), String::new()),
             };
             println!(
-                "    {}  {}  {}",
-                console::style(ui::pad(info.name, name_width)).bold(),
-                ui::pad(info.description, desc_width),
-                status,
+                "    {}{}",
+                ui::dotfill(info.name, &version_text, dot_width),
+                extra,
             );
         }
     }

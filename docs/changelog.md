@@ -11,6 +11,8 @@
 - PostgreSQL 安装后自动设置 `PGDATA` 环境变量
 - Git 安装后自动设置 `core.autocrlf=true`
 - Rust 安装时自动使用 USTC 镜像下载工具链
+- CLI 输出美化：精简 Banner、边框标题、点线列表、boxed 安装摘要
+- 移除 figlet-rs 依赖，减少二进制体积
 
 ## v0.2.6
 
