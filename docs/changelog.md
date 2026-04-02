@@ -1,6 +1,12 @@
 # 更新日志
 
-## v0.2.8 <Badge type="tip" text="最新" />
+## v0.2.9 <Badge type="tip" text="最新" />
+
+**优化**
+- `hudo list` 默认只读 state.json，毫秒级响应，不再启动子进程检测
+- `hudo list --all` 保持完整并行检测
+
+## v0.2.8
 
 **改进**
 - 恢复大 Logo ASCII art，硬编码 + 蓝紫逐行渐变色，移除 figlet-rs 运行时依赖
