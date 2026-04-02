@@ -92,7 +92,7 @@ jobs:
           VERSION="${TAG#v}"
 
           # 从 changelog.md 提取当前版本的 release notes
-          NOTES=$(awk "/^## v${VERSION}/,/^## v[0-9]/" docs/changelog.md | head -n -1 | sed '1d;/^$/d')
+          NOTES=$(tr -d '\r' < docs/changelog.md | sed 's/ <Badge[^/]*\/>//g' | awk "BEGIN{p=0} /^## v${VERSION}\$/{p=1;next} /^## v[0-9]/{p=0} p" | sed '/^$/d')
           if [ -z "$NOTES" ]; then
             NOTES="Release $TAG"
           fi
