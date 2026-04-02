@@ -1576,13 +1576,13 @@ async fn interactive_menu(config: &HudoConfig) -> Result<()> {
         ui::page_header("主菜单");
 
         let menu_items = &[
-            "📦  安装工具",
-            "📋  查看已安装",
-            "🗑   卸载工具",
-            "📁  环境档案",
-            "⚙   配置",
-            "🔑  Claude Code API 来源",
-            "🚪  退出",
+            "[+] 安装工具",
+            "[=] 查看已安装",
+            "[-] 卸载工具",
+            "[>] 环境档案",
+            "[*] 配置",
+            "[K] Claude Code API 来源",
+            "[Q] 退出",
         ];
 
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -1665,9 +1665,9 @@ async fn interactive_profile(config: &HudoConfig) -> Result<()> {
         ui::page_header("环境档案");
 
         let menu_items = &[
-            "📤  导出环境档案",
-            "📥  导入环境档案",
-            "↩   返回",
+            "[>] 导出环境档案",
+            "[<] 导入环境档案",
+            "[B] 返回",
         ];
 
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -1701,11 +1701,11 @@ async fn interactive_config(config: &HudoConfig) -> Result<()> {
         ui::page_header("配置管理");
 
         let menu_items = &[
-            "📄  查看配置",
-            "🌐  设置镜像",
-            "📝  编辑配置文件",
-            "🔄  重置配置",
-            "↩   返回",
+            "[=] 查看配置",
+            "[M] 设置镜像",
+            "[E] 编辑配置文件",
+            "[R] 重置配置",
+            "[B] 返回",
         ];
 
         let selection = Select::with_theme(&ColorfulTheme::default())
