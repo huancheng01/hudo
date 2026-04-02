@@ -1,15 +1,39 @@
 use std::io::Write;
 use console::{measure_text_width, pad_str, style, Alignment, Style};
 
-/// 打印 hudo 品牌 Banner（紧凑版）
+/// 硬编码 ASCII art（FIGlet "Small Slant" 风格，宽度 < 50 列）
+const BANNER_LINES: &[&str] = &[
+    r"    __              __",
+    r"   / /_  __  ______/ /___",
+    r"  / __ \/ / / / __  / __ \",
+    r" / / / / /_/ / /_/ / /_/ /",
+    r"/_/ /_/\__,_/\__,_/\____/",
+];
+
+/// 渐变色序列（蓝 → 青 → 紫）
+const GRADIENT_COLORS: &[(u8, u8, u8)] = &[
+    (59, 130, 246),  // blue-500
+    (56, 152, 236),
+    (99, 102, 241),  // indigo-500
+    (124, 92, 239),
+    (139, 92, 246),  // violet-500
+];
+
+/// 打印 hudo 品牌 Banner（硬编码 ASCII art + 逐行渐变）
 pub fn print_banner() {
-    println!(
+    let stdout = std::io::stdout();
+    let mut w = std::io::BufWriter::new(stdout.lock());
+    for (i, line) in BANNER_LINES.iter().enumerate() {
+        let (r, g, b) = GRADIENT_COLORS[i % GRADIENT_COLORS.len()];
+        let _ = writeln!(w, "\x1b[1m\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, line);
+    }
+    let _ = writeln!(
+        w,
         "  {} {}",
-        style("hudo").cyan().bold(),
-        style(format!("v{}", env!("CARGO_PKG_VERSION"))).dim()
+        style(format!("v{}", env!("CARGO_PKG_VERSION"))).dim(),
+        style("混沌 — 开发环境一键引导工具").dim()
     );
-    println!("  {}", style("混沌 — 开发环境一键引导工具").dim());
-    println!();
+    let _ = writeln!(w);
 }
 
 /// 清屏
