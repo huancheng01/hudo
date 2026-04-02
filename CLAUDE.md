@@ -177,3 +177,5 @@ irm hudo.zexa.cc/install.ps1 | iex
 - **gh auth token** 不导出到 profile 文件（安全考虑），新设备安装后自动引导 `gh auth login`
 - **install.ps1 有两份**：根目录 `install.ps1` 和 `docs/public/install.ps1`（Cloudflare Pages 部署用），修改时必须同步更新两份
 - **install.ps1 必须使用纯 ASCII 英文**：通过 `irm | iex` 执行时 PowerShell 5.x 可能用 GBK 解码，中文和 Unicode 字符会乱码
+- **changelog.md 使用 CRLF 换行符**：CI 的 release notes 提取脚本必须先 `tr -d '\r'` 去除 `\r`，否则 awk 匹配会失败
+- **CI release notes 提取**：awk 不能用范围模式 `/start/,/end/`（开始行同时匹配结束 pattern），必须用显式状态变量
