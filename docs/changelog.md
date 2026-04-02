@@ -5,6 +5,11 @@
 **优化**
 - `hudo list` 默认只读 state.json，毫秒级响应，不再启动子进程检测
 - `hudo list --all` 保持完整并行检测
+- 菜单 emoji 全部替换为 ASCII 图标，兼容 Windows 10 旧控制台
+- 恢复大 Logo ASCII art，硬编码 + 蓝紫逐行渐变色
+
+**修复**
+- CI release notes 提取失败（CRLF 换行符 + awk 范围匹配问题）
 
 ## v0.2.8
 
