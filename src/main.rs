@@ -1366,10 +1366,25 @@ async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
         ui::ToolCategory::Ide,
     ];
 
-    // 收集所有工具的检测结果（并行）
-    let tool_refs: Vec<&dyn installer::Installer> =
-        installers.iter().map(|i| i.as_ref()).collect();
-    let all_results = detect_all_parallel(&tool_refs, config, &reg);
+    // 收集工具检测结果
+    // hudo list：仅读 state.json，毫秒级
+    // hudo list --all：完整子进程检测（并行）
+    let all_results: Vec<(installer::ToolInfo, Result<DetectResult>)> = if show_all {
+        let tool_refs: Vec<&dyn installer::Installer> =
+            installers.iter().map(|i| i.as_ref()).collect();
+        detect_all_parallel(&tool_refs, config, &reg)
+    } else {
+        installers
+            .iter()
+            .map(|inst| {
+                let info = inst.info();
+                let detect = fast_detect(info.id, &reg)
+                    .map(Ok)
+                    .unwrap_or(Ok(DetectResult::NotInstalled));
+                (info, detect)
+            })
+            .collect()
+    };
 
     // 点线连接的总宽度
     let dot_width = 50usize;
