@@ -59,7 +59,7 @@ export default defineConfig({
       { text: '工具列表', link: '/tools/' },
       { text: '博客', link: '/blog/' },
       {
-        text: 'v0.2.7',
+        text: 'v0.2.8',
         items: [
           { text: '更新日志', link: '/changelog' },
           { text: 'GitHub', link: 'https://github.com/zexadev/hudo' },

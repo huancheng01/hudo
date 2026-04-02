@@ -1,6 +1,14 @@
 # 更新日志
 
-## v0.2.7 <Badge type="tip" text="最新" />
+## v0.2.8 <Badge type="tip" text="最新" />
+
+**改进**
+- 恢复大 Logo ASCII art，硬编码 + 蓝紫逐行渐变色，移除 figlet-rs 运行时依赖
+- README 全面更新，补全所有工具和特色功能介绍
+- 文档站 SEO 优化：完善 meta/OG 标签、Schema.org 结构化数据、favicon
+- 新增博客栏目，21 篇教程文章覆盖全部工具
+
+## v0.2.7
 
 **改进**
 - 下载自动回退国内镜像：Git/Node.js/Go/JDK/Maven/Gradle/Rust/Miniconda/VS Code，原地址连接失败时自动切换
