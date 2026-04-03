@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Claude Code 完整安装教程：Windows 开发者从零开始的 AI 编程助手
 description: Claude Code 是 Anthropic 官方命令行 AI 编程工具，支持代码生成、重构、调试、文件编辑和 Git 操作。本文详解 Windows 上安装 Claude Code 的完整流程，解决 GCS 国内不可达问题，使用 hudo 一键安装并自动配置。
 keywords:
@@ -95,3 +97,8 @@ Claude Code 把 AI 编程从编辑器插件带到了命令行。在 Windows 上�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Claude Code 工具文档](/tools/claude-code) 了解完整安装参数与配置选项。

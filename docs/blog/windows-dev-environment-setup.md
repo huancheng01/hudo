@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: 新电脑到手后，用 hudo 20 分钟配好完整 Windows 开发环境
 description: 新电脑或重装系统后，开发者往往要花半天时间逐个下载安装 Git、Node.js、JDK、Maven、MySQL、VS Code 等工具并配置环境变量。本文介绍如何使用 hudo 一键配置 Windows 开发环境，20 分钟搞定全部 20 款开发工具的安装、环境变量设置和国内镜像加速。
 keywords:
@@ -150,3 +152,8 @@ hudo import
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [工具列表](/tools/) 了解完整安装参数与配置选项。

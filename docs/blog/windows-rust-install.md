@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows 安装 Rust 不踩坑：告别 MSVC 依赖，一条命令搞定
 description: 详解 Windows 下安装 Rust 的常见坑点：MSVC Build Tools 体积大、MinGW 配置繁琐、crates.io 国内慢。使用 hudo 一条命令自动安装 GNU 工具链并配置 USTC 镜像，零门槛上手 Rust 开发。
 keywords:
@@ -95,3 +97,8 @@ hudo install rust
 ```
 
 少折腾环境，多写代码。
+
+
+---
+
+> 查看 [Rust 工具文档](/tools/rust) 了解完整安装参数与配置选项。

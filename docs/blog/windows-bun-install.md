@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Bun：比 Node.js 快数倍的 JS 运行时，Windows 一分钟上手
 description: Bun 是集 JavaScript 运行时、包管理器、打包器、测试框架于一体的全能工具，速度远超 Node.js。本文介绍如何在 Windows 上快速安装 Bun，对比传统手动安装的痛点，使用 hudo 一条命令完成下载解压与 PATH 配置。
 keywords:
@@ -105,3 +107,8 @@ Bun 把 JavaScript 工具链做到了极致的简单和快速。在 Windows 上�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Bun 工具文档](/tools/bun) 了解完整安装参数与配置选项。

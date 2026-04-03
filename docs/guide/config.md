@@ -1,3 +1,12 @@
+---
+title: "配置文件 - hudo 配置说明"
+description: "hudo 配置文件详解：自定义安装目录、版本锁定、镜像源设置，通过 config.toml 灵活控制工具安装行为。"
+head:
+  - - meta
+    - name: keywords
+      content: "hudo 配置, config.toml, hudo 安装目录, 镜像源配置, 版本锁定, hudo 自定义配置"
+---
+
 # 配置文件
 
 hudo 的配置文件位于 `%USERPROFILE%\.hudo\config.toml`，首次运行时自动创建。

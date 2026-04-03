@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows MySQL 安装不求人：一键部署 + 服务注册 + 环境变量配置
 description: 详细介绍 Windows 下 MySQL 的传统 ZIP 安装步骤与常见坑点，并演示如何用 hudo 一条命令完成 MySQL 下载、my.ini 生成、数据初始化、服务注册和环境变量配置。
 keywords:
@@ -107,3 +109,8 @@ Windows 上装 MySQL 本不该这么复杂。传统方式需要下载、配置�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [MySQL 工具文档](/tools/mysql) 了解完整安装参数与配置选项。

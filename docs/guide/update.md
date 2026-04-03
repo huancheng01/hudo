@@ -1,3 +1,12 @@
+---
+title: "自我更新 - hudo 更新指南"
+description: "hudo 支持自我更新，一条命令即可升级到最新版本，无需重新下载安装脚本，保持工具始终最新。"
+head:
+  - - meta
+    - name: keywords
+      content: "hudo 更新, hudo update, hudo 升级, 自我更新, hudo 最新版本"
+---
+
 # 自我更新
 
 hudo 支持自我更新，无需重新下载安装脚本。

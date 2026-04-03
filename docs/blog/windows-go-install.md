@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows Go 开发环境配置避坑指南：GOPATH、模块代理一文搞定
 description: Windows 上安装 Go 语言总是被 GOROOT、GOPATH、GOPROXY 搞晕？本文详解传统手动安装的常见坑点，解释 GOPATH 与 Go Modules 的关系，介绍使用 hudo 一条命令自动完成 Go 下载、环境变量配置和目录规划的方案。
 keywords:
@@ -112,3 +114,8 @@ Go 语言本身很简单，但 Windows 上的环境配置确实有些繁琐—�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Go 工具文档](/tools/go) 了解完整安装参数与配置选项。

@@ -1,3 +1,12 @@
+---
+title: "安装 hudo - 一条命令完成安装"
+description: "通过 PowerShell 一条命令安装 hudo，支持 Windows 10/11，自动配置环境变量，无需管理员权限即可开始搭建开发环境。"
+head:
+  - - meta
+    - name: keywords
+      content: "安装 hudo, hudo 下载, PowerShell 安装, Windows 开发工具安装, hudo 安装教程"
+---
+
 # 安装 hudo
 
 ## 系统要求

@@ -1,3 +1,12 @@
+---
+title: "快速上手 - hudo 使用教程"
+description: "hudo 快速上手指南：学习如何通过交互式菜单安装开发工具、管理已安装工具、卸载工具，五分钟搭建完整 Windows 开发环境。"
+head:
+  - - meta
+    - name: keywords
+      content: "hudo 使用教程, hudo 快速上手, hudo 命令, 开发工具安装教程, Windows 开发环境配置教程"
+---
+
 # 快速上手
 
 ## 第一次运行

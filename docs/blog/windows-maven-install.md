@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Maven 安装配置一条龙：环境变量 + 阿里云镜像，一条命令全搞定
 description: 详解 Windows 下 Maven 安装的三大痛点——Apache 下载慢、MAVEN_HOME 环境变量配置繁琐、settings.xml 阿里云镜像遗漏导致依赖下载龟速，以及如何用 hudo 一条命令全部解决。
 keywords:
@@ -90,3 +92,8 @@ mvn archetype:generate -DgroupId=com.test -DartifactId=demo -DarchetypeArtifactI
 ## 总结
 
 Maven 安装的真正难点不在于安装本身，而在于那些"安装之后"的配置工作。环境变量要配对，`settings.xml` 不能漏，镜像地址要正确。与其每次都重复这套流程，不如用 `hudo install maven` 一步到位——下载、解压、环境变量、阿里云镜像，全部自动搞定。
+
+
+---
+
+> 查看 [Maven 工具文档](/tools/maven) 了解完整安装参数与配置选项。

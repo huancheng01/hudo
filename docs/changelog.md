@@ -1,3 +1,12 @@
+---
+title: "更新日志 - hudo"
+description: "hudo 版本更新历史记录，包含每个版本的新功能、优化改进和问题修复详情。"
+head:
+  - - meta
+    - name: keywords
+      content: "hudo 更新日志, hudo changelog, hudo 版本历史, hudo 新功能"
+---
+
 # 更新日志
 
 ## v0.2.9 <Badge type="tip" text="最新" />

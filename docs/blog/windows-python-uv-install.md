@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: pip 太慢？uv 一键管理 Python 版本和虚拟环境（Windows 实战）
 description: 还在用 pip 等半天？uv 是 Rust 编写的超快 Python 包管理器，比 pip 快 100 倍，集版本管理、虚拟环境、包安装于一体。本文介绍如何在 Windows 上用 hudo 一条命令安装 uv，告别 pip 慢、virtualenv 碎片化、多版本 Python 共存混乱等问题。
 keywords:
@@ -116,3 +118,8 @@ Python 环境管理不需要同时学 pyenv、virtualenv、pip、pipx 四个工�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Python (uv) 工具文档](/tools/python) 了解完整安装参数与配置选项。

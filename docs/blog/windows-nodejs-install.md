@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: 2026 年 Windows Node.js 环境搭建终极方案 — 告别 nvm、PATH 问题与 npm 慢速下载
 description: Windows 上安装 Node.js 总是遇到 PATH 不生效、npm 下载慢、版本管理工具复杂等问题？本文介绍一条命令完成 Node.js 安装与环境变量配置的终极方案，使用 hudo 工具自动下载官方 LTS 包并配好 PATH，支持国内镜像回退。
 keywords:
@@ -91,3 +93,8 @@ Windows 上装 Node.js 不需要那么复杂。不需要 nvm，不需要 fnm，�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Node.js 工具文档](/tools/nodejs) 了解完整安装参数与配置选项。

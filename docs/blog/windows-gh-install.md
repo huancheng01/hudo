@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: 告别网页操作：GitHub CLI 安装与十个最实用命令
 description: 详细介绍如何在 Windows 上安装 GitHub CLI（gh），对比传统手动下载配置方式和使用 hudo 一条命令自动安装的体验差异，并精选十个最实用的 gh 命令，涵盖 PR 创建、Issue 管理、CI 状态查看、仓库操作等日常高频场景。
 keywords:
@@ -155,3 +157,8 @@ gh auth status
 ## 小结
 
 GitHub CLI 把 GitHub 操作从浏览器搬到了终端，对于日常在命令行里写代码的开发者来说，效率提升非常明显。在 Windows 上通过 hudo 安装只需要一条命令，省去了手动下载和配置环境变量的麻烦。如果你还没有用过 `gh`，值得试一试。
+
+
+---
+
+> 查看 [GitHub CLI 工具文档](/tools/gh) 了解完整安装参数与配置选项。

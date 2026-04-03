@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: 还在手动配 JAVA_HOME？一键安装 JDK 并自动配置环境变量
 description: 详解 Windows 下 JDK 安装与 JAVA_HOME、PATH 环境变量配置的常见坑，以及如何用 hudo 一条命令完成 Adoptium Temurin JDK 安装和环境变量自动配置。
 keywords:
@@ -88,3 +90,8 @@ javac -version
 ## 总结
 
 JDK 安装本身不复杂，复杂的是那套环境变量仪式。与其每次都在"系统属性"里小心翼翼地编辑，不如用 `hudo install jdk` 一步到位。下载、解压、配置环境变量，全部自动完成，把时间花在写代码上。
+
+
+---
+
+> 查看 [JDK 工具文档](/tools/jdk) 了解完整安装参数与配置选项。

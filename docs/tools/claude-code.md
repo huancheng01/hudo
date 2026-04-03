@@ -1,4 +1,15 @@
+---
+title: "Claude Code 安装配置 - Windows 一键安装 AI 编程助手 - hudo"
+description: "使用 hudo 一键安装 Anthropic Claude Code CLI，AI 驱动的命令行编程助手，自动配置 Node.js 依赖和环境变量。"
+head:
+  - - meta
+    - name: keywords
+      content: "Claude Code 安装, Claude Code CLI, AI 编程助手, Anthropic Claude, Windows Claude Code, AI 代码工具, hudo"
+---
+
 # Claude Code
+
+Claude Code 是 Anthropic 推出的 AI 命令行编程助手，能够直接在终端中理解代码库、编写代码、执行命令和管理 Git 操作。它是目前最强大的 AI 编程工具之一，特别适合代码审查、重构和复杂任务自动化。
 
 Anthropic Claude Code CLI，AI 驱动的命令行编程助手。
 
@@ -47,3 +58,29 @@ hudo uninstall claude-code
 # 不填则自动获取最新版
 claude_code = "1.0.0"
 ```
+
+## hudo 安装优势
+
+- **官方二进制直装**：从 Google Cloud Storage 下载官方编译包，不依赖 npm 全局安装
+- **SHA256 完整性校验**：自动验证下载文件的哈希值，确保安装包未被篡改
+- **自动清理旧版**：如果系统中已通过 npm 安装了 Claude Code，hudo 会自动卸载旧版后重装
+- **版本可锁定**：通过[配置文件](/guide/config)指定版本号，避免自动更新导致行为变化
+- **无需手动管理 Node.js**：使用独立二进制，不需要先安装 [Node.js](/tools/nodejs) 环境
+
+## 常见问题
+
+### Claude Code 需要付费吗？
+
+Claude Code 本身免费安装，但使用时需要 Anthropic 账号或 API Key。可以通过 `claude login` 登录账号，或设置 `ANTHROPIC_API_KEY` 环境变量。
+
+### 安装失败提示 SHA256 校验不通过？
+
+hudo 会自动清除缓存并重试一次。如果仍然失败，可能是网络问题导致下载不完整，检查网络连接后重试 `hudo install claude-code`。
+
+### 如何更新 Claude Code 到最新版？
+
+重新运行 `hudo install claude-code` 即可，hudo 会自动获取并安装最新版本。
+
+## 相关阅读
+
+- [Claude Code 完整安装教程：Windows 开发者从零开始的 AI 编程助手](/blog/windows-claude-code-install) — 详细安装教程与常见问题解答

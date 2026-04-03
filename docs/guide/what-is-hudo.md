@@ -1,3 +1,12 @@
+---
+title: "什么是 hudo - Windows 开发环境一键搭建工具"
+description: "hudo（混沌）是一个 Windows 开发环境一键引导工具，自动下载安装 Git、Node.js、Rust、Go、JDK 等 20+ 开发工具并配置环境变量，告别手动搭建。"
+head:
+  - - meta
+    - name: keywords
+      content: "Windows 开发环境工具, hudo, 开发环境搭建, 一键安装开发工具, Windows 环境配置, 开发环境自动化"
+---
+
 # 什么是 hudo？
 
 **hudo（混沌）** 是一个 Windows 开发环境一键引导工具。

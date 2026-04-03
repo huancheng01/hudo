@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: PyCharm 社区版完全够用：安装配置 + Python 环境关联一步到位
 description: PyCharm 社区版免费且功能强大，足以覆盖绝大多数 Python 开发场景。本文对比传统安装与 hudo 一键安装的区别，讲解如何在 Windows 上快速部署 PyCharm 社区版并关联 Python 解释器，让你跳过繁琐配置直接开始写代码。
 keywords:
@@ -89,3 +91,8 @@ PyCharm 社区版免费、功能完整，对于 Python 开发完全够用。传�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [PyCharm 工具文档](/tools/pycharm) 了解完整安装参数与配置选项。

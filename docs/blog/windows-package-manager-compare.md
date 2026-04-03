@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Scoop vs Winget vs Chocolatey vs hudo：Windows 包管理器横评，开发者该选哪个？
 description: 详细对比 Windows 平台四大包管理器 Scoop、Winget、Chocolatey 和 hudo 的优缺点，从安装方式、管理员权限、环境配置、包数量等维度分析，帮助开发者根据实际需求选择最合适的工具管理方案。
 keywords:
@@ -109,3 +111,8 @@ hudo 适合需要快速搭建标准化开发环境的场景，尤其是新机器
 - **快速搭建开发环境** → hudo。装完直接写代码，不用再折腾环境变量和镜像配置。
 
 实际上，这几个工具并不互斥。完全可以用 Winget 管理日常软件，用 Scoop 或 hudo 管理开发工具。根据自己的工作流灵活组合，才是最务实的选择。
+
+
+---
+
+> 查看 [工具列表](/tools/) 了解完整安装参数与配置选项。

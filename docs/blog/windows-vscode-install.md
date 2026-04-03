@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: VS Code 便携版安装：免安装器 + 右键菜单 + 数据隔离，Windows 最干净的方案
 description: 介绍 Windows 下 VS Code 便携版（portable）的优势与使用方法，包括设置和扩展数据隔离、右键菜单注册、跨机器迁移技巧，以及如何用 hudo 一条命令自动完成全部配置。
 keywords:
@@ -95,3 +97,8 @@ hudo uninstall vscode
 ---
 
 VS Code 便携版是 Windows 上最干净的使用方式，配合 hudo 的自动化安装，既不牺牲便利性，又保持了系统的整洁。如果你还在用安装器版，不妨试试这个方案。
+
+
+---
+
+> 查看 [VS Code 工具文档](/tools/vscode) 了解完整安装参数与配置选项。

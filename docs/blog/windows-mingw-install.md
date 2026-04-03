@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: 不装 Visual Studio 也能写 C/C++ — MinGW-w64 一键安装 + VS Code 配置全流程
 description: Windows 上写 C/C++ 一定要装几十 GB 的 Visual Studio 吗？MinGW-w64 是轻量替代方案，但官网下载页让人头大。本文介绍用 hudo 一条命令安装 MinGW-w64 最新 GCC，自动配好 PATH，再搭配 VS Code 快速搭建 C/C++ 开发环境。
 keywords:
@@ -109,3 +111,8 @@ Windows 上写 C/C++ 不一定要装 Visual Studio。MinGW-w64 提供了完整�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [MinGW 工具文档](/tools/mingw) 了解完整安装参数与配置选项。

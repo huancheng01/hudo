@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Miniconda vs Anaconda：Windows 轻量 Python 环境 5 分钟搭建指南
 description: Anaconda 动辄 3GB 太臃肿？Miniconda 只有 80MB，保留 conda 核心功能。本文对比 Miniconda 和 Anaconda 的区别，介绍如何在 Windows 上快速安装 Miniconda 并配置 conda 环境，包括镜像加速、conda init 和环境变量配置，以及用 hudo 一条命令完成全部步骤。
 keywords:
@@ -103,3 +105,8 @@ Anaconda 适合想要开箱即用的用户，但对大多数开发者来说 Mini
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Miniconda 工具文档](/tools/miniconda) 了解完整安装参数与配置选项。

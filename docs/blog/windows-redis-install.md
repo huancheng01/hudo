@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows 也能用 Redis：2026 最新安装方案 + 开机自启配置
 description: Redis 官方不支持 Windows，本文介绍 2026 年最新的 Windows Redis 安装方案，从社区构建版下载到服务注册、AOF 持久化配置，以及如何用 hudo 一条命令完成全部步骤。
 keywords:
@@ -106,3 +108,8 @@ Redis 官方不支持 Windows 不代表 Windows 用不了 Redis。借助社区�
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [Redis 工具文档](/tools/redis) 了解完整安装参数与配置选项。

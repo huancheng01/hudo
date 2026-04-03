@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows Git 安装与配置教程：一条命令搞定全部步骤
 description: 详细介绍 Windows 系统下安装和配置 Git 的完整教程，包括传统手动安装方式的痛点分析，以及使用 hudo 工具一条命令自动完成 Git 下载、静默安装、PATH 环境变量配置、user.name/email 设置和 autocrlf 换行符配置的全流程方案。
 keywords:
@@ -121,3 +123,8 @@ hudo uninstall git
 在 Windows 上安装 Git 的核心问题在于：下载慢、选项多、配置散。这些琐碎的步骤不断消耗开发者的时间和耐心。`hudo install git` 把这些步骤压缩成一条命令，让你把精力留给真正重要的事——写代码。
 
 如果你想了解 hudo 支持的完整工具列表和更多用法，可以访问 [hudo 文档站](https://hudo.zexa.cc)。
+
+
+---
+
+> 查看 [Git 工具文档](/tools/git) 了解完整安装参数与配置选项。

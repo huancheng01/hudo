@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Gradle vs Maven：Windows 上如何选择与快速安装
 description: 对比 Java 两大构建工具 Gradle 和 Maven 的优劣，详解 Windows 下 Gradle 传统安装流程的痛点，以及如何用 hudo 一条命令完成 Gradle 下载、环境变量配置和阿里云镜像设置。
 keywords:
@@ -105,3 +107,8 @@ hudo install gradle
 ```
 
 hudo 会分别设置 `MAVEN_HOME` 和 `GRADLE_HOME`，各自的 `bin` 目录独立添加到 `PATH`，同时为两者生成各自的国内镜像配置（Maven 的 `settings.xml` 和 Gradle 的 `init.gradle`）。需要哪个用哪个，和平共处。
+
+
+---
+
+> 查看 [Gradle 工具文档](/tools/gradle) 了解完整安装参数与配置选项。

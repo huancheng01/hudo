@@ -1,4 +1,6 @@
 ---
+date: 2026-03-15
+author: Zexa
 title: Windows PostgreSQL 快速安装指南：从下载到第一条 SQL
 description: 详细介绍 Windows 下 PostgreSQL 的传统安装方式与常见难点，并演示如何用 hudo 一条命令完成 PostgreSQL 下载、initdb 初始化、Windows 服务注册、PGDATA 环境变量配置，快速执行第一条 SQL 查询。
 keywords:
@@ -106,3 +108,8 @@ PostgreSQL 功能强大，但 Windows 上的传统安装流程确实不够友好
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
 ```
+
+
+---
+
+> 查看 [PostgreSQL 工具文档](/tools/pgsql) 了解完整安装参数与配置选项。
