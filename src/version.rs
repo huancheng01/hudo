@@ -156,7 +156,9 @@ pub async fn claude_code_latest() -> Option<String> {
 
 /// Redis: GitHub API (redis-windows) → 最新版本号（如 "8.6.1"）
 /// tag 格式: "8.6.1.1" → 取前三段 "8.6.1"
-pub async fn redis_latest() -> Option<String> {
+/// 返回 (tag, version)，tag 用于下载 URL，version 用于文件名
+/// 例如 tag="8.6.2" version="8.6.2" 或 tag="8.6.1.1" version="8.6.1"
+pub async fn redis_latest() -> Option<(String, String)> {
     let client = make_client().ok()?;
     let resp: serde_json::Value = client
         .get("https://api.github.com/repos/redis-windows/redis-windows/releases/latest")
@@ -167,14 +169,15 @@ pub async fn redis_latest() -> Option<String> {
         .json()
         .await
         .ok()?;
-    let tag = resp["tag_name"].as_str()?; // "8.6.1.1"
-    // 取前三段作为 Redis 版本号
+    let tag = resp["tag_name"].as_str()?;
+    // 取前三段作为 Redis 版本号（文件名用）
     let parts: Vec<&str> = tag.split('.').collect();
-    if parts.len() >= 3 {
-        Some(parts[..3].join("."))
+    let version = if parts.len() >= 3 {
+        parts[..3].join(".")
     } else {
-        Some(tag.to_string())
-    }
+        tag.to_string()
+    };
+    Some((tag.to_string(), version))
 }
 
 /// Node.js: nodejs.org API → 最新 LTS 版本号（如 "22.14.0"）

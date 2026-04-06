@@ -9,7 +9,12 @@ head:
 
 # 更新日志
 
-## v0.2.9 <Badge type="tip" text="最新" />
+## v0.2.10 <Badge type="tip" text="最新" />
+
+**修复**
+- Redis 安装 404 错误：redis-windows 新版 release tag 不再带 `.1` 后缀，URL 拼接已适配
+
+## v0.2.9
 
 **优化**
 - `hudo list` 默认只读 state.json，毫秒级响应，不再启动子进程检测

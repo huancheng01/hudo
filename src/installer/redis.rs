@@ -11,7 +11,7 @@ use crate::download;
 
 pub struct RedisInstaller;
 
-const REDIS_VERSION_DEFAULT: &str = "8.6.1";
+const REDIS_VERSION_DEFAULT: &str = "8.6.2";
 const REDIS_SERVICE_NAME: &str = "Redis";
 
 #[async_trait]
@@ -65,8 +65,9 @@ impl Installer for RedisInstaller {
         let base = config.mirrors.redis.as_deref().unwrap_or(
             "https://github.com/redis-windows/redis-windows/releases/download",
         );
+        // tag 直接用版本号（新版不再带 .1 后缀）
         let url = format!(
-            "{}/{}.1/{}",
+            "{}/{}/{}",
             base.trim_end_matches('/'),
             version,
             filename
@@ -78,13 +79,18 @@ impl Installer for RedisInstaller {
         let config = ctx.config;
         let install_dir = config.tools_dir().join("redis");
 
-        let version = match &config.versions.redis {
-            Some(v) => v.clone(),
+        let (tag, version) = match &config.versions.redis {
+            Some(v) => (v.clone(), v.clone()),
             None => {
                 crate::ui::print_action("查询 Redis 最新版本...");
                 crate::version::redis_latest()
                     .await
-                    .unwrap_or_else(|| REDIS_VERSION_DEFAULT.to_string())
+                    .unwrap_or_else(|| {
+                        (
+                            REDIS_VERSION_DEFAULT.to_string(),
+                            REDIS_VERSION_DEFAULT.to_string(),
+                        )
+                    })
             }
         };
 
@@ -96,9 +102,9 @@ impl Installer for RedisInstaller {
             "https://github.com/redis-windows/redis-windows/releases/download",
         );
         let url = format!(
-            "{}/{}.1/{}",
+            "{}/{}/{}",
             base.trim_end_matches('/'),
-            version,
+            tag,
             filename
         );
 
