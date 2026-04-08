@@ -9,7 +9,12 @@ head:
 
 # 更新日志
 
-## v0.2.10 <Badge type="tip" text="最新" />
+## v0.2.11 <Badge type="tip" text="最新" />
+
+**新功能**
+- Claude Code API 来源管理新增「恢复默认」选项，一键清除自定义配置回到官方默认
+
+## v0.2.10
 
 **修复**
 - Redis 安装 404 错误：redis-windows 新版 release tag 不再带 `.1` 后缀，URL 拼接已适配

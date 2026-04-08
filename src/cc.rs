@@ -163,6 +163,32 @@ fn current_base_url() -> Option<String> {
     })
 }
 
+/// 清除 settings.json 中所有 hudo 写入的 env 变量，恢复官方默认
+fn reset_to_default() -> Result<()> {
+    let mut settings = read_settings()?;
+    if let Some(env) = settings.get_mut("env").and_then(|e| e.as_object_mut()) {
+        let keys_to_remove = [
+            "ANTHROPIC_AUTH_TOKEN",
+            "ANTHROPIC_BASE_URL",
+            "ANTHROPIC_MODEL",
+            "ANTHROPIC_REASONING_MODEL",
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+            "ANTHROPIC_DEFAULT_SONNET_MODEL",
+            "ANTHROPIC_DEFAULT_OPUS_MODEL",
+        ];
+        for key in &keys_to_remove {
+            env.remove(*key);
+        }
+        // 如果 env 为空则整个移除
+        if env.is_empty() {
+            if let Some(obj) = settings.as_object_mut() {
+                obj.remove("env");
+            }
+        }
+    }
+    write_settings(&settings)
+}
+
 // ── 交互菜单 ──────────────────────────────────────────────────────────────────
 
 pub fn cmd_cc() -> Result<()> {
@@ -205,6 +231,7 @@ pub fn cmd_cc() -> Result<()> {
             })
             .chain(std::iter::once("  [+] 添加 Provider".to_string()))
             .chain(std::iter::once("  [x] 删除 Provider".to_string()))
+            .chain(std::iter::once("  [R] 恢复默认（清除自定义配置）".to_string()))
             .chain(std::iter::once("  退出".to_string()))
             .collect();
 
@@ -234,6 +261,19 @@ pub fn cmd_cc() -> Result<()> {
                 // 删除
                 if delete_provider(&mut store)? {
                     store.save()?;
+                }
+            }
+            Some(i) if i == n + 2 => {
+                // 恢复默认
+                if Confirm::with_theme(&ColorfulTheme::default())
+                    .with_prompt("确认清除所有自定义 API 配置，恢复官方默认？")
+                    .default(false)
+                    .interact()?
+                {
+                    reset_to_default()?;
+                    ui::print_success("已恢复默认，自定义 API 配置已清除");
+                    ui::print_info("重启终端或 Claude Code 后生效");
+                    break;
                 }
             }
             _ => break,
