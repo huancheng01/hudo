@@ -1235,16 +1235,28 @@ async fn cmd_update() -> Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
-    let bytes = client
+    let resp = client
         .get(&url)
         .send()
         .await
-        .context("下载请求失败")?
-        .bytes()
-        .await
-        .context("读取下载内容失败")?;
+        .context("下载请求失败")?;
+
+    if !resp.status().is_success() {
+        pb.finish_and_clear();
+        ui::print_error(&format!("下载失败，HTTP 状态码: {}", resp.status()));
+        return Ok(());
+    }
+
+    let bytes = resp.bytes().await.context("读取下载内容失败")?;
 
     pb.finish_and_clear();
+
+    // 验证下载文件完整性：PE 可执行文件必须以 MZ 开头且大小合理
+    if bytes.len() < 1_000_000 || bytes.get(0..2) != Some(&[0x4D, 0x5A]) {
+        ui::print_error("下载的文件不是有效的可执行程序，可能网络异常，请稍后重试");
+        return Ok(());
+    }
+
     std::fs::write(&tmp, &bytes).context("写入临时文件失败")?;
 
     // 自替换：重命名当前 exe（Windows 允许对运行中的 exe 改名），再移入新文件
