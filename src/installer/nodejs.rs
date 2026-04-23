@@ -93,19 +93,43 @@ impl Installer for NodejsInstaller {
 
         // zip 内有 node-v{VERSION}-win-x64/ 子目录
         if install_dir.exists() {
-            std::fs::remove_dir_all(&install_dir).ok();
-        }
-        let inner = tmp_dir.join(format!("node-v{}-win-x64", version));
-        if inner.exists() {
-            std::fs::rename(&inner, &install_dir).context("移动 Node.js 文件失败")?;
-        } else {
-            // 尝试找唯一子目录
-            if let Some(sub) = download::find_single_subdir(&tmp_dir) {
-                std::fs::rename(&sub, &install_dir).context("移动 Node.js 文件失败")?;
-            } else {
-                std::fs::rename(&tmp_dir, &install_dir).context("移动 Node.js 文件失败")?;
+            // 检测目录是否被 fnm 占用（fnm 会在 FNM_DIR 下建 node-versions/aliases 子目录）
+            let fnm_occupied = install_dir.join("node-versions").exists()
+                || install_dir.join("aliases").exists();
+            if let Err(e) = std::fs::remove_dir_all(&install_dir) {
+                if fnm_occupied {
+                    anyhow::bail!(
+                        "目录 {} 已被 fnm 管理，无法作为纯 Node.js 安装目标。\n\
+                         请先运行 `hudo uninstall fnm` 或手动删除该目录后重试。\n\
+                         底层错误: {}",
+                        install_dir.display(),
+                        e
+                    );
+                }
+                anyhow::bail!(
+                    "无法清理已存在的目录 {}。\n\
+                     可能有进程占用文件，关闭所有 node/npm 终端后重试。\n\
+                     底层错误: {}",
+                    install_dir.display(),
+                    e
+                );
             }
         }
+        let inner = tmp_dir.join(format!("node-v{}-win-x64", version));
+        let source = if inner.exists() {
+            inner
+        } else if let Some(sub) = download::find_single_subdir(&tmp_dir) {
+            sub
+        } else {
+            tmp_dir.clone()
+        };
+        std::fs::rename(&source, &install_dir).with_context(|| {
+            format!(
+                "移动 Node.js 文件失败: {} -> {}",
+                source.display(),
+                install_dir.display()
+            )
+        })?;
         std::fs::remove_dir_all(&tmp_dir).ok();
 
         let installed_version =

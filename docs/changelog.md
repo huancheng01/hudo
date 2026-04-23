@@ -9,7 +9,16 @@ head:
 
 # 更新日志
 
-## v0.2.12 <Badge type="tip" text="最新" />
+## v0.2.13 <Badge type="tip" text="最新" />
+
+**新功能**
+- 新增 fnm 安装器，作为 Node.js 多版本管理选项与纯 `nodejs` 安装器并存
+- fnm 管理目录独立为 `lang/node-fnm/`，与 `lang/node/` 解耦，可同时安装互不干扰
+
+**优化**
+- Node.js 安装在目录被 fnm 占用或文件锁定时给出明确错误提示，并指引清理步骤
+
+## v0.2.12
 
 **修复**
 - `hudo update` 自更新增加下载完整性校验：检查 HTTP 状态码和 PE 文件头，防止网络异常导致损坏的二进制替换正常程序

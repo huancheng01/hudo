@@ -24,6 +24,8 @@ pub mod mingw;
 #[cfg(windows)]
 pub mod mysql;
 #[cfg(windows)]
+pub mod fnm;
+#[cfg(windows)]
 pub mod nodejs;
 #[cfg(windows)]
 pub mod pgsql;
@@ -210,6 +212,7 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         list.push(Box::new(uv::UvInstaller));           // Python
         list.push(Box::new(miniconda::MinicondaInstaller)); // Python
         list.push(Box::new(nodejs::NodejsInstaller));   // JavaScript
+        list.push(Box::new(fnm::FnmInstaller));         // JavaScript（Node.js 版本管理）
         list.push(Box::new(bun::BunInstaller));         // JavaScript
         list.push(Box::new(rustup::RustupInstaller));   // Rust
         list.push(Box::new(go::GoInstaller));           // Go

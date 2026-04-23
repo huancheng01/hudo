@@ -23,6 +23,7 @@ hudo 支持安装以下工具，按分类列出：
 | 工具 | 说明 |
 |------|------|
 | [Node.js](./nodejs) | JavaScript 运行时 |
+| [fnm](./fnm) | Node.js 版本管理器（多版本切换） |
 | [Bun](./bun) | 高性能 JavaScript 运行时 |
 | [Python](./python) | Python 环境（通过 uv 管理） |
 | [Miniconda](./miniconda) | Python 科学计算环境（Conda 包管理） |

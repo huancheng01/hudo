@@ -60,6 +60,7 @@ fn default_go_version() -> String {
 pub struct MirrorConfig {
     pub uv: Option<String>,
     pub nodejs: Option<String>,
+    pub fnm: Option<String>,
     pub go: Option<String>,
     pub java: Option<String>,
     pub vscode: Option<String>,
@@ -76,6 +77,7 @@ pub struct VersionConfig {
     pub git: Option<String>,
     pub gh: Option<String>,
     pub nodejs: Option<String>,
+    pub fnm: Option<String>,
     pub mysql: Option<String>,
     pub pgsql: Option<String>,
     pub pycharm: Option<String>,

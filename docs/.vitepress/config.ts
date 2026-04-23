@@ -4,6 +4,7 @@ import { defineConfig, type HeadConfig } from 'vitepress'
 const toolHowTo: Record<string, { name: string; steps: string[] }> = {
   'tools/git': { name: '在 Windows 安装 Git', steps: ['运行 hudo install git', 'hudo 自动下载最新版 Git 并静默安装', '自动配置 PATH 环境变量和 core.autocrlf'] },
   'tools/nodejs': { name: '在 Windows 安装 Node.js', steps: ['运行 hudo install nodejs', 'hudo 下载官方预编译包并解压', '自动配置 PATH，npm 开箱即用'] },
+  'tools/fnm': { name: '在 Windows 安装 fnm', steps: ['运行 hudo install fnm', 'hudo 下载 fnm 并安装最新 LTS Node.js', '自动配置 FNM_DIR 并写入 PowerShell profile'] },
   'tools/rust': { name: '在 Windows 安装 Rust', steps: ['运行 hudo install rust', 'hudo 通过 rustup 安装 Rust 工具链', '自动配置 CARGO_HOME 和 RUSTUP_HOME，支持 USTC 镜像'] },
   'tools/go': { name: '在 Windows 安装 Go', steps: ['运行 hudo install go', 'hudo 下载 Go 官方安装包', '自动配置 GOROOT、GOPATH 和 GOPROXY 国内镜像'] },
   'tools/jdk': { name: '在 Windows 安装 JDK', steps: ['运行 hudo install jdk', 'hudo 下载 Eclipse Temurin JDK', '自动配置 JAVA_HOME 和 PATH'] },
@@ -82,7 +83,7 @@ export default defineConfig({
       { text: '工具列表', link: '/tools/' },
       { text: '博客', link: '/blog/' },
       {
-        text: 'v0.2.11',
+        text: 'v0.2.13',
         items: [
           { text: '更新日志', link: '/changelog' },
           { text: 'GitHub', link: 'https://github.com/zexadev/hudo' },
@@ -117,6 +118,7 @@ export default defineConfig({
             { text: 'Git', link: '/tools/git' },
             { text: 'GitHub CLI', link: '/tools/gh' },
             { text: 'Node.js', link: '/tools/nodejs' },
+            { text: 'fnm', link: '/tools/fnm' },
             { text: 'Bun', link: '/tools/bun' },
             { text: 'Rust', link: '/tools/rust' },
             { text: 'Go', link: '/tools/go' },
