@@ -1,8 +1,12 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
+use dialoguer::Confirm;
 use std::path::PathBuf;
 
-use super::{DetectResult, EnvAction, InstallContext, InstallResult, Installer, ToolInfo};
+use super::{
+    clean_fnm_profile_lines, force_remove_dir_all, is_legacy_fnm_dir, DetectResult, EnvAction,
+    InstallContext, InstallResult, Installer, ToolInfo,
+};
 use crate::config::HudoConfig;
 use crate::download;
 
@@ -67,6 +71,21 @@ impl Installer for FnmInstaller {
 
     async fn install(&self, ctx: &InstallContext<'_>) -> Result<InstallResult> {
         let config = ctx.config;
+        let legacy_node_dir = config.lang_dir().join("node");
+        // 旧版 fnm 残留迁移：征得同意后清 lang/node/、PowerShell profile，并移除 state 里的 nodejs 条目
+        if is_legacy_fnm_dir(&legacy_node_dir) || legacy_fnm_state_exists(config) {
+            crate::ui::print_warning("检测到旧版 fnm 残留（由 hudo 0.2.12 及更早版本安装）");
+            let confirm = Confirm::new()
+                .with_prompt("  是否清理旧版残留后再安装新版 fnm？")
+                .default(true)
+                .interact()
+                .context("选择被取消")?;
+            if !confirm {
+                anyhow::bail!("已取消，请先运行 `hudo uninstall nodejs` 清理旧版后再试");
+            }
+            cleanup_legacy_fnm(config)?;
+        }
+
         let fnm_dir = config.tools_dir().join("fnm");
         let node_dir = fnm_node_dir(config);
         let (url, filename) = self.resolve_download(config);
@@ -147,6 +166,68 @@ impl Installer for FnmInstaller {
 
         Ok(())
     }
+
+    async fn pre_uninstall(&self, ctx: &InstallContext<'_>) -> Result<()> {
+        // 清 PowerShell profile 里的 fnm 初始化（新旧版写入格式一致）
+        match clean_fnm_profile_lines() {
+            Ok(true) => crate::ui::print_info("已清理 PowerShell profile 中的 fnm 初始化行"),
+            Ok(false) => {}
+            Err(e) => crate::ui::print_warning(&format!("清理 PowerShell profile 失败: {}", e)),
+        }
+        // 同时清掉 fnm 管理的 Node 版本目录
+        let node_dir = fnm_node_dir(ctx.config);
+        if node_dir.exists() {
+            if let Err(e) = force_remove_dir_all(&node_dir) {
+                crate::ui::print_warning(&format!("删除 {} 失败: {}", node_dir.display(), e));
+            } else {
+                crate::ui::print_info(&format!("已删除 {}", node_dir.display()));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// state.json 里 `nodejs` 条目指向 fnm 时，认定为旧版 fnm 残留
+fn legacy_fnm_state_exists(config: &HudoConfig) -> bool {
+    let Ok(reg) = crate::registry::InstallRegistry::load(&config.state_path()) else {
+        return false;
+    };
+    let Some(entry) = reg.get("nodejs") else { return false };
+    entry.install_path.to_lowercase().contains("fnm")
+        || entry.version.to_lowercase().starts_with("fnm ")
+}
+
+fn cleanup_legacy_fnm(config: &HudoConfig) -> Result<()> {
+    crate::ui::print_action("清理旧版 fnm 残留...");
+    let node_dir = config.lang_dir().join("node");
+    if node_dir.exists() {
+        force_remove_dir_all(&node_dir)
+            .with_context(|| format!("删除 {} 失败（可能有进程占用）", node_dir.display()))?;
+        crate::ui::print_info(&format!("已删除 {}", node_dir.display()));
+    }
+    let old_fnm_dir = config.tools_dir().join("fnm");
+    if old_fnm_dir.exists() {
+        // 只删 fnm.exe 等旧内容；如果目录存在但准备重装新版，重装逻辑会重新解压
+        force_remove_dir_all(&old_fnm_dir).ok();
+    }
+    if legacy_fnm_state_exists(config) {
+        let mut reg = crate::registry::InstallRegistry::load(&config.state_path())?;
+        reg.remove("nodejs");
+        reg.save(&config.state_path()).ok();
+    }
+    if let Ok(Some(val)) = crate::env::EnvManager::get_var("FNM_DIR") {
+        let target = config.lang_dir().join("node").to_string_lossy().to_lowercase();
+        if val.to_lowercase() == target {
+            crate::env::EnvManager::delete_var("FNM_DIR").ok();
+            crate::ui::print_info("已移除旧 FNM_DIR 环境变量");
+        }
+    }
+    match clean_fnm_profile_lines() {
+        Ok(true) => crate::ui::print_info("已清理 PowerShell profile 中的 fnm 初始化行"),
+        Ok(false) => {}
+        Err(e) => crate::ui::print_warning(&format!("清理 PowerShell profile 失败: {}", e)),
+    }
+    Ok(())
 }
 
 /// fnm 管理的 Node.js 版本目录，独立于纯 nodejs 安装器的 lang/node/

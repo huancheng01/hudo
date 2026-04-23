@@ -40,7 +40,7 @@ pub mod uv;
 #[cfg(windows)]
 pub mod vscode;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use std::path::PathBuf;
 
@@ -161,6 +161,112 @@ pub fn query_service_state(name: &str) -> ServiceState {
         }
         _ => ServiceState::NotFound,
     }
+}
+
+/// 强力删除目录：先递归清除只读属性，再调用 remove_dir_all；
+/// 仍失败则回退到 `cmd /c rd /s /q` 处理 junction 等 Rust std 不友好的场景。
+#[cfg(windows)]
+pub fn force_remove_dir_all(path: &std::path::Path) -> anyhow::Result<()> {
+    if !path.exists() {
+        return Ok(());
+    }
+    clear_readonly_recursive(path).ok();
+    if let Err(e) = std::fs::remove_dir_all(path) {
+        // 回退：cmd 的 rd /s /q 能处理 junction 与一些 std 卡住的边界场景
+        let status = std::process::Command::new("cmd")
+            .args(["/c", "rd", "/s", "/q", &path.to_string_lossy()])
+            .status();
+        match status {
+            Ok(s) if s.success() && !path.exists() => Ok(()),
+            _ => Err(anyhow::anyhow!(
+                "删除目录失败: {} ({})",
+                path.display(),
+                e
+            )),
+        }
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(windows)]
+fn clear_readonly_recursive(path: &std::path::Path) -> std::io::Result<()> {
+    let md = match std::fs::symlink_metadata(path) {
+        Ok(m) => m,
+        Err(_) => return Ok(()),
+    };
+    let mut perm = md.permissions();
+    if perm.readonly() {
+        perm.set_readonly(false);
+        std::fs::set_permissions(path, perm).ok();
+    }
+    if md.is_dir() && !md.file_type().is_symlink() {
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                clear_readonly_recursive(&entry.path()).ok();
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 旧版 hudo 的 fnm 安装痕迹检测：`lang/node/` 下存在 `node-versions/` 或 `aliases/`
+#[cfg(windows)]
+pub fn is_legacy_fnm_dir(node_dir: &std::path::Path) -> bool {
+    node_dir.join("node-versions").exists() || node_dir.join("aliases").exists()
+}
+
+/// 清理 PowerShell `$PROFILE` 中由 hudo 写入的 fnm 初始化行（旧版或新版均能匹配）。
+/// 返回值：是否实际修改了文件。
+#[cfg(windows)]
+pub fn clean_fnm_profile_lines() -> anyhow::Result<bool> {
+    let output = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", "$PROFILE"])
+        .output();
+    let Ok(out) = output else { return Ok(false) };
+    let profile_path = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if profile_path.is_empty() {
+        return Ok(false);
+    }
+    let profile_path = std::path::PathBuf::from(&profile_path);
+    if !profile_path.exists() {
+        return Ok(false);
+    }
+
+    let content = match std::fs::read_to_string(&profile_path) {
+        Ok(s) => s,
+        Err(_) => return Ok(false),
+    };
+
+    let line_sep = if content.contains("\r\n") { "\r\n" } else { "\n" };
+    let marker_cmd = "fnm env --use-on-cd --shell power-shell";
+    let marker_comment = "# fnm (Node.js version manager)";
+
+    let mut kept: Vec<&str> = Vec::new();
+    for line in content.split(line_sep) {
+        let t = line.trim();
+        if t.contains(marker_cmd) || t == marker_comment {
+            continue;
+        }
+        kept.push(line);
+    }
+
+    let new_content = kept.join(line_sep);
+    // 去掉末尾多余空行
+    let new_content = new_content.trim_end_matches(&['\r', '\n'][..]).to_string();
+
+    if new_content == content.trim_end_matches(&['\r', '\n'][..]) {
+        return Ok(false);
+    }
+
+    let final_content = if new_content.is_empty() {
+        String::new()
+    } else {
+        format!("{}{}", new_content, line_sep)
+    };
+    std::fs::write(&profile_path, final_content)
+        .with_context(|| format!("写入 PowerShell profile 失败: {}", profile_path.display()))?;
+    Ok(true)
 }
 
 /// 通过 PowerShell Start-Process -Verb RunAs 以管理员身份运行命令

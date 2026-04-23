@@ -9,7 +9,16 @@ head:
 
 # 更新日志
 
-## v0.2.13 <Badge type="tip" text="最新" />
+## v0.2.14 <Badge type="tip" text="最新" />
+
+**修复**
+- 升级用户卡点：旧版 hudo (≤0.2.12) 用 `nodejs` id 记录 fnm，`hudo uninstall fnm` 找不到、`hudo uninstall nodejs` 不清 `lang/node/` 和 PowerShell profile
+- `hudo uninstall nodejs` 现在识别旧版 fnm 条目，一并清理 `lang/node/`、`tools/fnm/`、`FNM_DIR` 环境变量和 profile 中的 fnm 初始化行
+- `hudo uninstall fnm` 卸载时同步清理 PowerShell profile 和 `lang/node-fnm/`
+- `hudo install nodejs` / `hudo install fnm` 检测到旧版 fnm 残留时，交互确认后自动迁移
+- 新增 `force_remove_dir_all` 工具：递归清除只读属性、junction 回退 `cmd rd /s /q`
+
+## v0.2.13
 
 **新功能**
 - 新增 fnm 安装器，作为 Node.js 多版本管理选项与纯 `nodejs` 安装器并存
