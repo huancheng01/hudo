@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use dialoguer::Confirm;
 use std::path::PathBuf;
 
 use super::{DetectResult, EnvAction, InstallContext, InstallResult, Installer, ToolInfo};
@@ -130,11 +129,7 @@ async fn ensure_gcc(ctx: &InstallContext<'_>) -> Result<()> {
 
     crate::ui::print_warning("未检测到 gcc，Rust GNU 工具链需要 MinGW-w64 作为链接器");
 
-    let install_now = Confirm::new()
-        .with_prompt("  是否现在安装 C/C++ (MinGW-w64)？")
-        .default(true)
-        .interact()
-        .unwrap_or(false);
+    let install_now = crate::ui::confirm("是否现在安装 C/C++ (MinGW-w64)？", true).unwrap_or(false);
 
     if !install_now {
         anyhow::bail!("请先安装 MinGW-w64：hudo install c");

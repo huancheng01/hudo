@@ -128,7 +128,10 @@ impl Installer for ClaudeCodeInstaller {
     }
 
     async fn detect_installed(&self, ctx: &InstallContext<'_>) -> Result<DetectResult> {
-        let exe = ctx.config.tools_dir().join("claude-code").join(exe_name());
+        let install_dir = ctx.config.tools_dir().join("claude-code");
+
+        // GCS 直装为 claude.exe；npm 回退安装生成的是 claude.cmd shim
+        let exe = install_dir.join(exe_name());
         if exe.exists() {
             if let Ok(out) = std::process::Command::new(&exe).arg("--version").output() {
                 if out.status.success() {
@@ -139,8 +142,35 @@ impl Installer for ClaudeCodeInstaller {
             return Ok(DetectResult::InstalledByHudo("已安装".to_string()));
         }
 
-        // 回退检查系统 PATH
-        if let Ok(out) = std::process::Command::new("claude").arg("--version").output() {
+        #[cfg(windows)]
+        {
+            let cmd_shim = install_dir.join("claude.cmd");
+            if cmd_shim.exists() {
+                // .cmd 不能直接 Command::new 执行，必须经 cmd /c
+                if let Ok(out) = std::process::Command::new("cmd")
+                    .arg("/c")
+                    .arg(&cmd_shim)
+                    .arg("--version")
+                    .output()
+                {
+                    if out.status.success() {
+                        let version = parse_claude_version(&String::from_utf8_lossy(&out.stdout));
+                        return Ok(DetectResult::InstalledByHudo(version));
+                    }
+                }
+                return Ok(DetectResult::InstalledByHudo("已安装".to_string()));
+            }
+        }
+
+        // 回退检查系统 PATH（Windows 上经 cmd /c 兼容 claude.cmd）
+        let out = if cfg!(windows) {
+            std::process::Command::new("cmd")
+                .args(["/c", "claude", "--version"])
+                .output()
+        } else {
+            std::process::Command::new("claude").arg("--version").output()
+        };
+        if let Ok(out) = out {
             if out.status.success() {
                 let version = parse_claude_version(&String::from_utf8_lossy(&out.stdout));
                 return Ok(DetectResult::InstalledExternal(version));
@@ -173,9 +203,19 @@ impl Installer for ClaudeCodeInstaller {
             Some(v) => v.clone(),
             None => {
                 ui::print_action("查询 Claude Code 最新版本...");
-                crate::version::claude_code_latest()
-                    .await
-                    .unwrap_or_else(|| DEFAULT_VERSION.to_string())
+                match crate::version::claude_code_latest().await {
+                    Some(v) => {
+                        ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            DEFAULT_VERSION
+                        ));
+                        DEFAULT_VERSION.to_string()
+                    }
+                }
             }
         };
 
@@ -256,9 +296,8 @@ impl Installer for ClaudeCodeInstaller {
 
     async fn configure(&self, _ctx: &InstallContext<'_>) -> Result<()> {
         ui::print_title("配置 Claude Code");
-        ui::print_info("运行以下命令登录 Claude:");
-        ui::print_info("  claude login");
-        ui::print_info("或设置环境变量 ANTHROPIC_API_KEY");
+        ui::print_next_step("运行 claude，在对话中输入 /login 登录");
+        ui::print_info("如需使用第三方 API，可在 hudo 主菜单选择 [K] Claude Code API 来源 配置");
         Ok(())
     }
 }
@@ -275,7 +314,8 @@ fn install_via_npm(install_dir: &std::path::Path) -> Result<()> {
     {
         ui::print_action("通过 npm 镜像安装 Claude Code...");
         std::fs::create_dir_all(install_dir).ok();
-        let status = std::process::Command::new(npm_cmd)
+        let sp = ui::spinner("正在通过 npm 安装（可能需要几分钟）...");
+        let output = std::process::Command::new(npm_cmd)
             .args([
                 "install",
                 "-g",
@@ -283,11 +323,17 @@ fn install_via_npm(install_dir: &std::path::Path) -> Result<()> {
                 "--registry=https://registry.npmmirror.com",
                 &format!("--prefix={}", install_dir.display()),
             ])
-            .status()
-            .context("npm install 执行失败")?;
+            .output();
+        sp.finish_and_clear();
+        let output = output.context("npm install 执行失败")?;
 
-        if !status.success() {
-            bail!("npm 安装 Claude Code 失败，退出码: {}", status.code().unwrap_or(-1));
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let lines: Vec<&str> = stderr.lines().filter(|l| !l.trim().is_empty()).collect();
+            for line in &lines[lines.len().saturating_sub(5)..] {
+                ui::print_info(line);
+            }
+            bail!("npm 安装 Claude Code 失败，退出码: {}", output.status.code().unwrap_or(-1));
         }
 
         ui::print_success("通过 npm 镜像安装成功");

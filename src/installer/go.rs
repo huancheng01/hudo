@@ -62,9 +62,19 @@ impl Installer for GoInstaller {
         let version = match config.go.version.as_str() {
             "" | "latest" => {
                 crate::ui::print_action("查询 Go 最新版本...");
-                crate::version::go_latest()
-                    .await
-                    .unwrap_or_else(|| GO_VERSION_DEFAULT.to_string())
+                match crate::version::go_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            GO_VERSION_DEFAULT
+                        ));
+                        GO_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
             v => v.to_string(),
         };

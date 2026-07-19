@@ -65,9 +65,19 @@ impl Installer for PgsqlInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 PostgreSQL 最新版本...");
-                crate::version::pgsql_latest()
-                    .await
-                    .unwrap_or_else(|| PG_VERSION_DEFAULT.to_string())
+                match crate::version::pgsql_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            PG_VERSION_DEFAULT
+                        ));
+                        PG_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 
@@ -132,8 +142,9 @@ impl Installer for PgsqlInstaller {
             .unwrap_or(true);
 
         if is_data_empty {
-            crate::ui::print_action("初始化 PostgreSQL 数据目录...");
-            let status = std::process::Command::new(&initdb)
+            // initdb 会直通约 25 行英文日志，与 spinner 重绘互相覆盖，必须捕获
+            let pb = crate::ui::spinner("初始化 PostgreSQL 数据目录...");
+            let output = std::process::Command::new(&initdb)
                 .args([
                     "-D",
                     &data_dir.to_string_lossy(),
@@ -143,14 +154,25 @@ impl Installer for PgsqlInstaller {
                     "UTF8",
                     "--no-locale",
                 ])
-                .status();
+                .output();
+            pb.finish_and_clear();
 
-            match status {
-                Ok(s) if s.success() => {
+            let manual_cmd = format!("请手动执行: initdb -D {} -U postgres", data_dir.display());
+            match output {
+                Ok(out) if out.status.success() => {
                     crate::ui::print_success("数据目录初始化完成");
                 }
-                _ => {
-                    crate::ui::print_warning("PostgreSQL 初始化失败，请手动执行: initdb -D <data_dir>");
+                Ok(out) => {
+                    crate::ui::print_warning("PostgreSQL 初始化失败");
+                    for line in output_summary(&out) {
+                        crate::ui::print_info(&line);
+                    }
+                    crate::ui::print_next_step(&manual_cmd);
+                    return Ok(());
+                }
+                Err(e) => {
+                    crate::ui::print_warning(&format!("PostgreSQL 初始化失败: {}", e));
+                    crate::ui::print_next_step(&manual_cmd);
                     return Ok(());
                 }
             }
@@ -162,10 +184,10 @@ impl Installer for PgsqlInstaller {
             let pg_ctl_str = pg_ctl.to_string_lossy().to_string();
             let data_str = data_dir.to_string_lossy().to_string();
 
-            // 先直接尝试（hudo 以管理员运行时无需 UAC）
+            // 先直接尝试（hudo 以管理员运行时无需 UAC）；捕获输出避免直通控制台
             let _ = std::process::Command::new(&pg_ctl_str)
                 .args(["register", "-N", PG_SERVICE_NAME, "-D", &data_str])
-                .status();
+                .output();
 
             // pg_ctl register 权限不足时可能返回 0，用 sc query 验证
             if !query_service_exists(PG_SERVICE_NAME) {
@@ -187,26 +209,23 @@ impl Installer for PgsqlInstaller {
                 crate::ui::print_success("PostgreSQL 服务已在运行");
             }
             ServiceState::Stopped => {
-                let pb = indicatif::ProgressBar::new_spinner();
-                pb.set_style(
-                    indicatif::ProgressStyle::default_spinner()
-                        .template("  {spinner:.cyan} {msg}")
-                        .unwrap(),
-                );
-                pb.set_message("PostgreSQL 服务启动中...");
-                pb.enable_steady_tick(std::time::Duration::from_millis(100));
-
-                let direct_ok = tokio::task::spawn_blocking(|| {
+                // net start 是同步阻塞调用，用 spinner 显示等待状态；
+                // 输出必须捕获，net 的本地化输出会与 spinner 重绘互相覆盖花屏
+                let pb = crate::ui::spinner("PostgreSQL 服务启动中...");
+                let start_output = tokio::task::spawn_blocking(|| {
                     std::process::Command::new("net")
                         .args(["start", PG_SERVICE_NAME])
-                        .status()
-                        .map(|s| s.success())
-                        .unwrap_or(false)
+                        .output()
                 })
                 .await
-                .unwrap_or(false);
-
+                .ok()
+                .and_then(|r| r.ok());
                 pb.finish_and_clear();
+
+                let direct_ok = start_output
+                    .as_ref()
+                    .map(|o| o.status.success())
+                    .unwrap_or(false);
 
                 if direct_ok {
                     crate::ui::print_success("PostgreSQL 服务已启动");
@@ -216,7 +235,13 @@ impl Installer for PgsqlInstaller {
                         Ok(_) => crate::ui::print_success("PostgreSQL 服务已启动"),
                         Err(_) => {
                             crate::ui::print_warning("PostgreSQL 服务未能自动启动");
-                            crate::ui::print_info("请以管理员身份手动运行: net start PostgreSQL");
+                            // 提权进程的输出无法捕获，展示直接尝试时的错误摘要辅助排查
+                            if let Some(out) = &start_output {
+                                for line in output_summary(out) {
+                                    crate::ui::print_info(&line);
+                                }
+                            }
+                            crate::ui::print_next_step("请以管理员身份运行: net start PostgreSQL");
                         }
                     }
                 }
@@ -227,9 +252,14 @@ impl Installer for PgsqlInstaller {
             }
         }
 
-        crate::ui::print_info("连接: psql -U postgres");
-        crate::ui::print_info("停止: net stop PostgreSQL");
-        crate::ui::print_info("卸载服务: pg_ctl unregister -N PostgreSQL（需管理员）");
+        crate::ui::print_box(&[
+            format!(" {}", console::style("PostgreSQL 连接信息").bold()),
+            String::new(),
+            " 地址   127.0.0.1:5432".to_string(),
+            " 账号   postgres（trust 认证，本地免密）".to_string(),
+            " 连接   psql -U postgres".to_string(),
+            " 启停   net start / net stop PostgreSQL（需管理员）".to_string(),
+        ]);
 
         Ok(())
     }
@@ -243,14 +273,46 @@ impl Installer for PgsqlInstaller {
             .join("pg_ctl.exe");
         let pg_ctl_str = pg_ctl.to_string_lossy().to_string();
 
-        crate::ui::print_action("停止 PostgreSQL 服务...");
-        let _ = run_as_admin("net", &["stop", PG_SERVICE_NAME]);
+        // 服务不存在则无需清理；清理失败不中断卸载，但要明确告知
+        match query_service_state(PG_SERVICE_NAME) {
+            ServiceState::NotFound => return Ok(()),
+            ServiceState::Running => {
+                crate::ui::print_action("停止 PostgreSQL 服务...");
+                if let Err(e) = run_as_admin("net", &["stop", PG_SERVICE_NAME]) {
+                    crate::ui::print_warning(&format!("PostgreSQL 服务可能未停止: {}", e));
+                    crate::ui::print_next_step("请以管理员身份运行: net stop PostgreSQL");
+                }
+            }
+            ServiceState::Stopped => {}
+        }
 
         crate::ui::print_action("移除 PostgreSQL 服务注册...");
-        let _ = run_as_admin(&pg_ctl_str, &["unregister", "-N", PG_SERVICE_NAME]);
+        if let Err(e) = run_as_admin(&pg_ctl_str, &["unregister", "-N", PG_SERVICE_NAME]) {
+            crate::ui::print_warning(&format!("PostgreSQL 服务注册可能未移除: {}", e));
+            crate::ui::print_next_step("请以管理员身份运行: sc delete PostgreSQL");
+        }
 
         Ok(())
     }
+}
+
+/// 取子进程输出的最后几条非空行做摘要（stderr 优先），避免整段日志倾倒。
+/// Windows 下 net 等命令可能输出 GBK 编码，from_utf8_lossy 会乱码但不引入转码依赖。
+fn output_summary(out: &std::process::Output) -> Vec<String> {
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let text = if stderr.trim().is_empty() {
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    } else {
+        stderr.into_owned()
+    };
+    let lines: Vec<String> = text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(String::from)
+        .collect();
+    let skip = lines.len().saturating_sub(5);
+    lines.into_iter().skip(skip).collect()
 }
 
 /// 从 `psql --version` 输出中提取版本号

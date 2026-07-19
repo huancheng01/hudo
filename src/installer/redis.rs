@@ -83,14 +83,22 @@ impl Installer for RedisInstaller {
             Some(v) => (v.clone(), v.clone()),
             None => {
                 crate::ui::print_action("查询 Redis 最新版本...");
-                crate::version::redis_latest()
-                    .await
-                    .unwrap_or_else(|| {
+                match crate::version::redis_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v.0));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            REDIS_VERSION_DEFAULT
+                        ));
                         (
                             REDIS_VERSION_DEFAULT.to_string(),
                             REDIS_VERSION_DEFAULT.to_string(),
                         )
-                    })
+                    }
+                }
             }
         };
 
@@ -156,10 +164,10 @@ impl Installer for RedisInstaller {
             crate::ui::print_action("注册 Redis Windows 服务...");
             let service_str = service_exe.to_string_lossy().to_string();
 
-            // 先直接尝试
+            // 先直接尝试；捕获输出避免直通控制台
             let _ = std::process::Command::new(&service_str)
                 .arg("install")
-                .status();
+                .output();
 
             if !query_service_exists(REDIS_SERVICE_NAME) {
                 crate::ui::print_info("需要管理员权限，请在弹出的 UAC 窗口中点击\"是\"...");
@@ -180,26 +188,23 @@ impl Installer for RedisInstaller {
                 crate::ui::print_success("Redis 服务已在运行");
             }
             ServiceState::Stopped => {
-                let pb = indicatif::ProgressBar::new_spinner();
-                pb.set_style(
-                    indicatif::ProgressStyle::default_spinner()
-                        .template("  {spinner:.cyan} {msg}")
-                        .unwrap(),
-                );
-                pb.set_message("Redis 服务启动中...");
-                pb.enable_steady_tick(std::time::Duration::from_millis(100));
-
-                let direct_ok = tokio::task::spawn_blocking(|| {
+                // net start 是同步阻塞调用，用 spinner 显示等待状态；
+                // 输出必须捕获，net 的本地化输出会与 spinner 重绘互相覆盖花屏
+                let pb = crate::ui::spinner("Redis 服务启动中...");
+                let start_output = tokio::task::spawn_blocking(|| {
                     std::process::Command::new("net")
                         .args(["start", REDIS_SERVICE_NAME])
-                        .status()
-                        .map(|s| s.success())
-                        .unwrap_or(false)
+                        .output()
                 })
                 .await
-                .unwrap_or(false);
-
+                .ok()
+                .and_then(|r| r.ok());
                 pb.finish_and_clear();
+
+                let direct_ok = start_output
+                    .as_ref()
+                    .map(|o| o.status.success())
+                    .unwrap_or(false);
 
                 if direct_ok {
                     crate::ui::print_success("Redis 服务已启动");
@@ -209,7 +214,13 @@ impl Installer for RedisInstaller {
                         Ok(_) => crate::ui::print_success("Redis 服务已启动"),
                         Err(_) => {
                             crate::ui::print_warning("Redis 服务未能自动启动");
-                            crate::ui::print_info("请以管理员身份手动运行: net start Redis");
+                            // 提权进程的输出无法捕获，展示直接尝试时的错误摘要辅助排查
+                            if let Some(out) = &start_output {
+                                for line in output_summary(out) {
+                                    crate::ui::print_info(&line);
+                                }
+                            }
+                            crate::ui::print_next_step("请以管理员身份运行: net start Redis");
                         }
                     }
                 }
@@ -220,8 +231,13 @@ impl Installer for RedisInstaller {
             }
         }
 
-        crate::ui::print_info("连接: redis-cli");
-        crate::ui::print_info("停止: net stop Redis");
+        crate::ui::print_box(&[
+            format!(" {}", console::style("Redis 连接信息").bold()),
+            String::new(),
+            " 地址   127.0.0.1:6379（仅本机，无密码）".to_string(),
+            " 连接   redis-cli".to_string(),
+            " 启停   net start / net stop Redis（需管理员）".to_string(),
+        ]);
 
         Ok(())
     }
@@ -230,13 +246,29 @@ impl Installer for RedisInstaller {
         let install_dir = ctx.config.tools_dir().join("redis");
         let service_exe = install_dir.join("RedisService.exe");
 
-        crate::ui::print_action("停止 Redis 服务...");
-        let _ = run_as_admin("net", &["stop", REDIS_SERVICE_NAME]);
+        // 服务不存在则无需清理；清理失败不中断卸载，但要明确告知
+        match query_service_state(REDIS_SERVICE_NAME) {
+            ServiceState::NotFound => return Ok(()),
+            ServiceState::Running => {
+                crate::ui::print_action("停止 Redis 服务...");
+                if let Err(e) = run_as_admin("net", &["stop", REDIS_SERVICE_NAME]) {
+                    crate::ui::print_warning(&format!("Redis 服务可能未停止: {}", e));
+                    crate::ui::print_next_step("请以管理员身份运行: net stop Redis");
+                }
+            }
+            ServiceState::Stopped => {}
+        }
 
+        crate::ui::print_action("移除 Redis 服务注册...");
         if service_exe.exists() {
-            crate::ui::print_action("移除 Redis 服务注册...");
             let service_str = service_exe.to_string_lossy().to_string();
-            let _ = run_as_admin(&service_str, &["uninstall"]);
+            if let Err(e) = run_as_admin(&service_str, &["uninstall"]) {
+                crate::ui::print_warning(&format!("Redis 服务注册可能未移除: {}", e));
+                crate::ui::print_next_step("请以管理员身份运行: sc delete Redis");
+            }
+        } else {
+            crate::ui::print_warning("未找到 RedisService.exe，无法自动移除服务注册");
+            crate::ui::print_next_step("请以管理员身份运行: sc delete Redis");
         }
 
         Ok(())
@@ -262,6 +294,25 @@ fn write_redis_conf(install_dir: &PathBuf) -> Result<PathBuf> {
 
     std::fs::write(&conf_path, content)?;
     Ok(conf_path)
+}
+
+/// 取子进程输出的最后几条非空行做摘要（stderr 优先），避免整段日志倾倒。
+/// Windows 下 net 等命令可能输出 GBK 编码，from_utf8_lossy 会乱码但不引入转码依赖。
+fn output_summary(out: &std::process::Output) -> Vec<String> {
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let text = if stderr.trim().is_empty() {
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    } else {
+        stderr.into_owned()
+    };
+    let lines: Vec<String> = text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(String::from)
+        .collect();
+    let skip = lines.len().saturating_sub(5);
+    lines.into_iter().skip(skip).collect()
 }
 
 /// 从 `redis-server --version` 输出中提取版本号

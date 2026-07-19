@@ -107,14 +107,25 @@ impl Installer for MysqlInstaller {
             .join("bin")
             .join("mysqld.exe");
 
-        // 停止服务（忽略失败：可能服务未运行）
-        crate::ui::print_action("停止 MySQL 服务...");
-        let _ = run_as_admin("net", &["stop", MYSQL_SERVICE_NAME]);
+        // 服务不存在则无需清理；清理失败不中断卸载，但要明确告知
+        match query_service_state(MYSQL_SERVICE_NAME) {
+            ServiceState::NotFound => return Ok(()),
+            ServiceState::Running => {
+                crate::ui::print_action("停止 MySQL 服务...");
+                if let Err(e) = run_as_admin("net", &["stop", MYSQL_SERVICE_NAME]) {
+                    crate::ui::print_warning(&format!("MySQL 服务可能未停止: {}", e));
+                    crate::ui::print_next_step("请以管理员身份运行: net stop MySQL");
+                }
+            }
+            ServiceState::Stopped => {}
+        }
 
-        // 移除服务注册（忽略失败：可能服务未注册）
         crate::ui::print_action("移除 MySQL 服务注册...");
         let mysqld_str = mysqld.to_string_lossy().to_string();
-        let _ = run_as_admin(&mysqld_str, &["--remove", MYSQL_SERVICE_NAME]);
+        if let Err(e) = run_as_admin(&mysqld_str, &["--remove", MYSQL_SERVICE_NAME]) {
+            crate::ui::print_warning(&format!("MySQL 服务注册可能未移除: {}", e));
+            crate::ui::print_next_step("请以管理员身份运行: sc delete MySQL");
+        }
 
         Ok(())
     }
@@ -136,25 +147,36 @@ impl Installer for MysqlInstaller {
             .unwrap_or(true);
 
         if is_data_empty {
-            crate::ui::print_action("初始化 MySQL 数据目录...");
             let basedir_arg = format!("--basedir={}", install_dir.display());
             let datadir_arg = format!("--datadir={}", data_dir.display());
-            let status = std::process::Command::new(&mysqld)
+            // mysqld 初始化日志直通控制台会与 spinner 重绘互相覆盖，必须捕获
+            let pb = crate::ui::spinner("初始化 MySQL 数据目录...");
+            let output = std::process::Command::new(&mysqld)
                 .args(["--initialize-insecure", &basedir_arg, &datadir_arg])
-                .status();
+                .output();
+            pb.finish_and_clear();
 
-            match status {
-                Ok(s) if s.success() => {
+            let manual_cmd = format!(
+                "请手动执行: {} --initialize-insecure {} {}",
+                mysqld.display(),
+                basedir_arg,
+                datadir_arg
+            );
+            match output {
+                Ok(out) if out.status.success() => {
                     crate::ui::print_success("数据目录初始化完成（root 用户无密码）");
                 }
-                _ => {
+                Ok(out) => {
                     crate::ui::print_warning("数据目录初始化失败");
-                    crate::ui::print_info(&format!(
-                        "  请手动执行: {} --initialize-insecure {} {}",
-                        mysqld.display(),
-                        basedir_arg,
-                        datadir_arg
-                    ));
+                    for line in output_summary(&out) {
+                        crate::ui::print_info(&line);
+                    }
+                    crate::ui::print_next_step(&manual_cmd);
+                    return Ok(());
+                }
+                Err(e) => {
+                    crate::ui::print_warning(&format!("数据目录初始化失败: {}", e));
+                    crate::ui::print_next_step(&manual_cmd);
                     return Ok(());
                 }
             }
@@ -166,10 +188,10 @@ impl Installer for MysqlInstaller {
             let mysqld_str = mysqld.to_string_lossy().to_string();
             let defaults_arg = format!("--defaults-file={}", my_ini.display());
 
-            // 先直接尝试（hudo 以管理员运行时无需 UAC）
+            // 先直接尝试（hudo 以管理员运行时无需 UAC）；捕获输出避免直通控制台
             let _ = std::process::Command::new(&mysqld_str)
                 .args(["--install", MYSQL_SERVICE_NAME, &defaults_arg])
-                .status();
+                .output();
 
             // mysqld --install 权限不足时可能返回 0，用 sc query 验证注册是否成功
             if !query_service_exists(MYSQL_SERVICE_NAME) {
@@ -191,27 +213,23 @@ impl Installer for MysqlInstaller {
                 crate::ui::print_success("MySQL 服务已在运行");
             }
             ServiceState::Stopped => {
-                // net start 是同步阻塞调用，用 spinner 显示等待状态
-                let pb = indicatif::ProgressBar::new_spinner();
-                pb.set_style(
-                    indicatif::ProgressStyle::default_spinner()
-                        .template("  {spinner:.cyan} {msg}")
-                        .unwrap(),
-                );
-                pb.set_message("MySQL 服务启动中...");
-                pb.enable_steady_tick(std::time::Duration::from_millis(100));
-
-                let direct_ok = tokio::task::spawn_blocking(|| {
+                // net start 是同步阻塞调用，用 spinner 显示等待状态；
+                // 输出必须捕获，net 的本地化输出会与 spinner 重绘互相覆盖花屏
+                let pb = crate::ui::spinner("MySQL 服务启动中...");
+                let start_output = tokio::task::spawn_blocking(|| {
                     std::process::Command::new("net")
                         .args(["start", MYSQL_SERVICE_NAME])
-                        .status()
-                        .map(|s| s.success())
-                        .unwrap_or(false)
+                        .output()
                 })
                 .await
-                .unwrap_or(false);
-
+                .ok()
+                .and_then(|r| r.ok());
                 pb.finish_and_clear();
+
+                let direct_ok = start_output
+                    .as_ref()
+                    .map(|o| o.status.success())
+                    .unwrap_or(false);
 
                 if direct_ok {
                     crate::ui::print_success("MySQL 服务已启动");
@@ -222,7 +240,13 @@ impl Installer for MysqlInstaller {
                         Ok(_) => crate::ui::print_success("MySQL 服务已启动"),
                         Err(_) => {
                             crate::ui::print_warning("MySQL 服务未能自动启动");
-                            crate::ui::print_info("请以管理员身份手动运行: net start MySQL");
+                            // 提权进程的输出无法捕获，展示直接尝试时的错误摘要辅助排查
+                            if let Some(out) = &start_output {
+                                for line in output_summary(out) {
+                                    crate::ui::print_info(&line);
+                                }
+                            }
+                            crate::ui::print_next_step("请以管理员身份运行: net start MySQL");
                         }
                     }
                 }
@@ -232,9 +256,15 @@ impl Installer for MysqlInstaller {
                 return Ok(());
             }
         }
-        crate::ui::print_info("连接: mysql -u root");
-        crate::ui::print_info("停止: net stop MySQL");
-        crate::ui::print_info("卸载服务: mysqld --remove MySQL（需管理员）");
+
+        crate::ui::print_box(&[
+            format!(" {}", console::style("MySQL 连接信息").bold()),
+            String::new(),
+            " 地址   127.0.0.1:3306".to_string(),
+            " 账号   root（初始无密码，建议尽快设置密码）".to_string(),
+            " 连接   mysql -u root".to_string(),
+            " 启停   net start / net stop MySQL（需管理员）".to_string(),
+        ]);
 
         Ok(())
     }
@@ -273,6 +303,25 @@ fn write_my_ini(install_dir: &PathBuf) -> Result<PathBuf> {
 }
 
 use super::{query_service_exists, query_service_state, run_as_admin, ServiceState};
+
+/// 取子进程输出的最后几条非空行做摘要（stderr 优先），避免整段日志倾倒。
+/// Windows 下 net 等命令可能输出 GBK 编码，from_utf8_lossy 会乱码但不引入转码依赖。
+fn output_summary(out: &std::process::Output) -> Vec<String> {
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let text = if stderr.trim().is_empty() {
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    } else {
+        stderr.into_owned()
+    };
+    let lines: Vec<String> = text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(String::from)
+        .collect();
+    let skip = lines.len().saturating_sub(5);
+    lines.into_iter().skip(skip).collect()
+}
 
 /// 从 `mysql --version` 输出中提取版本号
 /// "Ver 14.14 Distrib 5.7.44, for Win64" → "5.7.44"

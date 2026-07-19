@@ -67,9 +67,19 @@ impl Installer for PycharmInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 PyCharm 最新版本...");
-                crate::version::pycharm_latest()
-                    .await
-                    .unwrap_or_else(|| PYCHARM_VERSION_DEFAULT.to_string())
+                match crate::version::pycharm_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            PYCHARM_VERSION_DEFAULT
+                        ));
+                        PYCHARM_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 

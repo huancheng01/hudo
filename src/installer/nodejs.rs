@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use dialoguer::Confirm;
 use std::path::PathBuf;
 
 use super::{
@@ -72,11 +71,7 @@ impl Installer for NodejsInstaller {
         // 旧版 fnm 残留自动迁移：征得同意后清理 lang/node/、tools/fnm/、PowerShell profile
         if is_legacy_fnm_dir(&install_dir) || legacy_fnm_version(config).is_some() {
             crate::ui::print_warning("检测到旧版 fnm 残留（由 hudo 0.2.12 及更早版本安装）");
-            let confirm = Confirm::new()
-                .with_prompt("  是否清理旧版 fnm 残留后继续安装 Node.js？")
-                .default(true)
-                .interact()
-                .context("选择被取消")?;
+            let confirm = crate::ui::confirm("是否清理旧版 fnm 残留后继续安装 Node.js？", true)?;
             if !confirm {
                 anyhow::bail!("已取消，请先运行 `hudo uninstall nodejs` 清理旧版 fnm 再重试");
             }
@@ -88,9 +83,19 @@ impl Installer for NodejsInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 Node.js 最新 LTS 版本...");
-                crate::version::nodejs_lts_latest()
-                    .await
-                    .unwrap_or_else(|| NODEJS_VERSION_DEFAULT.to_string())
+                match crate::version::nodejs_lts_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新 LTS 版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            NODEJS_VERSION_DEFAULT
+                        ));
+                        NODEJS_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 

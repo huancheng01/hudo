@@ -70,6 +70,7 @@ impl Installer for MingwInstaller {
         crate::ui::print_action("查询 MinGW-w64 最新版本...");
         let (url, filename, gcc_version) = match crate::version::mingw_latest().await {
             Some((tag, filename, gcc_version)) => {
+                crate::ui::print_info(&format!("最新版本: GCC {}", gcc_version));
                 let url = format!(
                     "https://github.com/brechtsanders/winlibs_mingw/releases/download/{}/{}",
                     tag, filename
@@ -77,6 +78,10 @@ impl Installer for MingwInstaller {
                 (url, filename, gcc_version)
             }
             None => {
+                crate::ui::print_warning(&format!(
+                    "获取最新版本失败，使用内置默认版本 GCC {}",
+                    MINGW_GCC_VERSION
+                ));
                 let (url, filename) = self.resolve_download(config);
                 (url, filename, MINGW_GCC_VERSION.to_string())
             }

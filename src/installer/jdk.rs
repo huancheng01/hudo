@@ -1,6 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use dialoguer::Confirm;
 use std::path::PathBuf;
 
 use super::{DetectResult, EnvAction, InstallContext, InstallResult, Installer, ToolInfo};
@@ -170,11 +169,7 @@ pub async fn ensure_jdk(ctx: &InstallContext<'_>, tool_name: &str) -> Result<()>
         tool_name
     ));
 
-    let install_now = Confirm::new()
-        .with_prompt("  是否现在安装 Java JDK？")
-        .default(true)
-        .interact()
-        .unwrap_or(false);
+    let install_now = crate::ui::confirm("是否现在安装 Java JDK？", true).unwrap_or(false);
 
     if !install_now {
         anyhow::bail!("请先安装 JDK：hudo install jdk");

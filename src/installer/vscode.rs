@@ -216,7 +216,7 @@ fn register_context_menu(config: &HudoConfig) -> Result<()> {
         cmd_key.set_value("", &cmd_value)?;
     }
 
-    crate::ui::print_action("已注册右键菜单「通过 Code 打开」");
+    crate::ui::print_success("已注册右键菜单「通过 Code 打开」");
     Ok(())
 }
 

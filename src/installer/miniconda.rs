@@ -56,7 +56,7 @@ impl Installer for MinicondaInstaller {
         let exe_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
 
         // Miniconda 支持静默安装到指定目录
-        crate::ui::print_action("安装 Miniconda（静默模式）...");
+        let sp = crate::ui::spinner("正在运行 Miniconda 安装程序（可能需要几分钟）...");
         let status = std::process::Command::new(&exe_path)
             .args([
                 "/InstallationType=JustMe",                     // 仅当前用户，不写 HKLM
@@ -65,8 +65,9 @@ impl Installer for MinicondaInstaller {
                 "/S",                                           // 静默
                 &format!("/D={}", install_dir.display()),       // 指定安装目录（必须最后）
             ])
-            .status()
-            .context("启动 Miniconda 安装程序失败")?;
+            .status();
+        sp.finish_and_clear();
+        let status = status.context("启动 Miniconda 安装程序失败")?;
 
         if !status.success() {
             anyhow::bail!(
@@ -88,15 +89,23 @@ impl Installer for MinicondaInstaller {
         let conda_exe = install_dir.join("Scripts").join("conda.exe");
 
         // 初始化 cmd.exe 和 PowerShell，使 conda activate 可用
+        // conda init 会逐行打印 modified/no change，用 output() 捕获，失败才展示摘要
         for shell in &["cmd.exe", "powershell"] {
-            let status = std::process::Command::new(&conda_exe)
+            let output = std::process::Command::new(&conda_exe)
                 .args(["init", shell])
-                .status();
-            match status {
-                Ok(s) if s.success() => {
+                .output();
+            match output {
+                Ok(o) if o.status.success() => {
                     crate::ui::print_success(&format!("已初始化 conda ({})", shell));
                 }
-                _ => {
+                Ok(o) => {
+                    crate::ui::print_warning(&format!("conda init {} 失败，可手动执行", shell));
+                    let stderr = String::from_utf8_lossy(&o.stderr);
+                    for line in stderr.lines().filter(|l| !l.trim().is_empty()).take(3) {
+                        crate::ui::print_info(line);
+                    }
+                }
+                Err(_) => {
                     crate::ui::print_warning(&format!("conda init {} 失败，可手动执行", shell));
                 }
             }

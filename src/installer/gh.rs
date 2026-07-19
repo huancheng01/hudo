@@ -69,9 +69,19 @@ impl Installer for GhInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 GitHub CLI 最新版本...");
-                crate::version::gh_latest()
-                    .await
-                    .unwrap_or_else(|| GH_VERSION_DEFAULT.to_string())
+                match crate::version::gh_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            GH_VERSION_DEFAULT
+                        ));
+                        GH_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 

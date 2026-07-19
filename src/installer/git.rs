@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use dialoguer::Input;
 use std::path::PathBuf;
 
 use super::{DetectResult, EnvAction, InstallContext, InstallResult, Installer, ToolInfo};
@@ -62,9 +61,19 @@ impl Installer for GitInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 Git 最新版本...");
-                crate::version::git_latest()
-                    .await
-                    .unwrap_or_else(|| GIT_VERSION_DEFAULT.to_string())
+                match crate::version::git_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            GIT_VERSION_DEFAULT
+                        ));
+                        GIT_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 
@@ -82,9 +91,10 @@ impl Installer for GitInstaller {
         );
         let exe_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
-        // 静默安装到指定目录
+        // 静默安装到指定目录（安装器自身无输出，挂 spinner 提示进行中）
         crate::ui::print_action("安装 Git（静默模式）...");
-        download::run_installer(
+        let pb = ui::spinner("正在运行 Git 安装程序...");
+        let install_result = download::run_installer(
             &exe_path,
             &[
                 "/VERYSILENT",
@@ -93,8 +103,9 @@ impl Installer for GitInstaller {
                 "/NOICONS",
                 "/COMPONENTS=ext,ext\\shellhere,ext\\guihere,gitlfs,assoc,assoc_sh,scalar",
             ],
-        )
-        .context("Git 安装失败")?;
+        );
+        pb.finish_and_clear();
+        install_result.context("Git 安装失败")?;
 
         Ok(InstallResult {
             install_path: install_dir,
@@ -121,35 +132,19 @@ impl Installer for GitInstaller {
         ui::print_info("这不是登录账号，只是显示在代码历史中的名字和邮箱");
         println!();
 
-        // user.name
-        let name: String = match current_name {
-            Some(ref d) => Input::new()
-                .with_prompt("  user.name")
-                .default(d.clone())
-                .interact_text()
-                .context("输入 user.name 失败")?,
-            None => Input::new()
-                .with_prompt("  user.name")
-                .interact_text()
-                .context("输入 user.name 失败")?,
-        };
+        // user.name / user.email（已有值作为默认值；留空则跳过该项设置）
+        let name = ui::input_text("user.name", current_name.as_deref(), true)
+            .context("输入 user.name 失败")?;
+        let email = ui::input_text("user.email", current_email.as_deref(), true)
+            .context("输入 user.email 失败")?;
 
-        // user.email
-        let email: String = match current_email {
-            Some(ref d) => Input::new()
-                .with_prompt("  user.email")
-                .default(d.clone())
-                .interact_text()
-                .context("输入 user.email 失败")?,
-            None => Input::new()
-                .with_prompt("  user.email")
-                .interact_text()
-                .context("输入 user.email 失败")?,
-        };
-
-        // 写入 git global config
-        git_config_set(&git, "user.name", &name)?;
-        git_config_set(&git, "user.email", &email)?;
+        // 写入 git global config（空输入跳过对应项）
+        if !name.is_empty() {
+            git_config_set(&git, "user.name", &name)?;
+        }
+        if !email.is_empty() {
+            git_config_set(&git, "user.email", &email)?;
+        }
         git_config_set(&git, "core.autocrlf", "true")?;
 
         ui::print_success("Git 配置成功");

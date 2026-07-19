@@ -54,16 +54,20 @@ impl Installer for ChromeInstaller {
         crate::ui::print_action("安装 Google Chrome（需要管理员权限）...");
 
         // 先直接尝试（hudo 以管理员运行时直接成功）
+        let sp = crate::ui::spinner("正在运行 Chrome 安装程序（可能需要几分钟）...");
         let direct_ok = std::process::Command::new("msiexec")
             .args(["/i", &msi_str, "/quiet", "/norestart"])
             .status()
             .map(|s| matches!(s.code(), Some(0) | Some(3010)))
             .unwrap_or(false);
+        sp.finish_and_clear();
 
         if !direct_ok {
             crate::ui::print_info("需要管理员权限，请在弹出的 UAC 窗口中点击\"是\"...");
-            run_as_admin("msiexec", &["/i", &msi_str, "/quiet", "/norestart"])
-                .context("Chrome 安装失败")?;
+            let sp = crate::ui::spinner("等待 Chrome 安装完成（可能需要几分钟）...");
+            let result = run_as_admin("msiexec", &["/i", &msi_str, "/quiet", "/norestart"]);
+            sp.finish_and_clear();
+            result.context("Chrome 安装失败")?;
         }
 
         let install_dir = find_chrome_app_dir()

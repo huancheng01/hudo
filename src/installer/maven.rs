@@ -74,9 +74,19 @@ impl Installer for MavenInstaller {
             Some(v) => v.clone(),
             None => {
                 crate::ui::print_action("查询 Maven 最新版本...");
-                crate::version::maven_latest()
-                    .await
-                    .unwrap_or_else(|| MAVEN_VERSION_DEFAULT.to_string())
+                match crate::version::maven_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            MAVEN_VERSION_DEFAULT
+                        ));
+                        MAVEN_VERSION_DEFAULT.to_string()
+                    }
+                }
             }
         };
 
