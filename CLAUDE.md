@@ -168,6 +168,10 @@ irm hudo.zexa.cc/install.ps1 | iex
 
 ## 已知注意事项
 
+- **交互控件统一走 `ui::confirm` / `ui::input_text`**（ColorfulTheme，Esc=取消），禁止再用裸 `Confirm::new()` / `Input::new()`；prompt 不要带前导空格（主题自带缩进）。长阻塞操作（检测/解压/静默安装/网络查询）必须挂 `ui::spinner`，spinner 转动期间子进程输出必须用 `.output()` 捕获，不得直通终端
+- **交互菜单层有错误边界**：`interactive_menu` 捕获子流程 Err 展示后回菜单；不要用 `bail!` 表达用户主动取消（会被当成程序错误）。所有页面统一用 `ui::page_header`（完整 banner）——头部高度必须一致，否则切换页面时内容会跳行（用户明确要求保留全局 hudo 标志）
+- **configure() 失败不算安装失败**：`run_configure` 降级为警告（安装与 state.json 记录已完成），提示用 `hudo install <id>` 重新配置
+
 - **`.bat`/`.cmd` 文件**不能直接用 `Command::new()` 执行，必须通过 `cmd /c <file>` 调用（影响 gradle、maven 检测）
 - **emoji 图标**在 Windows 10 旧控制台不支持，使用 ASCII `[T][L][D][E]` 代替
 - **gh.exe 路径**：安装后在 `tools/gh/gh.exe`（不在 `bin/` 子目录），检测和 PATH 已兼容两种结构
