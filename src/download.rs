@@ -19,7 +19,10 @@ pub async fn download(url: &str, cache_dir: &Path, filename: &str) -> Result<Pat
 
     println!("  {} {}", console::style("↓").cyan(), console::style(url).dim());
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let resp = client
         .get(url)
         .send()
@@ -49,19 +52,37 @@ pub async fn download(url: &str, cache_dir: &Path, filename: &str) -> Result<Pat
 async fn download_to_tmp(tmp_dest: &Path, resp: reqwest::Response) -> Result<()> {
     let total_size = resp.content_length().unwrap_or(0);
 
-    let pb = ProgressBar::new(total_size);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("  {bar:40.cyan/blue}  {bytes}/{total_bytes}  {eta}")
-            .unwrap()
-            .progress_chars("━╸─"),
-    );
+    // 已知总大小走进度条；服务器不返回 Content-Length 时降级为 spinner + 已下载字节
+    let pb = if total_size > 0 {
+        let pb = ProgressBar::new(total_size);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("  {bar:40.cyan/blue}  {percent:>3}%  {bytes}/{total_bytes}  {bytes_per_sec}  {eta}")
+                .unwrap()
+                .progress_chars("━╸─"),
+        );
+        pb
+    } else {
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .template("  {spinner:.cyan} 已下载 {bytes}  {bytes_per_sec}")
+                .unwrap(),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+        pb
+    };
 
     let mut file = std::fs::File::create(tmp_dest)
         .with_context(|| format!("无法创建临时文件: {}", tmp_dest.display()))?;
 
     let mut stream = resp.bytes_stream();
-    while let Some(chunk) = stream.next().await {
+    loop {
+        // 单块 60 秒读超时：连接建立后中途断流不再让进度条永久冻结
+        let chunk = tokio::time::timeout(std::time::Duration::from_secs(60), stream.next())
+            .await
+            .map_err(|_| anyhow::anyhow!("下载超时（60 秒未收到数据），请检查网络后重试"))?;
+        let Some(chunk) = chunk else { break };
         let chunk = chunk.context("下载数据流错误")?;
         std::io::Write::write_all(&mut file, &chunk).context("写入文件失败")?;
         pb.inc(chunk.len() as u64);
@@ -147,6 +168,7 @@ fn is_connection_error(err: &anyhow::Error) -> bool {
         || msg.contains("timeout")
         || msg.contains("dns")
         || msg.contains("timed out")
+        || msg.contains("下载超时")
         || msg.contains("Connection refused")
         || msg.contains("No address")
         || msg.contains("request")
@@ -163,7 +185,17 @@ pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<()> {
     let mut archive = zip::ZipArchive::new(file)
         .with_context(|| format!("无效的 zip 文件: {}", zip_path.display()))?;
 
-    for i in 0..archive.len() {
+    // 按条目数显示进度：大包（MinGW/PyCharm 数万文件）解压可达数分钟，不能全程静默
+    let total = archive.len();
+    let pb = ProgressBar::new(total as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("  {bar:40.cyan/blue}  {pos}/{len} 文件")
+            .unwrap()
+            .progress_chars("━╸─"),
+    );
+
+    for i in 0..total {
         let mut entry = archive.by_index(i).context("读取 zip 条目失败")?;
         let name = entry.name().to_string();
 
@@ -180,8 +212,10 @@ pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<()> {
             std::io::copy(&mut entry, &mut outfile)
                 .with_context(|| format!("解压文件失败: {}", name))?;
         }
+        pb.inc(1);
     }
 
+    pb.finish_and_clear();
     Ok(())
 }
 
