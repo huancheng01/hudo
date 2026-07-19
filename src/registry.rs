@@ -28,11 +28,21 @@ impl InstallRegistry {
         match serde_json::from_str::<InstallRegistry>(&content) {
             Ok(registry) => Ok(registry),
             Err(_) => {
+                // 先备份损坏文件再重置：否则下一次 save 会直接覆盖掉原始现场，安装记录无法找回
+                let backup = state_path.with_extension("json.bak");
+                let backed_up = std::fs::copy(state_path, &backup).is_ok();
                 eprintln!(
                     "  {} 状态文件损坏，已重置: {}",
                     console::style("⚠").yellow(),
                     state_path.display()
                 );
+                if backed_up {
+                    eprintln!(
+                        "  {} 原文件已备份到 {}，可手动修复后改名回 state.json 恢复",
+                        console::style("⚠").yellow(),
+                        backup.display()
+                    );
+                }
                 Ok(Self::default())
             }
         }

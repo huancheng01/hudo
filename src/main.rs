@@ -13,7 +13,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use cli::{Cli, Commands, ConfigAction};
 use config::HudoConfig;
-use dialoguer::{Confirm, Input, MultiSelect, Select, theme::ColorfulTheme};
+use dialoguer::{MultiSelect, Select, theme::ColorfulTheme};
 use installer::{DetectResult, InstallContext, EnvAction, all_installers};
 
 /// 确保配置已初始化（首次运行引导用户选择安装盘）
@@ -45,6 +45,15 @@ fn ensure_config() -> Result<HudoConfig> {
     config.ensure_dirs()?;
     ui::print_success(&format!("已创建 {}", root_dir));
 
+    Ok(config)
+}
+
+/// 只读命令使用：配置不存在时给提示，不触发首次运行的选盘向导（不在磁盘上留痕）
+fn load_config_readonly() -> Result<Option<HudoConfig>> {
+    let config = HudoConfig::load()?;
+    if config.is_none() {
+        ui::print_info("hudo 尚未初始化，运行 hudo setup 开始安装");
+    }
     Ok(config)
 }
 
@@ -117,6 +126,8 @@ fn ensure_config_windows() -> Result<String> {
 /// Unix：默认 ~/hudo，允许用户自定义
 #[cfg(not(windows))]
 fn ensure_config_unix() -> Result<String> {
+    use dialoguer::Input;
+
     let default_dir = HudoConfig::default_root_dir()
         .unwrap_or_else(|_| "/opt/hudo".to_string());
     println!("  {}", console::style(format!("默认安装目录: {}", default_dir)).dim());
@@ -165,7 +176,7 @@ async fn cmd_setup(config: &HudoConfig) -> Result<()> {
             .items(&cat_labels)
             .default(0)
             .interact_opt()
-            .context("选择被取消")?;
+            .unwrap_or(None);
 
         let cat_idx = match cat_sel {
             Some(i) => i,
@@ -202,10 +213,12 @@ async fn setup_category(
 
     let reg = registry::InstallRegistry::load(&config.state_path())?;
 
-    // 并行检测该分类下所有工具的安装状态
+    // 并行检测该分类下所有工具的安装状态（检测期间显示 spinner，避免界面像卡死）
     let tool_refs: Vec<&dyn installer::Installer> =
         tool_indices.iter().map(|&i| installers[i].as_ref()).collect();
+    let sp = ui::spinner("正在检测已安装工具...");
     let tool_data = detect_all_parallel(&tool_refs, config, &reg);
+    sp.finish_and_clear();
 
     // 计算动态列宽
     let mut name_width = 0usize;
@@ -246,14 +259,14 @@ async fn setup_category(
         defaults.push(false);
     }
 
-    println!("  {}", console::style("空格勾选/取消，回车确认，Esc 返回").dim());
+    println!("  {}", console::style("空格勾选，a 全选/取消全选，回车确认，Esc 返回").dim());
     println!();
 
     let selections = MultiSelect::with_theme(&ColorfulTheme::default())
         .items(&labels)
         .defaults(&defaults)
         .interact_opt()
-        .context("选择被取消")?;
+        .unwrap_or(None);
 
     let selections = match selections {
         Some(s) => s,
@@ -279,21 +292,18 @@ async fn setup_category(
         console::style(selected_names.len()).cyan().bold(),
         selected_names.join(", ")
     );
-    let confirm = Confirm::new()
-        .with_prompt("  确认开始？")
-        .default(true)
-        .interact()
-        .context("确认被取消")?;
+    let confirm = ui::confirm("确认开始？", true)?;
 
     if !confirm {
         ui::print_info("已取消");
         return Ok(());
     }
 
-    // 逐个安装
+    // 逐个安装（中途失败可选择中止，中止走正常汇总而非报错退出）
     let total = selections.len();
     let mut success_count = 0u32;
     let mut fail_names = Vec::new();
+    let mut aborted = false;
 
     for (idx, &sel) in selections.iter().enumerate() {
         let info = installers[tool_indices[sel]].info();
@@ -304,15 +314,11 @@ async fn setup_category(
             &format!("安装 {}", info.name),
         );
         if let Err(e) = cmd_install(config, info.id).await {
-            ui::print_error(&format!("{} 安装失败: {}", info.name, e));
+            ui::print_error(&format!("{} 安装失败: {:#}", info.name, e));
             fail_names.push(info.name);
-            let cont = Confirm::new()
-                .with_prompt("  是否继续安装其余工具？")
-                .default(true)
-                .interact()
-                .unwrap_or(false);
-            if !cont {
-                anyhow::bail!("用户中止安装");
+            if !ui::confirm("是否继续安装其余工具？", true).unwrap_or(false) {
+                aborted = true;
+                break;
             }
         } else {
             success_count += 1;
@@ -321,11 +327,17 @@ async fn setup_category(
 
     // 汇总（boxed 面板）
     let mut summary_lines = Vec::new();
-    if fail_names.is_empty() {
+    if fail_names.is_empty() && !aborted {
         summary_lines.push(format!(" {} {} 个工具安装完成", console::style("✓").green().bold(), success_count));
     } else {
         summary_lines.push(format!(" {} {} 个工具安装成功", console::style("✓").green().bold(), success_count));
-        summary_lines.push(format!(" {} {} 个失败: {}", console::style("✗").red().bold(), fail_names.len(), fail_names.join(", ")));
+        if !fail_names.is_empty() {
+            summary_lines.push(format!(" {} {} 个失败: {}", console::style("✗").red().bold(), fail_names.len(), fail_names.join(", ")));
+        }
+        let remaining = total.saturating_sub(success_count as usize + fail_names.len());
+        if aborted && remaining > 0 {
+            summary_lines.push(format!(" 已中止，{} 个工具未安装", remaining));
+        }
     }
     summary_lines.push(String::new());
     summary_lines.push(format!(" {}", console::style("请打开新终端以使环境变量生效").dim()));
@@ -365,23 +377,19 @@ async fn cmd_install_inner(config: &HudoConfig, tool_id: &str, skip_configure: b
     match &detect {
         DetectResult::InstalledByHudo(version) => {
             ui::print_success(&format!("{} 已安装 (hudo): {}", info.name, version));
-            if !skip_configure {
-                inst.configure(&ctx).await?;
+            if !skip_configure
+                && ui::confirm(&format!("是否重新运行 {} 的配置？", info.name), false)?
+            {
+                run_configure(inst.as_ref(), &ctx, &info).await;
             }
             return Ok(());
         }
         DetectResult::InstalledExternal(version) => {
             ui::print_warning(&format!("{} 已安装在系统其他位置: {}", info.name, version));
-            let reinstall = Confirm::new()
-                .with_prompt("  是否由 hudo 接管？（将清理旧版并重新安装到 hudo 目录）")
-                .default(false)
-                .interact()
-                .context("选择被取消")?;
+            let reinstall = ui::confirm("是否由 hudo 接管？（将清理旧版并重新安装到 hudo 目录）", false)?;
             if !reinstall {
+                // 外部安装不做 hudo 配置：configure 按 hudo 目录写路径，对外部安装是错的
                 ui::print_info("跳过安装，使用现有版本");
-                if !skip_configure {
-                    inst.configure(&ctx).await?;
-                }
                 return Ok(());
             }
             ui::print_step(1, 2, "卸载旧版...");
@@ -428,12 +436,28 @@ async fn cmd_install_inner(config: &HudoConfig, tool_id: &str, skip_configure: b
     );
     reg.save(&config.state_path())?;
 
-    // 交互式配置
+    // 交互式配置（失败降级为警告：此时安装与记录均已完成，不算安装失败）
     if !skip_configure {
-        inst.configure(&ctx).await?;
+        run_configure(inst.as_ref(), &ctx, &info).await;
+    }
+
+    if !actions.is_empty() {
+        ui::print_next_step("请打开新终端以使环境变量生效");
     }
 
     Ok(())
+}
+
+/// 运行工具的交互式配置；失败降级为警告（安装本身已完成并记录到 state.json）
+async fn run_configure(
+    inst: &dyn installer::Installer,
+    ctx: &InstallContext<'_>,
+    info: &installer::ToolInfo,
+) {
+    if let Err(e) = inst.configure(ctx).await {
+        ui::print_warning(&format!("{} 已安装，但配置未完成: {:#}", info.name, e));
+        ui::print_next_step(&format!("可运行 hudo install {} 重新配置", info.id));
+    }
 }
 
 /// 卸载 hudo 管理的工具
@@ -467,11 +491,10 @@ async fn cmd_uninstall(config: &HudoConfig, tool_id: &str) -> Result<()> {
         }
     }
 
-    let confirm = Confirm::new()
-        .with_prompt(format!("  确认卸载 {}？（将删除安装目录并清理环境变量）", info.name))
-        .default(false)
-        .interact()
-        .context("选择被取消")?;
+    let confirm = ui::confirm(
+        &format!("确认卸载 {}？（将删除安装目录并清理环境变量）", info.name),
+        false,
+    )?;
 
     if !confirm {
         ui::print_info("已取消");
@@ -497,6 +520,9 @@ async fn cmd_uninstall(config: &HudoConfig, tool_id: &str) -> Result<()> {
         });
 
     // 1. 卸载前清理（停止服务等）
+    if matches!(info.id, "mysql" | "pgsql" | "redis") {
+        ui::print_info("即将弹出 UAC 提权窗口以停止并移除服务，请在弹窗中选择\"是\"");
+    }
     inst.pre_uninstall(&ctx).await?;
 
     // 2. 清理环境变量
@@ -528,7 +554,7 @@ async fn cmd_uninstall(config: &HudoConfig, tool_id: &str) -> Result<()> {
     // 3. 删除安装目录
     if install_path.exists() {
         std::fs::remove_dir_all(&install_path)
-            .with_context(|| format!("删除目录失败: {}", install_path.display()))?;
+            .with_context(|| format!("删除目录失败（若相关程序正在运行，请关闭后重试）: {}", install_path.display()))?;
         ui::print_info(&format!("已删除 {}", install_path.display()));
     }
 
@@ -542,7 +568,7 @@ async fn cmd_uninstall(config: &HudoConfig, tool_id: &str) -> Result<()> {
     }
 
     ui::print_success(&format!("{} 已卸载", info.name));
-    ui::print_info("请打开新终端以使环境变量生效");
+    ui::print_next_step("请打开新终端以使环境变量生效");
     Ok(())
 }
 
@@ -677,6 +703,7 @@ fn uninstall_claude_code() -> Result<()> {
 /// 通用卸载：通过 where 找到旧二进制，从 PATH 移除其所在目录，并清理指定环境变量
 #[cfg(windows)]
 fn uninstall_green(binaries: &[&str], env_vars: &[&str]) -> Result<()> {
+    let mut old_dirs: Vec<String> = Vec::new();
     for bin in binaries {
         let bin_name = format!("{}.exe", bin);
         if let Ok(output) = std::process::Command::new("where").arg(&bin_name).output() {
@@ -688,9 +715,10 @@ fn uninstall_green(binaries: &[&str], env_vars: &[&str]) -> Result<()> {
                         continue;
                     }
                     if let Some(parent) = std::path::Path::new(line).parent() {
-                        let dir_str = parent.to_string_lossy();
-                        ui::print_info(&format!("移除 PATH: {}", dir_str));
+                        let dir_str = parent.to_string_lossy().to_string();
+                        ui::print_info(&format!("移除用户 PATH: {}", dir_str));
                         env::EnvManager::remove_from_path(&dir_str)?;
+                        old_dirs.push(dir_str);
                     }
                 }
             }
@@ -705,8 +733,32 @@ fn uninstall_green(binaries: &[&str], env_vars: &[&str]) -> Result<()> {
     }
 
     env::EnvManager::broadcast_change();
-    ui::print_success("旧版已清理");
+
+    // 用户级清理只覆盖 HKCU：MSI 全局安装的旧版在机器级 PATH 里，仍会优先生效
+    if let Some(dir) = machine_path_contains(&old_dirs) {
+        ui::print_warning(&format!("旧版位于机器级 PATH，无法以当前权限清理: {}", dir));
+        ui::print_next_step("请通过系统\"应用和功能\"卸载旧版，否则新版本可能被旧版遮蔽");
+    } else {
+        ui::print_success("旧版已清理");
+    }
     Ok(())
+}
+
+/// 检查机器级 PATH（HKLM）中是否仍包含给定目录，返回第一个命中的目录
+#[cfg(windows)]
+fn machine_path_contains(dirs: &[String]) -> Option<String> {
+    let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
+    let env_key = hklm
+        .open_subkey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment")
+        .ok()?;
+    let machine_path: String = env_key.get_value("Path").ok()?;
+    let entries: Vec<String> = machine_path
+        .split(';')
+        .map(|s| s.trim().trim_end_matches('\\').to_lowercase())
+        .collect();
+    dirs.iter()
+        .find(|d| entries.contains(&d.trim_end_matches('\\').to_lowercase()))
+        .cloned()
 }
 
 /// 卸载系统中的 Rust（通过 rustup self uninstall）
@@ -868,11 +920,17 @@ fn uninstall_vscode() -> Result<()> {
 async fn cmd_export(config: &HudoConfig, file: Option<String>) -> Result<()> {
     let output_path = file.unwrap_or_else(|| "hudo-profile.toml".to_string());
     let output_path = std::path::Path::new(&output_path);
+    // 展示绝对路径，避免用户找不到导出的文件
+    let display_path = std::path::absolute(output_path)
+        .unwrap_or_else(|_| output_path.to_path_buf());
 
     ui::print_title("导出环境档案");
 
     let installers = all_installers();
-    let profile = profile::HudoProfile::build_from_current(config, &installers).await?;
+    let sp = ui::spinner("正在检测已安装工具...");
+    let profile_result = profile::HudoProfile::build_from_current(config, &installers).await;
+    sp.finish_and_clear();
+    let profile = profile_result?;
 
     if profile.tools.is_empty() {
         ui::print_warning("未检测到任何已安装工具，无需导出");
@@ -892,21 +950,19 @@ async fn cmd_export(config: &HudoConfig, file: Option<String>) -> Result<()> {
         println!();
         ui::print_info(&format!("包含 {} 个工具的配置", profile.tool_config.len()));
     }
+    if !profile.cc_providers.is_empty() {
+        println!();
+        ui::print_warning("档案将包含 Claude Code API 密钥明文，请勿分享给他人或提交到仓库");
+    }
 
     println!();
-    let confirm = Confirm::new()
-        .with_prompt(format!("  导出到 {} ?", output_path.display()))
-        .default(true)
-        .interact_opt()
-        .context("确认被取消")?;
-
-    if confirm != Some(true) {
+    if !ui::confirm(&format!("导出到 {} ?", display_path.display()), true)? {
         ui::print_info("已取消");
         return Ok(());
     }
 
     profile.save_to_file(output_path)?;
-    ui::print_success(&format!("环境档案已导出到 {}", output_path.display()));
+    ui::print_success(&format!("环境档案已导出到 {}", display_path.display()));
 
     Ok(())
 }
@@ -926,119 +982,119 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
         prof.hudo.version, prof.hudo.exported_at
     ));
 
-    // 应用 settings
-    let mut settings_changed = false;
+    // 收集档案中的配置变更（用户确认后才应用，取消不落盘）
+    let mut setting_changes: Vec<(String, String)> = Vec::new();
     if let Some(ref jv) = prof.settings.java_version {
         if config.java.version != *jv {
-            config.java.version = jv.clone();
-            ui::print_info(&format!("java.version = {}", jv));
-            settings_changed = true;
+            setting_changes.push(("java.version".to_string(), jv.clone()));
         }
     }
     if let Some(ref gv) = prof.settings.go_version {
         if config.go.version != *gv {
-            config.go.version = gv.clone();
-            ui::print_info(&format!("go.version = {}", gv));
-            settings_changed = true;
+            setting_changes.push(("go.version".to_string(), gv.clone()));
         }
     }
-    // 应用 mirrors
     for (key, value) in &prof.settings.mirrors {
-        match key.as_str() {
-            "uv" => config.mirrors.uv = Some(value.clone()),
-            "nodejs" => config.mirrors.nodejs = Some(value.clone()),
-            "go" => config.mirrors.go = Some(value.clone()),
-            "java" => config.mirrors.java = Some(value.clone()),
-            "vscode" => config.mirrors.vscode = Some(value.clone()),
-            "pycharm" => config.mirrors.pycharm = Some(value.clone()),
-            "mysql" => config.mirrors.mysql = Some(value.clone()),
-            "pgsql" => config.mirrors.pgsql = Some(value.clone()),
-            "maven" => config.mirrors.maven = Some(value.clone()),
-            "gradle" => config.mirrors.gradle = Some(value.clone()),
-            _ => {}
+        if MIRROR_KEYS.contains(&key.as_str()) {
+            setting_changes.push((format!("mirrors.{}", key), value.clone()));
+        } else {
+            ui::print_warning(&format!("跳过未识别配置项: mirrors.{}", key));
         }
-        ui::print_info(&format!("mirrors.{} = {}", key, value));
-        settings_changed = true;
     }
-    // 应用 versions
     for (key, value) in &prof.settings.versions {
-        match key.as_str() {
-            "git" => config.versions.git = Some(value.clone()),
-            "gh" => config.versions.gh = Some(value.clone()),
-            "nodejs" => config.versions.nodejs = Some(value.clone()),
-            "mysql" => config.versions.mysql = Some(value.clone()),
-            "pgsql" => config.versions.pgsql = Some(value.clone()),
-            "pycharm" => config.versions.pycharm = Some(value.clone()),
-            _ => {}
+        if VERSION_KEYS.contains(&key.as_str()) {
+            setting_changes.push((format!("versions.{}", key), value.clone()));
+        } else {
+            ui::print_warning(&format!("跳过未识别配置项: versions.{}", key));
         }
-        ui::print_info(&format!("versions.{} = {}", key, value));
-        settings_changed = true;
     }
-    if settings_changed {
-        config.save()?;
-        ui::print_success("配置已更新");
+    if !setting_changes.is_empty() {
         println!();
+        ui::print_info(&format!("档案包含 {} 项配置变更:", setting_changes.len()));
+        for (key, value) in &setting_changes {
+            println!(
+                "    {}  {}",
+                console::style(ui::pad(key, 20)).bold(),
+                console::style(value).dim()
+            );
+        }
     }
 
-    if prof.tools.is_empty() {
-        ui::print_info("档案中没有工具需要安装");
+    if prof.tools.is_empty()
+        && setting_changes.is_empty()
+        && prof.tool_config.is_empty()
+        && prof.cc_providers.is_empty()
+    {
+        ui::print_info("档案中没有需要应用的内容");
         return Ok(());
     }
 
     // 检测已安装工具，筛选出需要安装的
     let installers = all_installers();
-    let ctx = InstallContext { config };
     let mut to_install = Vec::new();
-
-    for (tool_id, _ver) in &prof.tools {
-        if let Some(inst) = installers.iter().find(|i| i.info().id == tool_id.as_str()) {
-            match inst.detect_installed(&ctx).await {
-                Ok(DetectResult::InstalledByHudo(ver)) => {
-                    ui::print_info(&format!(
-                        "{} 已安装 (hudo): {} — 跳过",
-                        inst.info().name,
-                        ver
-                    ));
-                }
-                Ok(DetectResult::InstalledExternal(ver)) => {
-                    ui::print_info(&format!(
-                        "{} 已安装 (系统): {} — 跳过",
-                        inst.info().name,
-                        ver
-                    ));
-                }
-                _ => {
-                    to_install.push(inst.info());
+    {
+        let ctx = InstallContext { config: &*config };
+        let sp = ui::spinner("正在检测已安装工具...");
+        let mut skip_lines: Vec<String> = Vec::new();
+        for (tool_id, _ver) in &prof.tools {
+            if let Some(inst) = installers.iter().find(|i| i.info().id == tool_id.as_str()) {
+                match inst.detect_installed(&ctx).await {
+                    Ok(DetectResult::InstalledByHudo(ver)) => {
+                        skip_lines.push(format!("{} 已安装 (hudo): {} — 跳过", inst.info().name, ver));
+                    }
+                    Ok(DetectResult::InstalledExternal(ver)) => {
+                        skip_lines.push(format!("{} 已安装 (系统): {} — 跳过", inst.info().name, ver));
+                    }
+                    _ => {
+                        to_install.push(inst.info());
+                    }
                 }
             }
         }
+        sp.finish_and_clear();
+        for line in &skip_lines {
+            ui::print_info(line);
+        }
     }
 
-    if to_install.is_empty() {
-        ui::print_success("所有工具已安装，无需操作");
-    } else {
+    if !to_install.is_empty() {
         println!();
         ui::print_info(&format!("需要安装 {} 个工具:", to_install.len()));
         for info in &to_install {
             println!("    {}  {}", console::style(info.name).bold(), info.description);
         }
+    } else if !prof.tools.is_empty() {
+        ui::print_success("档案中的工具均已安装");
+    }
 
-        println!();
-        let confirm = Confirm::new()
-            .with_prompt("  确认开始安装？")
-            .default(true)
-            .interact_opt()
-            .context("确认被取消")?;
+    // 统一确认：确认前不落盘任何配置，取消即无副作用
+    println!();
+    let prompt = if to_install.is_empty() {
+        "确认应用档案中的配置？"
+    } else if setting_changes.is_empty() {
+        "确认开始安装？"
+    } else {
+        "确认应用配置并开始安装？"
+    };
+    if !ui::confirm(prompt, true)? {
+        ui::print_info("已取消，未做任何修改");
+        return Ok(());
+    }
 
-        if confirm != Some(true) {
-            ui::print_info("已取消");
-            return Ok(());
+    if !setting_changes.is_empty() {
+        for (key, value) in &setting_changes {
+            apply_config_kv(config, key, value)?;
         }
+        config.save()?;
+        ui::print_success("配置已更新");
+    }
 
-        // 批量安装（skip_configure=true）
+    if !to_install.is_empty() {
+        // 批量安装（中止走正常汇总，不以错误退出）
         let total = to_install.len();
         let mut success_count = 0u32;
         let mut fail_names = Vec::new();
+        let mut aborted = false;
 
         for (idx, info) in to_install.iter().enumerate() {
             println!();
@@ -1048,15 +1104,11 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
                 &format!("安装 {}", info.name),
             );
             if let Err(e) = cmd_install_inner(config, info.id, false).await {
-                ui::print_error(&format!("{} 安装失败: {}", info.name, e));
+                ui::print_error(&format!("{} 安装失败: {:#}", info.name, e));
                 fail_names.push(info.name);
-                let cont = Confirm::new()
-                    .with_prompt("  是否继续安装其余工具？")
-                    .default(true)
-                    .interact()
-                    .unwrap_or(false);
-                if !cont {
-                    anyhow::bail!("用户中止安装");
+                if !ui::confirm("是否继续安装其余工具？", true).unwrap_or(false) {
+                    aborted = true;
+                    break;
                 }
             } else {
                 success_count += 1;
@@ -1065,15 +1117,20 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
 
         println!();
         println!("{}", console::style("─".repeat(40)).cyan());
-        if fail_names.is_empty() {
+        if fail_names.is_empty() && !aborted {
             ui::print_success(&format!("全部 {} 个工具安装完成", success_count));
         } else {
             ui::print_success(&format!("{} 个工具安装成功", success_count));
-            ui::print_warning(&format!(
-                "{} 个工具安装失败: {}",
-                fail_names.len(),
-                fail_names.join(", ")
-            ));
+            if !fail_names.is_empty() {
+                ui::print_warning(&format!(
+                    "{} 个工具安装失败: {}",
+                    fail_names.len(),
+                    fail_names.join(", ")
+                ));
+            }
+            if aborted {
+                ui::print_info("已按要求中止剩余安装");
+            }
         }
     }
 
@@ -1102,8 +1159,7 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
         ));
     }
 
-    ui::print_info("请打开新终端以使环境变量生效");
-    ui::wait_for_key();
+    ui::print_next_step("请打开新终端以使环境变量生效");
     Ok(())
 }
 
@@ -1135,21 +1191,13 @@ async fn apply_tool_configs(
 async fn cmd_self_uninstall() -> Result<()> {
     ui::print_title("卸载 hudo");
 
-    let confirmed = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("确定要卸载 hudo 吗？")
-        .default(false)
-        .interact()
-        .context("输入被取消")?;
+    let confirmed = ui::confirm("确定要卸载 hudo 吗？", false)?;
     if !confirmed {
         println!("  已取消");
         return Ok(());
     }
 
-    let del_config = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("同时删除配置文件和缓存？")
-        .default(false)
-        .interact()
-        .unwrap_or(false);
+    let del_config = ui::confirm("同时删除配置文件和缓存？", false).unwrap_or(false);
 
     let current_exe = std::env::current_exe().context("无法获取当前程序路径")?;
     let bin_dir = current_exe
@@ -1363,9 +1411,16 @@ fn detect_all_parallel(
         .collect()
 }
 
-/// 列出所有工具状态
-async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
-    ui::print_title(if show_all { "所有可用工具" } else { "已安装工具" });
+/// 列出工具状态
+/// show_all 显示全部工具（含未安装）；deep 做完整检测（可识别系统安装），否则仅读 state.json
+async fn cmd_list(config: &HudoConfig, show_all: bool, deep: bool) -> Result<()> {
+    ui::print_title(if show_all {
+        "所有可用工具"
+    } else if deep {
+        "已安装工具"
+    } else {
+        "hudo 安装的工具"
+    });
 
     let installers = all_installers();
     let reg = registry::InstallRegistry::load(&config.state_path())?;
@@ -1379,12 +1434,15 @@ async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
     ];
 
     // 收集工具检测结果
-    // hudo list：仅读 state.json，毫秒级
-    // hudo list --all：完整子进程检测（并行）
-    let all_results: Vec<(installer::ToolInfo, Result<DetectResult>)> = if show_all {
+    // 快速模式：仅读 state.json，毫秒级（CLI hudo list）
+    // 完整模式：并行子进程检测，可识别系统安装（--all / 交互菜单）
+    let all_results: Vec<(installer::ToolInfo, Result<DetectResult>)> = if show_all || deep {
         let tool_refs: Vec<&dyn installer::Installer> =
             installers.iter().map(|i| i.as_ref()).collect();
-        detect_all_parallel(&tool_refs, config, &reg)
+        let sp = ui::spinner("正在检测已安装工具...");
+        let results = detect_all_parallel(&tool_refs, config, &reg);
+        sp.finish_and_clear();
+        results
     } else {
         installers
             .iter()
@@ -1460,19 +1518,27 @@ async fn cmd_list(config: &HudoConfig, show_all: bool) -> Result<()> {
     }
 
     if !any_displayed {
-        ui::print_info("尚未安装任何工具，运行 hudo setup 开始安装");
+        ui::print_info(if show_all || deep {
+            "尚未安装任何工具，运行 hudo setup 开始安装"
+        } else {
+            "hudo 尚未安装任何工具，运行 hudo setup 开始安装"
+        });
     }
 
     println!();
     let total = hudo_count + external_count;
     if total > 0 {
-        ui::print_info(&format!(
-            "共 {} 个工具已安装 (hudo: {}, 系统: {})",
-            total, hudo_count, external_count
-        ));
+        if show_all || deep {
+            ui::print_info(&format!(
+                "共 {} 个工具已安装 (hudo: {}, 系统: {})",
+                total, hudo_count, external_count
+            ));
+        } else {
+            ui::print_info(&format!("共 {} 个工具由 hudo 安装", total));
+        }
     }
-    if !show_all && total > 0 {
-        ui::print_info("使用 hudo list --all 查看所有可用工具");
+    if !show_all && !deep && total > 0 {
+        ui::print_info("使用 hudo list --all 查看所有可用工具（含系统安装）");
     }
     ui::print_info(&format!("安装根目录: {}", config.root_dir));
     Ok(())
@@ -1487,10 +1553,16 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
 
     let versions = [
         ("versions.git", &config.versions.git),
+        ("versions.gh", &config.versions.gh),
         ("versions.nodejs", &config.versions.nodejs),
+        ("versions.fnm", &config.versions.fnm),
         ("versions.mysql", &config.versions.mysql),
         ("versions.pgsql", &config.versions.pgsql),
         ("versions.pycharm", &config.versions.pycharm),
+        ("versions.maven", &config.versions.maven),
+        ("versions.gradle", &config.versions.gradle),
+        ("versions.claude_code", &config.versions.claude_code),
+        ("versions.redis", &config.versions.redis),
     ];
     let has_versions = versions.iter().any(|(_, v)| v.is_some());
     if has_versions {
@@ -1505,10 +1577,16 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
     let mirrors = [
         ("mirrors.uv", &config.mirrors.uv),
         ("mirrors.nodejs", &config.mirrors.nodejs),
+        ("mirrors.fnm", &config.mirrors.fnm),
         ("mirrors.go", &config.mirrors.go),
         ("mirrors.java", &config.mirrors.java),
         ("mirrors.vscode", &config.mirrors.vscode),
         ("mirrors.pycharm", &config.mirrors.pycharm),
+        ("mirrors.mysql", &config.mirrors.mysql),
+        ("mirrors.pgsql", &config.mirrors.pgsql),
+        ("mirrors.maven", &config.mirrors.maven),
+        ("mirrors.gradle", &config.mirrors.gradle),
+        ("mirrors.redis", &config.mirrors.redis),
     ];
     let has_mirrors = mirrors.iter().any(|(_, v)| v.is_some());
     if has_mirrors {
@@ -1522,24 +1600,73 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
     Ok(())
 }
 
-fn cmd_config_set(config: &mut HudoConfig, key: &str, value: &str) -> Result<()> {
+/// mirrors.* 支持的键（与 config::MirrorConfig 字段一一对应）
+const MIRROR_KEYS: &[&str] = &[
+    "uv", "nodejs", "fnm", "go", "java", "vscode", "pycharm",
+    "mysql", "pgsql", "maven", "gradle", "redis",
+];
+
+/// versions.* 支持的键（与 config::VersionConfig 字段一一对应）
+const VERSION_KEYS: &[&str] = &[
+    "git", "gh", "nodejs", "fnm", "mysql", "pgsql", "pycharm",
+    "maven", "gradle", "claude_code", "redis",
+];
+
+/// 将 key=value 写入 config（不落盘、不打印，供 config set 与档案导入共用）
+fn apply_config_kv(config: &mut HudoConfig, key: &str, value: &str) -> Result<()> {
+    let val = Some(value.to_string());
     match key {
         "root_dir" => config.root_dir = value.to_string(),
         "java.version" => config.java.version = value.to_string(),
         "go.version" => config.go.version = value.to_string(),
-        "versions.git" => config.versions.git = Some(value.to_string()),
-        "versions.nodejs" => config.versions.nodejs = Some(value.to_string()),
-        "versions.mysql" => config.versions.mysql = Some(value.to_string()),
-        "versions.pgsql" => config.versions.pgsql = Some(value.to_string()),
-        "versions.pycharm" => config.versions.pycharm = Some(value.to_string()),
-        "mirrors.uv" => config.mirrors.uv = Some(value.to_string()),
-        "mirrors.nodejs" => config.mirrors.nodejs = Some(value.to_string()),
-        "mirrors.go" => config.mirrors.go = Some(value.to_string()),
-        "mirrors.java" => config.mirrors.java = Some(value.to_string()),
-        "mirrors.vscode" => config.mirrors.vscode = Some(value.to_string()),
-        "mirrors.pycharm" => config.mirrors.pycharm = Some(value.to_string()),
-        _ => anyhow::bail!("未知配置项: {}。可用: root_dir, java.version, go.version, versions.*, mirrors.*", key),
+        "mirrors.uv" => config.mirrors.uv = val,
+        "mirrors.nodejs" => config.mirrors.nodejs = val,
+        "mirrors.fnm" => config.mirrors.fnm = val,
+        "mirrors.go" => config.mirrors.go = val,
+        "mirrors.java" => config.mirrors.java = val,
+        "mirrors.vscode" => config.mirrors.vscode = val,
+        "mirrors.pycharm" => config.mirrors.pycharm = val,
+        "mirrors.mysql" => config.mirrors.mysql = val,
+        "mirrors.pgsql" => config.mirrors.pgsql = val,
+        "mirrors.maven" => config.mirrors.maven = val,
+        "mirrors.gradle" => config.mirrors.gradle = val,
+        "mirrors.redis" => config.mirrors.redis = val,
+        "versions.git" => config.versions.git = val,
+        "versions.gh" => config.versions.gh = val,
+        "versions.nodejs" => config.versions.nodejs = val,
+        "versions.fnm" => config.versions.fnm = val,
+        "versions.mysql" => config.versions.mysql = val,
+        "versions.pgsql" => config.versions.pgsql = val,
+        "versions.pycharm" => config.versions.pycharm = val,
+        "versions.maven" => config.versions.maven = val,
+        "versions.gradle" => config.versions.gradle = val,
+        "versions.claude_code" => config.versions.claude_code = val,
+        "versions.redis" => config.versions.redis = val,
+        _ => anyhow::bail!(
+            "未知配置项: {}。可用: root_dir, java.version, go.version, mirrors.{{{}}}, versions.{{{}}}",
+            key,
+            MIRROR_KEYS.join("|"),
+            VERSION_KEYS.join("|")
+        ),
     }
+    Ok(())
+}
+
+fn cmd_config_set(config: &mut HudoConfig, key: &str, value: &str) -> Result<()> {
+    // root_dir 特殊：不迁移已装工具，改后旧目录中的安装记录不再显示
+    if key == "root_dir" && config.root_dir != value {
+        let has_records = registry::InstallRegistry::load(&config.state_path())
+            .map(|r| !r.tools.is_empty())
+            .unwrap_or(false);
+        if has_records {
+            ui::print_warning("修改 root_dir 不会迁移已安装的工具，旧目录中的安装记录将不再显示");
+            if !ui::confirm("确认修改？", false)? {
+                ui::print_info("已取消");
+                return Ok(());
+            }
+        }
+    }
+    apply_config_kv(config, key, value)?;
     config.save()?;
     ui::print_success(&format!("已设置 {} = {}", key, value));
     Ok(())
@@ -1547,8 +1674,13 @@ fn cmd_config_set(config: &mut HudoConfig, key: &str, value: &str) -> Result<()>
 
 fn cmd_config_edit() -> Result<()> {
     let path = HudoConfig::config_path()?;
+    if !path.exists() {
+        ui::print_info("配置文件尚不存在，请先运行 hudo setup 完成初始化");
+        return Ok(());
+    }
     let default_editor = if cfg!(windows) { "notepad" } else { "vi" };
     let editor = std::env::var("EDITOR").unwrap_or_else(|_| default_editor.to_string());
+    ui::print_info(&format!("已用 {} 打开 {}，保存并关闭编辑器后继续", editor, path.display()));
     std::process::Command::new(&editor)
         .arg(path.to_str().unwrap())
         .status()
@@ -1568,6 +1700,7 @@ fn cmd_config_reset() -> Result<()> {
 }
 
 /// 截断版本号字符串，保留关键部分（如 "git version 2.47.1.windows.2" → "2.47.1"）
+/// 按字符边界截断，多字节字符不会 panic
 fn truncate_version(ver: &str, max_len: usize) -> String {
     // 尝试提取纯版本号（数字.数字 开头的部分）
     let trimmed = ver.trim();
@@ -1575,15 +1708,15 @@ fn truncate_version(ver: &str, max_len: usize) -> String {
         .split_whitespace()
         .find(|s| s.starts_with(|c: char| c.is_ascii_digit()))
         .unwrap_or(trimmed);
-    if version_part.len() <= max_len {
-        version_part.to_string()
-    } else {
-        format!("{}…", &version_part[..max_len - 1])
+    if version_part.chars().count() <= max_len {
+        return version_part.to_string();
     }
+    let cut: String = version_part.chars().take(max_len.saturating_sub(1)).collect();
+    format!("{}…", cut)
 }
 
-/// 交互式主菜单
-async fn interactive_menu(config: &HudoConfig) -> Result<()> {
+/// 交互式主菜单（子流程出错只展示错误并回到菜单，不退出程序）
+async fn interactive_menu(config: &mut HudoConfig) -> Result<()> {
     loop {
         ui::page_header("主菜单");
 
@@ -1597,22 +1730,35 @@ async fn interactive_menu(config: &HudoConfig) -> Result<()> {
             "[Q] 退出",
         ];
 
-        let selection = Select::with_theme(&ColorfulTheme::default())
+        let selection = match Select::with_theme(&ColorfulTheme::default())
             .with_prompt("请选择操作 (Esc 退出)")
             .items(menu_items)
             .default(0)
             .interact_opt()
-            .context("选择被取消")?;
+        {
+            Ok(sel) => sel,
+            Err(_) => break, // 终端 IO 异常按退出处理
+        };
 
-        match selection {
-            Some(0) => { cmd_setup(config).await?; }
-            Some(1) => { cmd_list(config, false).await?; ui::wait_for_key(); }
-            Some(2) => { interactive_uninstall(config).await?; }
-            Some(3) => { interactive_profile(config).await?; }
-            Some(4) => { interactive_config(config).await?; }
-            Some(5) => { cc::cmd_cc()?; }
+        let result = match selection {
+            Some(0) => cmd_setup(config).await,
+            Some(1) => {
+                let r = cmd_list(config, false, true).await;
+                ui::wait_for_key();
+                r
+            }
+            Some(2) => interactive_uninstall(config).await,
+            Some(3) => interactive_profile(config).await,
+            Some(4) => interactive_config(config).await,
+            Some(5) => cc::cmd_cc(),
             Some(6) | None => break,
             _ => unreachable!(),
+        };
+
+        // 错误边界：子流程失败不退出程序，展示后回到菜单
+        if let Err(e) = result {
+            ui::print_error(&format!("{:#}", e));
+            ui::wait_for_key();
         }
     }
 
@@ -1627,7 +1773,9 @@ async fn interactive_uninstall(config: &HudoConfig) -> Result<()> {
     let reg = registry::InstallRegistry::load(&config.state_path())?;
 
     let refs: Vec<&dyn installer::Installer> = installers.iter().map(|b| b.as_ref()).collect();
+    let sp = ui::spinner("正在检测已安装工具...");
     let results = detect_all_parallel(&refs, config, &reg);
+    sp.finish_and_clear();
 
     let mut installed = Vec::new();
     for (info, result) in &results {
@@ -1657,7 +1805,7 @@ async fn interactive_uninstall(config: &HudoConfig) -> Result<()> {
         .with_prompt("选择要卸载的工具 (Esc 返回)")
         .items(&labels)
         .interact_opt()
-        .context("选择被取消")?;
+        .unwrap_or(None);
 
     match selection {
         Some(idx) => {
@@ -1672,7 +1820,7 @@ async fn interactive_uninstall(config: &HudoConfig) -> Result<()> {
 }
 
 /// 交互式环境档案子菜单（导出 / 导入）
-async fn interactive_profile(config: &HudoConfig) -> Result<()> {
+async fn interactive_profile(config: &mut HudoConfig) -> Result<()> {
     loop {
         ui::page_header("环境档案");
 
@@ -1687,7 +1835,7 @@ async fn interactive_profile(config: &HudoConfig) -> Result<()> {
             .items(menu_items)
             .default(0)
             .interact_opt()
-            .context("选择被取消")?;
+            .unwrap_or(None);
 
         match selection {
             Some(0) => {
@@ -1695,8 +1843,13 @@ async fn interactive_profile(config: &HudoConfig) -> Result<()> {
                 ui::wait_for_key();
             }
             Some(1) => {
-                let mut config = config.clone();
-                cmd_import(&mut config, "hudo-profile.toml").await?;
+                let path = ui::input_text("档案文件路径", Some("hudo-profile.toml"), false)?;
+                if !std::path::Path::new(&path).exists() {
+                    ui::print_error(&format!("文件不存在: {}", path));
+                    ui::wait_for_key();
+                    continue;
+                }
+                cmd_import(config, &path).await?;
                 ui::wait_for_key();
             }
             Some(2) | None => break,
@@ -1708,13 +1861,14 @@ async fn interactive_profile(config: &HudoConfig) -> Result<()> {
 }
 
 /// 交互式配置子菜单
-async fn interactive_config(config: &HudoConfig) -> Result<()> {
+async fn interactive_config(config: &mut HudoConfig) -> Result<()> {
     loop {
         ui::page_header("配置管理");
 
         let menu_items = &[
             "[=] 查看配置",
             "[M] 设置镜像",
+            "[V] 设置固定版本",
             "[E] 编辑配置文件",
             "[R] 重置配置",
             "[B] 返回",
@@ -1725,7 +1879,7 @@ async fn interactive_config(config: &HudoConfig) -> Result<()> {
             .items(menu_items)
             .default(0)
             .interact_opt()
-            .context("选择被取消")?;
+            .unwrap_or(None);
 
         match selection {
             Some(0) => {
@@ -1733,39 +1887,50 @@ async fn interactive_config(config: &HudoConfig) -> Result<()> {
                 ui::wait_for_key();
             }
             Some(1) => {
-                let mirror_keys = &[
-                    "mirrors.uv",
-                    "mirrors.nodejs",
-                    "mirrors.go",
-                    "mirrors.java",
-                    "mirrors.vscode",
-                    "mirrors.pycharm",
-                ];
-
-                let key_sel = Select::with_theme(&ColorfulTheme::default())
-                    .with_prompt("选择要设置的镜像")
-                    .items(mirror_keys)
-                    .interact_opt()
-                    .context("选择被取消")?;
-
-                if let Some(idx) = key_sel {
-                    let value: String = Input::with_theme(&ColorfulTheme::default())
-                        .with_prompt(format!("输入 {} 的值", mirror_keys[idx]))
-                        .interact_text()
-                        .context("输入被取消")?;
-
-                    let mut config = config.clone();
-                    cmd_config_set(&mut config, mirror_keys[idx], &value)?;
+                interactive_config_set(config, "mirrors", MIRROR_KEYS)?;
+            }
+            Some(2) => {
+                interactive_config_set(config, "versions", VERSION_KEYS)?;
+            }
+            Some(3) => {
+                cmd_config_edit()?;
+                // 用户可能改了文件，重新加载保证本次会话生效
+                if let Some(new_config) = HudoConfig::load()? {
+                    *config = new_config;
+                    ui::print_success("配置已重新加载");
                 }
                 ui::wait_for_key();
             }
-            Some(2) => cmd_config_edit()?,
-            Some(3) => { cmd_config_reset()?; ui::wait_for_key(); }
-            Some(4) | None => break,
+            Some(4) => {
+                cmd_config_reset()?;
+                ui::wait_for_key();
+            }
+            Some(5) | None => break,
             _ => unreachable!(),
         }
     }
 
+    Ok(())
+}
+
+/// 交互式设置 mirrors.* / versions.* 配置项（写入的是真实 config，本次会话立即生效）
+fn interactive_config_set(config: &mut HudoConfig, prefix: &str, keys: &[&str]) -> Result<()> {
+    let labels: Vec<String> = keys.iter().map(|k| format!("{}.{}", prefix, k)).collect();
+    let key_sel = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("选择要设置的配置项 (Esc 返回)")
+        .items(&labels)
+        .interact_opt()
+        .unwrap_or(None);
+
+    if let Some(idx) = key_sel {
+        let value = ui::input_text(&format!("输入 {} 的值（留空取消）", labels[idx]), None, true)?;
+        if value.is_empty() {
+            ui::print_info("已取消");
+        } else {
+            cmd_config_set(config, &labels[idx], &value)?;
+        }
+        ui::wait_for_key();
+    }
     Ok(())
 }
 
@@ -1792,8 +1957,9 @@ async fn main() -> Result<()> {
                         ui::print_error("Linux/macOS 暂不支持自卸载，请手动删除 hudo 目录");
                     }
                 } else if let Some(t) = tool {
-                    let config = ensure_config()?;
-                    cmd_uninstall(&config, &t.to_lowercase()).await?;
+                    if let Some(config) = load_config_readonly()? {
+                        cmd_uninstall(&config, &t.to_lowercase()).await?;
+                    }
                 } else {
                     eprintln!("请指定工具名称，或使用 --self 卸载 hudo 自身");
                     eprintln!("示例: hudo uninstall git");
@@ -1802,21 +1968,24 @@ async fn main() -> Result<()> {
                 }
             }
             Commands::Export { file } => {
-                let config = ensure_config()?;
-                cmd_export(&config, file).await?;
+                if let Some(config) = load_config_readonly()? {
+                    cmd_export(&config, file).await?;
+                }
             }
             Commands::Import { file } => {
                 let mut config = ensure_config()?;
                 cmd_import(&mut config, &file).await?;
             }
             Commands::List { all } => {
-                let config = ensure_config()?;
-                cmd_list(&config, all).await?;
+                if let Some(config) = load_config_readonly()? {
+                    cmd_list(&config, all, all).await?;
+                }
             }
             Commands::Config { action } => match action {
                 ConfigAction::Show => {
-                    let config = ensure_config()?;
-                    cmd_config_show(&config)?;
+                    if let Some(config) = load_config_readonly()? {
+                        cmd_config_show(&config)?;
+                    }
                 }
                 ConfigAction::Set { key, value } => {
                     let mut config = ensure_config()?;
@@ -1842,8 +2011,8 @@ async fn main() -> Result<()> {
             }
         },
         None => {
-            let config = ensure_config()?;
-            interactive_menu(&config).await?;
+            let mut config = ensure_config()?;
+            interactive_menu(&mut config).await?;
         }
     }
 
