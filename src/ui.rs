@@ -1,5 +1,7 @@
 use std::io::Write;
+use anyhow::Result;
 use console::{measure_text_width, pad_str, style, Alignment, Style};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input};
 
 /// 硬编码 ASCII art（FIGlet "Small Slant" 风格，宽度 < 50 列）
 const BANNER_LINES: &[&str] = &[
@@ -20,12 +22,18 @@ const GRADIENT_COLORS: &[(u8, u8, u8)] = &[
 ];
 
 /// 打印 hudo 品牌 Banner（硬编码 ASCII art + 逐行渐变）
+/// 终端不支持颜色（重定向 / CLICOLOR=0 / 旧终端）时输出纯文本，避免裸转义乱码
 pub fn print_banner() {
     let stdout = std::io::stdout();
     let mut w = std::io::BufWriter::new(stdout.lock());
+    let colors = console::colors_enabled();
     for (i, line) in BANNER_LINES.iter().enumerate() {
-        let (r, g, b) = GRADIENT_COLORS[i % GRADIENT_COLORS.len()];
-        let _ = writeln!(w, "\x1b[1m\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, line);
+        if colors {
+            let (r, g, b) = GRADIENT_COLORS[i % GRADIENT_COLORS.len()];
+            let _ = writeln!(w, "\x1b[1m\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, line);
+        } else {
+            let _ = writeln!(w, "{}", line);
+        }
     }
     let _ = writeln!(
         w,
@@ -36,24 +44,18 @@ pub fn print_banner() {
     let _ = writeln!(w);
 }
 
-/// 清屏
+/// 清屏（经 console 的终端能力检测：ANSI 不可用时走 WinAPI，保留滚动缓冲区）
 pub fn clear_screen() {
-    let mut stdout = std::io::stdout().lock();
-    let _ = write!(stdout, "\x1B[2J\x1B[3J\x1B[H");
-    let _ = stdout.flush();
+    let _ = console::Term::stdout().clear_screen();
 }
 
-/// 打印标题行（带边框）
+/// 打印标题行（单行分隔线，避免悬空的半开边框）
 pub fn print_title(text: &str) {
     let text_width = measure_text_width(text);
-    let total_width = text_width.max(38) + 4; // 两侧各留 2 字符
-    let fill = total_width - text_width - 4; // 右侧填充
+    let fill = text_width.max(38) + 2 - text_width;
     let s = Style::new().cyan();
     println!();
-    println!(
-        "{}",
-        s.apply_to(format!("╭─ {} {}╮", text, "─".repeat(fill)))
-    );
+    println!("{}", s.apply_to(format!("── {} {}", text, "─".repeat(fill))));
 }
 
 /// 打印分类标题（用于 list / setup 中的分组）
@@ -86,6 +88,11 @@ pub fn print_error(text: &str) {
 
 pub fn print_info(text: &str) {
     println!("  {}", style(text).dim());
+}
+
+/// 打印需要用户执行的关键下一步操作（醒目，与 dim 的过程信息区分）
+pub fn print_next_step(text: &str) {
+    println!("  {} {}", style(">").cyan().bold(), style(text).cyan());
 }
 
 /// 打印正在进行的操作（树形连接符）
@@ -187,15 +194,52 @@ impl ToolCategory {
 }
 
 /// 页面头部：清屏 + Banner + 标题
+/// 所有页面统一用这个：头部高度一致，切换页面时内容不跳行
 pub fn page_header(title: &str) {
     clear_screen();
     print_banner();
     print_title(title);
 }
 
-/// 暂停等待用户按键
+/// 暂停等待用户按键（提示与读键走同一个终端，避免 stdout 重定向时提示丢失）
 pub fn wait_for_key() {
-    println!();
-    println!("  {}", style("按任意键返回...").dim());
-    let _ = console::Term::stderr().read_key();
+    let term = console::Term::stderr();
+    let _ = term.write_line("");
+    let _ = term.write_line(&format!("  {}", style("按任意键继续...").dim()));
+    let _ = term.read_key();
+}
+
+/// 统一主题的确认框（Esc 视为取消，返回 false）
+pub fn confirm(prompt: &str, default: bool) -> Result<bool> {
+    let ans = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(prompt)
+        .default(default)
+        .interact_opt()?;
+    Ok(ans.unwrap_or(false))
+}
+
+/// 统一主题的文本输入（返回值已去除首尾空白）
+/// allow_empty 为 true 时允许空输入，调用方可将空值视为取消
+pub fn input_text(prompt: &str, default: Option<&str>, allow_empty: bool) -> Result<String> {
+    let theme = ColorfulTheme::default();
+    let mut input = Input::<String>::with_theme(&theme)
+        .with_prompt(prompt)
+        .allow_empty(allow_empty);
+    if let Some(d) = default {
+        input = input.default(d.to_string());
+    }
+    Ok(input.interact_text()?.trim().to_string())
+}
+
+/// 创建一个转圈 spinner（调用方负责 finish_and_clear）
+pub fn spinner(msg: &str) -> indicatif::ProgressBar {
+    let pb = indicatif::ProgressBar::new_spinner();
+    pb.set_style(
+        indicatif::ProgressStyle::default_spinner()
+            .template("  {spinner:.cyan} {msg}")
+            .unwrap(),
+    );
+    pb.set_message(msg.to_string());
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+    pb
 }
