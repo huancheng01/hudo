@@ -180,6 +180,26 @@ pub async fn redis_latest() -> Option<(String, String)> {
     Some((tag.to_string(), version))
 }
 
+/// MySQL: endoflife.date API → 最新 LTS 周期的最新补丁版（如 "9.7.1"）
+/// 只取 LTS：innovation 版本发布三个月即 EOL，不适合默认安装
+pub async fn mysql_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: Vec<serde_json::Value> = client
+        .get("https://endoflife.date/api/mysql.json")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    // 数组按周期从新到旧排列，第一个 lts 条目即当前最新 LTS
+    resp.iter()
+        .find(|v| v["lts"].as_bool() == Some(true))
+        .and_then(|v| v["latest"].as_str())
+        .map(|s| s.to_string())
+}
+
 /// Node.js: nodejs.org API → 最新 LTS 版本号（如 "22.14.0"）
 pub async fn nodejs_lts_latest() -> Option<String> {
     let client = make_client().ok()?;

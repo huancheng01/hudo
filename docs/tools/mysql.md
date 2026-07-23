@@ -19,7 +19,7 @@ MySQL Community Server，关系型数据库。
 hudo install mysql
 ```
 
-安装到 `{install_root}\lang\mysql\`，自动获取最新版本，自动注册为 Windows 服务（需要 UAC 提权）。
+安装到 `{install_root}\tools\mysql\`，自动获取最新 LTS 版本（只跟随 LTS 周期，不安装三个月即停止支持的 innovation 版本），自动注册为 Windows 服务（需要 UAC 提权）。可通过[配置文件](/guide/config)的 `versions.mysql` 锁定版本。
 
 ## 安装后
 

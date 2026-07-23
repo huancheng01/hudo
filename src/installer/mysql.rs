@@ -8,7 +8,7 @@ use crate::download;
 
 pub struct MysqlInstaller;
 
-const MYSQL_VERSION_DEFAULT: &str = "8.4.8";
+const MYSQL_VERSION_DEFAULT: &str = "9.7.1";
 const MYSQL_SERVICE_NAME: &str = "MySQL";
 
 #[async_trait]
@@ -63,7 +63,40 @@ impl Installer for MysqlInstaller {
     async fn install(&self, ctx: &InstallContext<'_>) -> Result<InstallResult> {
         let config = ctx.config;
         let install_dir = config.tools_dir().join("mysql");
-        let (url, filename) = self.resolve_download(config);
+
+        let version = match &config.versions.mysql {
+            Some(v) => v.clone(),
+            None => {
+                crate::ui::print_action("查询 MySQL 最新 LTS 版本...");
+                match crate::version::mysql_latest().await {
+                    Some(v) => {
+                        crate::ui::print_info(&format!("最新版本: {}", v));
+                        v
+                    }
+                    None => {
+                        crate::ui::print_warning(&format!(
+                            "获取最新版本失败，使用内置默认版本 {}",
+                            MYSQL_VERSION_DEFAULT
+                        ));
+                        MYSQL_VERSION_DEFAULT.to_string()
+                    }
+                }
+            }
+        };
+
+        let filename = format!("mysql-{}-winx64.zip", version);
+        let major_minor = version.rsplitn(2, '.').last().unwrap_or(&version);
+        let base = config
+            .mirrors
+            .mysql
+            .as_deref()
+            .unwrap_or("https://cdn.mysql.com/Downloads");
+        let url = format!(
+            "{}/MySQL-{}/{}",
+            base.trim_end_matches('/'),
+            major_minor,
+            filename
+        );
 
         let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
 
@@ -81,15 +114,9 @@ impl Installer for MysqlInstaller {
         std::fs::rename(&inner, &install_dir).ok();
         std::fs::remove_dir_all(&tmp_dir).ok();
 
-        let version = config
-            .versions
-            .mysql
-            .as_deref()
-            .unwrap_or(MYSQL_VERSION_DEFAULT);
-
         Ok(InstallResult {
             install_path: install_dir,
-            version: version.to_string(),
+            version,
         })
     }
 
