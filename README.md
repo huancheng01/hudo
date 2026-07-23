@@ -47,7 +47,7 @@ hudo
 
 ---
 
-## 支持的工具（26 个）
+## 支持的工具（27 个）
 
 ### 工具
 | ID | 工具 | 说明 |
@@ -58,6 +58,7 @@ hudo
 | `7zip` | 7-Zip | 压缩/解压工具（便携免管理员） |
 | `pwsh` | PowerShell 7 | 现代跨平台 PowerShell（便携版） |
 | `powertoys` | PowerToys | 微软官方效率工具集（用户级静默安装） |
+| `omp` | Oh My Posh | 终端主题引擎 + Nerd Font 字体 |
 
 ### 语言 & 运行时
 | ID | 工具 | 说明 |

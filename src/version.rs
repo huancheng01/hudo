@@ -137,6 +137,22 @@ pub async fn pycharm_latest() -> Option<String> {
     resp["PCC"][0]["version"].as_str().map(|s| s.to_string())
 }
 
+/// Oh My Posh: GitHub API → 最新版本号（tag "v29.35.1" → "29.35.1"）
+pub async fn omp_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    Some(tag.trim_start_matches('v').to_string())
+}
+
 /// PowerToys: GitHub API → 最新版本号（tag "v0.100.2" → "0.100.2"）
 pub async fn powertoys_latest() -> Option<String> {
     let client = make_client().ok()?;

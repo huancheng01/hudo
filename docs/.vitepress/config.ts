@@ -27,6 +27,7 @@ const toolHowTo: Record<string, { name: string; steps: string[] }> = {
   'tools/pwsh': { name: '在 Windows 安装 PowerShell 7', steps: ['运行 hudo install pwsh', 'hudo 下载官方 zip 便携版', '免管理员安装并配置 PATH'] },
   'tools/dotnet': { name: '在 Windows 安装 .NET SDK', steps: ['运行 hudo install dotnet', 'hudo 经官方 dotnet-install 脚本用户级安装', '自动配置 DOTNET_ROOT 与 PATH'] },
   'tools/powertoys': { name: '在 Windows 安装 PowerToys', steps: ['运行 hudo install powertoys', 'hudo 下载官方 UserSetup 用户级安装器', '免管理员静默安装'] },
+  'tools/omp': { name: '在 Windows 安装 Oh My Posh', steps: ['运行 hudo install omp', 'hudo 安装主程序、主题包并注册 Nerd Font 字体', '自动写入 PowerShell profile'] },
 }
 
 export default defineConfig({
@@ -143,6 +144,7 @@ export default defineConfig({
             { text: '7-Zip', link: '/tools/7zip' },
             { text: 'PowerShell 7', link: '/tools/pwsh' },
             { text: 'PowerToys', link: '/tools/powertoys' },
+            { text: 'Oh My Posh', link: '/tools/omp' },
             { text: 'Google Chrome', link: '/tools/chrome' },
             { text: 'Claude Code', link: '/tools/claude-code' },
           ]

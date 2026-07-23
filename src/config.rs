@@ -128,6 +128,7 @@ keyed_options!(VersionConfig {
     "pwsh" => pwsh,
     "dotnet" => dotnet,
     "powertoys" => powertoys,
+    "omp" => omp,
 });
 
 impl HudoConfig {

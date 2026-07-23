@@ -520,6 +520,7 @@ async fn resolve_upgrade_target(config: &HudoConfig, id: &str) -> Option<String>
         "pwsh" => lock_or(&v.pwsh, version::pwsh_latest()).await,
         "dotnet" => lock_or(&v.dotnet, version::dotnet_latest()).await,
         "powertoys" => lock_or(&v.powertoys, version::powertoys_latest()).await,
+        "omp" => lock_or(&v.omp, version::omp_latest()).await,
         _ => None,
     }
 }
