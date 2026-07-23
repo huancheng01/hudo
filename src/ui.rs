@@ -203,14 +203,45 @@ pub fn page_header(title: &str) {
 
 /// 暂停等待用户按键（提示与读键走同一个终端，避免 stdout 重定向时提示丢失）
 pub fn wait_for_key() {
+    if assume_yes() {
+        return;
+    }
     let term = console::Term::stderr();
     let _ = term.write_line("");
     let _ = term.write_line(&format!("  {}", style("按任意键继续...").dim()));
     let _ = term.read_key();
 }
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
+/// 非交互模式开关（-y/--yes），进程启动时注入一次
+static ASSUME_YES: AtomicBool = AtomicBool::new(false);
+
+pub fn set_assume_yes(on: bool) {
+    ASSUME_YES.store(on, Ordering::Relaxed);
+}
+
+pub fn assume_yes() -> bool {
+    ASSUME_YES.load(Ordering::Relaxed)
+}
+
+/// 非交互模式下回显自动决策，保证脚本日志可审计
+fn print_auto_answer(prompt: &str, answer: bool) {
+    println!(
+        "  {} {} {}",
+        style("?").cyan(),
+        prompt,
+        style(if answer { "[自动: 是]" } else { "[自动: 否]" }).dim()
+    );
+}
+
 /// 统一主题的确认框（Esc 视为取消，返回 false）
+/// 用于可选分支（接管/重跑配置/顺带安装等）：非交互模式下取默认值，不会自动扩大动作范围
 pub fn confirm(prompt: &str, default: bool) -> Result<bool> {
+    if assume_yes() {
+        print_auto_answer(prompt, default);
+        return Ok(default);
+    }
     let ans = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(prompt)
         .default(default)
@@ -218,9 +249,33 @@ pub fn confirm(prompt: &str, default: bool) -> Result<bool> {
     Ok(ans.unwrap_or(false))
 }
 
+/// 推进类确认（确认开始/确认卸载/确认导入等，"否"意味着整个命令中止）：
+/// 非交互模式下自动"是"——用户敲下命令本身就是意图，交互默认值只服务于交互场景
+pub fn confirm_proceed(prompt: &str, default: bool) -> Result<bool> {
+    if assume_yes() {
+        print_auto_answer(prompt, true);
+        return Ok(true);
+    }
+    confirm(prompt, default)
+}
+
 /// 统一主题的文本输入（返回值已去除首尾空白）
 /// allow_empty 为 true 时允许空输入，调用方可将空值视为取消
+/// 非交互模式下直接采用默认值；无默认值且不允许空时报错，不静默编造输入
 pub fn input_text(prompt: &str, default: Option<&str>, allow_empty: bool) -> Result<String> {
+    if assume_yes() {
+        let v = default.unwrap_or("").trim().to_string();
+        if v.is_empty() && !allow_empty {
+            anyhow::bail!("非交互模式下「{}」没有默认值，无法继续", prompt);
+        }
+        println!(
+            "  {} {} {}",
+            style("?").cyan(),
+            prompt,
+            style(format!("[自动: {}]", if v.is_empty() { "(空)" } else { &v })).dim()
+        );
+        return Ok(v);
+    }
     let theme = ColorfulTheme::default();
     let mut input = Input::<String>::with_theme(&theme)
         .with_prompt(prompt)

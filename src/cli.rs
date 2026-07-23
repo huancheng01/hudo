@@ -7,6 +7,10 @@ pub struct Cli {
     #[arg(short = 'v', long, action = clap::ArgAction::Version)]
     version: Option<bool>,
 
+    /// 非交互模式：推进类确认自动"是"，可选分支（如接管系统已装工具）取安全默认值
+    #[arg(short = 'y', long = "yes", global = true)]
+    pub yes: bool,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }

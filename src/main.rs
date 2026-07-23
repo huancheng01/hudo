@@ -298,7 +298,7 @@ async fn setup_category(
         console::style(selected_names.len()).cyan().bold(),
         selected_names.join(", ")
     );
-    let confirm = ui::confirm("确认开始？", true)?;
+    let confirm = ui::confirm_proceed("确认开始？", true)?;
 
     if !confirm {
         ui::print_info("已取消");
@@ -322,7 +322,7 @@ async fn setup_category(
         if let Err(e) = cmd_install(config, info.id).await {
             ui::print_error(&format!("{} 安装失败: {:#}", info.name, e));
             fail_names.push(info.name);
-            if !ui::confirm("是否继续安装其余工具？", true).unwrap_or(false) {
+            if !ui::confirm_proceed("是否继续安装其余工具？", true).unwrap_or(false) {
                 aborted = true;
                 break;
             }
@@ -497,7 +497,7 @@ async fn cmd_uninstall(config: &HudoConfig, tool_id: &str) -> Result<()> {
         }
     }
 
-    let confirm = ui::confirm(
+    let confirm = ui::confirm_proceed(
         &format!("确认卸载 {}？（将删除安装目录并清理环境变量）", info.name),
         false,
     )?;
@@ -962,7 +962,7 @@ async fn cmd_export(config: &HudoConfig, file: Option<String>) -> Result<()> {
     }
 
     println!();
-    if !ui::confirm(&format!("导出到 {} ?", display_path.display()), true)? {
+    if !ui::confirm_proceed(&format!("导出到 {} ?", display_path.display()), true)? {
         ui::print_info("已取消");
         return Ok(());
     }
@@ -1085,7 +1085,7 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
     } else {
         "确认应用配置并开始安装？"
     };
-    if !ui::confirm(prompt, true)? {
+    if !ui::confirm_proceed(prompt, true)? {
         ui::print_info("已取消，未做任何修改");
         return Ok(());
     }
@@ -1115,7 +1115,7 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
             if let Err(e) = cmd_install_inner(config, info.id, false).await {
                 ui::print_error(&format!("{} 安装失败: {:#}", info.name, e));
                 fail_names.push(info.name);
-                if !ui::confirm("是否继续安装其余工具？", true).unwrap_or(false) {
+                if !ui::confirm_proceed("是否继续安装其余工具？", true).unwrap_or(false) {
                     aborted = true;
                     break;
                 }
@@ -1200,7 +1200,7 @@ async fn apply_tool_configs(
 async fn cmd_self_uninstall() -> Result<()> {
     ui::print_title("卸载 hudo");
 
-    let confirmed = ui::confirm("确定要卸载 hudo 吗？", false)?;
+    let confirmed = ui::confirm_proceed("确定要卸载 hudo 吗？", false)?;
     if !confirmed {
         println!("  已取消");
         return Ok(());
@@ -1650,7 +1650,7 @@ fn cmd_config_set(config: &mut HudoConfig, key: &str, value: &str) -> Result<()>
             .unwrap_or(false);
         if has_records {
             ui::print_warning("修改 root_dir 不会迁移已安装的工具，旧目录中的安装记录将不再显示");
-            if !ui::confirm("确认修改？", false)? {
+            if !ui::confirm_proceed("确认修改？", false)? {
                 ui::print_info("已取消");
                 return Ok(());
             }
@@ -1927,6 +1927,10 @@ fn interactive_config_set(config: &mut HudoConfig, prefix: &str, keys: &[&str]) 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    if cli.yes {
+        ui::set_assume_yes(true);
+    }
 
     // 进程级代理注入：静默读取配置（不触发首次初始化），对版本查询/下载/自更新统一生效
     if let Ok(Some(cfg)) = HudoConfig::load() {

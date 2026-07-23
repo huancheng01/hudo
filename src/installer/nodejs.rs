@@ -71,7 +71,7 @@ impl Installer for NodejsInstaller {
         // 旧版 fnm 残留自动迁移：征得同意后清理 lang/node/、tools/fnm/、PowerShell profile
         if is_legacy_fnm_dir(&install_dir) || legacy_fnm_version(config).is_some() {
             crate::ui::print_warning("检测到旧版 fnm 残留（由 hudo 0.2.12 及更早版本安装）");
-            let confirm = crate::ui::confirm("是否清理旧版 fnm 残留后继续安装 Node.js？", true)?;
+            let confirm = crate::ui::confirm_proceed("是否清理旧版 fnm 残留后继续安装 Node.js？", true)?;
             if !confirm {
                 anyhow::bail!("已取消，请先运行 `hudo uninstall nodejs` 清理旧版 fnm 再重试");
             }
