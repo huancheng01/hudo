@@ -90,11 +90,17 @@ fn ensure_config_windows() -> Result<String> {
         .unwrap_or(0);
 
     println!();
-    let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&items)
-        .default(default)
-        .interact()
-        .context("磁盘选择被取消")?;
+    let selection = if ui::assume_yes() {
+        // 非交互：自动选默认盘（首个非系统盘，无则 C），支撑 install.ps1 + 档案的无人值守整机还原
+        ui::print_info(&format!("非交互模式，自动选择安装盘: {}:", drives[default].letter));
+        default
+    } else {
+        Select::with_theme(&ColorfulTheme::default())
+            .items(&items)
+            .default(default)
+            .interact()
+            .context("磁盘选择被取消")?
+    };
 
     let chosen = &drives[selection];
     let mut root_dir = format!("{}:\\hudo", chosen.letter);
