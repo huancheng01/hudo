@@ -29,6 +29,7 @@ hudo 支持安装以下工具，按分类列出：
 | [Miniconda](./miniconda) | Python 科学计算环境（Conda 包管理） |
 | [Go](./go) | Go 语言 |
 | [Rust](./rust) | Rust 语言（通过 rustup 安装） |
+| [.NET SDK](./dotnet) | C#/F# 开发工具链（默认 LTS） |
 
 ## JVM 生态
 

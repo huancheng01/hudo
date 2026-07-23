@@ -6,6 +6,8 @@ pub mod bun;
 #[cfg(windows)]
 pub mod chrome;
 #[cfg(windows)]
+pub mod dotnet;
+#[cfg(windows)]
 pub mod gh;
 #[cfg(windows)]
 pub mod git;
@@ -332,6 +334,7 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         list.push(Box::new(maven::MavenInstaller));     // Java 构建
         list.push(Box::new(gradle::GradleInstaller));   // Java/Android 构建
         list.push(Box::new(mingw::MingwInstaller));     // C/C++
+        list.push(Box::new(dotnet::DotnetInstaller));   // .NET
         // 数据库
         list.push(Box::new(mysql::MysqlInstaller));
         list.push(Box::new(pgsql::PgsqlInstaller));

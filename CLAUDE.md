@@ -81,6 +81,7 @@ src/
     ├── gradle.rs
     ├── nodejs.rs
     ├── bun.rs
+    ├── dotnet.rs    # .NET SDK（官方脚本用户级安装，默认 LTS）
     ├── pwsh.rs      # PowerShell 7（zip 便携版）
     ├── rustup.rs
     ├── sevenzip.rs  # 7-Zip（id: 7zip，便携解包免管理员）
@@ -135,11 +136,11 @@ irm hudo.zexa.cc/install.ps1 | iex
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 
-### 支持的工具（24 个）
+### 支持的工具（25 个）
 | 分类 | 工具 ID |
 |------|---------|
 | 版本控制 | git, gh |
-| 运行时 | nodejs, fnm, bun, uv（Python）, miniconda, go, rust |
+| 运行时 | nodejs, fnm, bun, uv（Python）, miniconda, go, rust, dotnet |
 | JVM | jdk, maven, gradle |
 | 数据库 | mysql, pgsql, redis |
 | IDE | vscode, pycharm, idea |

@@ -25,6 +25,7 @@ const toolHowTo: Record<string, { name: string; steps: string[] }> = {
   'tools/claude-code': { name: '在 Windows 安装 Claude Code', steps: ['运行 hudo install claude-code', 'hudo 下载 Claude Code CLI 二进制', '自动配置 PATH 和 SHA256 校验'] },
   'tools/7zip': { name: '在 Windows 安装 7-Zip', steps: ['运行 hudo install 7zip', 'hudo 用官方 7zr 解出便携载荷', '免管理员安装并配置 PATH'] },
   'tools/pwsh': { name: '在 Windows 安装 PowerShell 7', steps: ['运行 hudo install pwsh', 'hudo 下载官方 zip 便携版', '免管理员安装并配置 PATH'] },
+  'tools/dotnet': { name: '在 Windows 安装 .NET SDK', steps: ['运行 hudo install dotnet', 'hudo 经官方 dotnet-install 脚本用户级安装', '自动配置 DOTNET_ROOT 与 PATH'] },
 }
 
 export default defineConfig({
@@ -130,6 +131,7 @@ export default defineConfig({
             { text: 'Gradle', link: '/tools/gradle' },
             { text: 'Python (uv)', link: '/tools/python' },
             { text: 'Miniconda', link: '/tools/miniconda' },
+            { text: '.NET SDK', link: '/tools/dotnet' },
             { text: 'MySQL', link: '/tools/mysql' },
             { text: 'PostgreSQL', link: '/tools/pgsql' },
             { text: 'Redis', link: '/tools/redis' },

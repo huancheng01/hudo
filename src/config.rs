@@ -126,6 +126,7 @@ keyed_options!(VersionConfig {
     "idea" => idea,
     "7zip" => sevenzip,
     "pwsh" => pwsh,
+    "dotnet" => dotnet,
 });
 
 impl HudoConfig {

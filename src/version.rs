@@ -137,6 +137,29 @@ pub async fn pycharm_latest() -> Option<String> {
     resp["PCC"][0]["version"].as_str().map(|s| s.to_string())
 }
 
+/// .NET SDK: releases-index.json → 最新活跃 LTS 通道的 latest-sdk（如 "10.0.302"）
+/// 只取 LTS：STS 通道 18 个月即停止支持，不适合默认安装
+pub async fn dotnet_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    resp["releases-index"]
+        .as_array()?
+        .iter()
+        .find(|e| {
+            e["release-type"].as_str() == Some("lts")
+                && e["support-phase"].as_str() == Some("active")
+        })
+        .and_then(|e| e["latest-sdk"].as_str())
+        .map(|s| s.to_string())
+}
+
 /// PowerShell 7: GitHub API → 最新版本号（tag "v7.6.4" → "7.6.4"）
 pub async fn pwsh_latest() -> Option<String> {
     let client = make_client().ok()?;

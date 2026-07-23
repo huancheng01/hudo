@@ -47,7 +47,7 @@ hudo
 
 ---
 
-## 支持的工具（24 个）
+## 支持的工具（25 个）
 
 ### 工具
 | ID | 工具 | 说明 |
@@ -70,6 +70,7 @@ hudo
 | `go` | Go | Go 编程语言 |
 | `jdk` | Java JDK | Adoptium Temurin JDK |
 | `c` | C/C++ | GCC 编译器（MinGW-w64） |
+| `dotnet` | .NET SDK | C#/F# 开发工具链（默认 LTS） |
 | `maven` | Maven | Apache Maven 构建工具 |
 | `gradle` | Gradle | Gradle 构建工具 |
 

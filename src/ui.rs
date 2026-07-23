@@ -185,7 +185,7 @@ impl ToolCategory {
     pub fn from_id(id: &str) -> Self {
         match id {
             "git" | "gh" | "claude-code" | "7zip" | "pwsh" => ToolCategory::Tool,
-            "uv" | "nodejs" | "fnm" | "bun" | "miniconda" | "rust" | "go" | "jdk" | "c" | "maven" | "gradle" => ToolCategory::Language,
+            "uv" | "nodejs" | "fnm" | "bun" | "miniconda" | "rust" | "go" | "jdk" | "c" | "maven" | "gradle" | "dotnet" => ToolCategory::Language,
             "mysql" | "pgsql" | "redis" => ToolCategory::Database,
             "vscode" | "pycharm" | "idea" | "chrome" => ToolCategory::Ide,
             _ => ToolCategory::Tool,
