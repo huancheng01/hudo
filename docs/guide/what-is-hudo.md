@@ -1,6 +1,6 @@
 ---
 title: "什么是 hudo - Windows 开发环境一键搭建工具"
-description: "hudo（混沌）是一个 Windows 开发环境一键引导工具，自动下载安装 Git、Node.js、Rust、Go、JDK 等 20+ 开发工具并配置环境变量，告别手动搭建。"
+description: "hudo（混沌）是一个 Windows 开发环境一键引导工具，自动下载安装 Git、Node.js、Rust、Go、JDK 等 27 款开发工具并配置环境变量，告别手动搭建。"
 head:
   - - meta
     - name: keywords
@@ -15,21 +15,23 @@ head:
 
 ## 能做什么
 
-- 交互式选择需要安装的工具
-- 自动下载并安装到指定盘（不装 C 盘）
-- 自动配置 PATH 等环境变量
-- 导出/导入配置档案，换电脑一键还原
+- 交互式选择需要安装的工具，全程免管理员权限（数据库服务注册除外）
+- 自动下载并安装到指定盘（不装 C 盘），写用户级环境变量
+- `hudo upgrade` 一键升级已装工具，支持版本锁定复现环境
+- 内置国内镜像回退与全局代理配置，大陆网络也能顺畅安装
+- 导出/导入配置档案，换电脑一条命令还原整套环境
+- 所有命令支持 `-y` 非交互模式，可脚本化、可无人值守
 
-## 支持的工具
+## 支持的工具（27 款）
 
 | 分类 | 工具 |
 |------|------|
 | 版本控制 | Git、GitHub CLI |
-| 运行时 | Node.js、Bun、Python（uv）、Miniconda、Go、Rust |
+| 运行时 | Node.js、fnm、Bun、Python（uv）、Miniconda、Go、Rust、.NET SDK |
 | JVM | JDK、Maven、Gradle |
-| 数据库 | MySQL、PostgreSQL |
-| IDE | VS Code、PyCharm |
-| 系统工具 | MinGW（GCC）、Google Chrome、Claude Code |
+| 数据库 | MySQL、PostgreSQL、Redis |
+| IDE | VS Code、PyCharm、IntelliJ IDEA |
+| 系统工具 | MinGW（GCC）、7-Zip、PowerShell 7、PowerToys、Oh My Posh、Google Chrome、Claude Code |
 
 ## 下一步
 

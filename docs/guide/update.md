@@ -11,6 +11,10 @@ head:
 
 hudo 支持自我更新，无需重新下载安装脚本。
 
+::: tip 要升级已安装的工具？
+`hudo update` 只更新 hudo 自身；升级 Git、Node.js 等已装工具用 [`hudo upgrade`](/guide/quickstart#升级工具)。
+:::
+
 ## 更新 hudo
 
 ```powershell
