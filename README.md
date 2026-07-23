@@ -45,7 +45,7 @@ hudo
 
 ---
 
-## 支持的工具（20 个）
+## 支持的工具（21 个）
 
 ### 工具
 | ID | 工具 | 说明 |
@@ -58,6 +58,7 @@ hudo
 | ID | 工具 | 说明 |
 |----|------|------|
 | `nodejs` | Node.js | Node.js 运行时 |
+| `fnm` | fnm | Node.js 多版本管理器 |
 | `bun` | Bun | JavaScript/TypeScript 运行时 |
 | `uv` | uv | Python 包管理器 |
 | `miniconda` | Miniconda | Conda 包管理器（最小安装） |
