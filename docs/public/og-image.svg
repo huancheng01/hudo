@@ -14,7 +14,7 @@
   <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
   <text x="600" y="220" font-family="system-ui,-apple-system,sans-serif" font-size="120" font-weight="800" fill="url(#accent)" text-anchor="middle">hudo</text>
   <text x="600" y="310" font-family="system-ui,-apple-system,sans-serif" font-size="36" fill="#e2e8f0" text-anchor="middle">Windows 开发环境一键引导工具</text>
-  <text x="600" y="380" font-family="system-ui,-apple-system,sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">Git · Node.js · Rust · Go · JDK · Python · MySQL · Redis · VS Code 等 20+ 工具</text>
+  <text x="600" y="380" font-family="system-ui,-apple-system,sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">Git · Node.js · Rust · Go · JDK · Python · MySQL · VS Code 等 27 款工具 · 免管理员</text>
   <text x="600" y="440" font-family="ui-monospace,monospace" font-size="20" fill="#64748b" text-anchor="middle">irm hudo.zexa.cc/install.ps1 | iex</text>
   <text x="600" y="560" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#475569" text-anchor="middle">hudo.zexa.cc · Open Source · MIT License</text>
 </svg>

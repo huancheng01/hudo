@@ -1,67 +1,55 @@
 import { defineConfig, type HeadConfig } from 'vitepress'
 
-// 工具页 HowTo schema 映射
-const toolHowTo: Record<string, { name: string; steps: string[] }> = {
-  'tools/git': { name: '在 Windows 安装 Git', steps: ['运行 hudo install git', 'hudo 自动下载最新版 Git 并静默安装', '自动配置 PATH 环境变量和 core.autocrlf'] },
-  'tools/nodejs': { name: '在 Windows 安装 Node.js', steps: ['运行 hudo install nodejs', 'hudo 下载官方预编译包并解压', '自动配置 PATH，npm 开箱即用'] },
-  'tools/fnm': { name: '在 Windows 安装 fnm', steps: ['运行 hudo install fnm', 'hudo 下载 fnm 并安装最新 LTS Node.js', '自动配置 FNM_DIR 并写入 PowerShell profile'] },
-  'tools/rust': { name: '在 Windows 安装 Rust', steps: ['运行 hudo install rust', 'hudo 通过 rustup 安装 Rust 工具链', '自动配置 CARGO_HOME 和 RUSTUP_HOME，支持 USTC 镜像'] },
-  'tools/go': { name: '在 Windows 安装 Go', steps: ['运行 hudo install go', 'hudo 下载 Go 官方安装包', '自动配置 GOROOT、GOPATH 和 GOPROXY 国内镜像'] },
-  'tools/jdk': { name: '在 Windows 安装 JDK', steps: ['运行 hudo install jdk', 'hudo 下载 Eclipse Temurin JDK', '自动配置 JAVA_HOME 和 PATH'] },
-  'tools/maven': { name: '在 Windows 安装 Maven', steps: ['运行 hudo install maven', 'hudo 下载 Maven 并解压', '自动配置 MAVEN_HOME 和阿里云镜像仓库'] },
-  'tools/gradle': { name: '在 Windows 安装 Gradle', steps: ['运行 hudo install gradle', 'hudo 下载 Gradle 并解压', '自动配置 GRADLE_HOME 和阿里云仓库镜像'] },
-  'tools/python': { name: '在 Windows 安装 Python (uv)', steps: ['运行 hudo install uv', 'hudo 安装 uv Python 包管理器', '通过 uv 管理 Python 版本和虚拟环境'] },
-  'tools/miniconda': { name: '在 Windows 安装 Miniconda', steps: ['运行 hudo install miniconda', 'hudo 下载 Miniconda 安装包', '自动静默安装并执行 conda init'] },
-  'tools/mysql': { name: '在 Windows 安装 MySQL', steps: ['运行 hudo install mysql', 'hudo 下载 MySQL Community Server', '自动初始化数据库、注册 Windows 服务、配置环境变量'] },
-  'tools/pgsql': { name: '在 Windows 安装 PostgreSQL', steps: ['运行 hudo install pgsql', 'hudo 下载 PostgreSQL 预编译包', '自动初始化数据目录、注册 Windows 服务'] },
-  'tools/redis': { name: '在 Windows 安装 Redis', steps: ['运行 hudo install redis', 'hudo 下载 Redis Windows 预编译包', '自动注册 Windows 服务，开机自启'] },
-  'tools/vscode': { name: '在 Windows 安装 VS Code', steps: ['运行 hudo install vscode', 'hudo 下载 VS Code 便携版', '自动配置 PATH 和右键菜单'] },
-  'tools/pycharm': { name: '在 Windows 安装 PyCharm', steps: ['运行 hudo install pycharm', 'hudo 下载 PyCharm Community Edition', '自动解压并配置桌面快捷方式'] },
-  'tools/idea': { name: '在 Windows 安装 IntelliJ IDEA', steps: ['运行 hudo install idea', 'hudo 经 JetBrains API 下载 IDEA 免安装包', '自动解压并配置 PATH'] },
-  'tools/mingw': { name: '在 Windows 安装 MinGW-w64', steps: ['运行 hudo install c', 'hudo 从 GitHub 下载 MinGW-w64 最新版', '自动配置 PATH，gcc/g++ 命令开箱即用'] },
-  'tools/bun': { name: '在 Windows 安装 Bun', steps: ['运行 hudo install bun', 'hudo 下载 Bun 运行时', '自动配置 PATH 环境变量'] },
-  'tools/gh': { name: '在 Windows 安装 GitHub CLI', steps: ['运行 hudo install gh', 'hudo 下载 GitHub CLI', '自动配置 PATH 并引导登录'] },
-  'tools/chrome': { name: '在 Windows 安装 Google Chrome', steps: ['运行 hudo install chrome', 'hudo 下载 Chrome 企业版 MSI', '自动 UAC 提权并静默安装'] },
-  'tools/claude-code': { name: '在 Windows 安装 Claude Code', steps: ['运行 hudo install claude-code', 'hudo 下载 Claude Code CLI 二进制', '自动配置 PATH 和 SHA256 校验'] },
-  'tools/7zip': { name: '在 Windows 安装 7-Zip', steps: ['运行 hudo install 7zip', 'hudo 用官方 7zr 解出便携载荷', '免管理员安装并配置 PATH'] },
-  'tools/pwsh': { name: '在 Windows 安装 PowerShell 7', steps: ['运行 hudo install pwsh', 'hudo 下载官方 zip 便携版', '免管理员安装并配置 PATH'] },
-  'tools/dotnet': { name: '在 Windows 安装 .NET SDK', steps: ['运行 hudo install dotnet', 'hudo 经官方 dotnet-install 脚本用户级安装', '自动配置 DOTNET_ROOT 与 PATH'] },
-  'tools/powertoys': { name: '在 Windows 安装 PowerToys', steps: ['运行 hudo install powertoys', 'hudo 下载官方 UserSetup 用户级安装器', '免管理员静默安装'] },
-  'tools/omp': { name: '在 Windows 安装 Oh My Posh', steps: ['运行 hudo install omp', 'hudo 安装主程序、主题包并注册 Nerd Font 字体', '自动写入 PowerShell profile'] },
+const SITE = 'https://hudo.zexa.cc'
+const SITE_TITLE = 'hudo - Windows 开发环境一键引导工具'
+const SITE_DESC = '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 27 款开发工具，免管理员权限，自动配置环境变量，支持国内镜像加速。'
+
+// 生成与 sitemap 完全一致的页面绝对 URL（canonical 必须与 sitemap/内链形态一致）
+function pageUrl(page: string): string {
+  const path = page.replace(/\.md$/, '')
+  if (path === 'index') return `${SITE}/`
+  if (path.endsWith('/index')) return `${SITE}/${path.slice(0, -'index'.length)}`
+  return `${SITE}/${path}.html`
+}
+
+// 面包屑分区：有真实索引页的分区才给中间层级
+const SECTIONS: Record<string, { name: string; url: string }> = {
+  tools: { name: '工具列表', url: `${SITE}/tools/` },
+  blog: { name: '博客', url: `${SITE}/blog/` },
 }
 
 export default defineConfig({
   title: 'hudo',
-  description: 'Windows 开发环境一键引导工具，支持 Git/Node.js/Rust/Go/JDK/Python 等 20+ 工具自动安装配置，告别手动折腾环境变量。',
+  description: SITE_DESC,
   lang: 'zh-CN',
+  // sitemap lastmod 与页面"最后更新"时间均取 git 提交时间（新鲜度信号）
+  lastUpdated: true,
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     // SEO meta
-    ['meta', { name: 'keywords', content: 'hudo, Windows开发环境, 一键安装, 开发工具, Git安装, Node.js安装, JDK安装, Rust安装, Python环境, Go开发环境, MySQL安装, 包管理器, dev tools, Windows development' }],
+    ['meta', { name: 'keywords', content: 'hudo, Windows开发环境, 一键安装, 开发工具, Git安装, Node.js安装, JDK安装, Rust安装, Python环境, Go开发环境, MySQL安装, 包管理器, 免管理员, dev tools, Windows development' }],
     ['meta', { name: 'author', content: 'Zexa' }],
-    // Open Graph
-    ['meta', { property: 'og:title', content: 'hudo - Windows 开发环境一键引导工具' }],
-    ['meta', { property: 'og:description', content: '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 20+ 开发工具，自动配置环境变量，支持国内镜像加速。' }],
-    ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:url', content: 'https://hudo.zexa.cc' }],
+    // Open Graph 站点级标签；og:title/og:description/og:url/canonical 逐页在 transformHead 输出
     ['meta', { property: 'og:site_name', content: 'hudo' }],
-    ['meta', { property: 'og:image', content: 'https://hudo.zexa.cc/og-image.svg' }],
+    // 社交爬虫不渲染 SVG，分享卡图必须用位图
+    ['meta', { property: 'og:image', content: `${SITE}/og-image.png` }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:image:alt', content: 'hudo - Windows 开发环境一键引导工具' }],
     ['meta', { property: 'og:locale', content: 'zh_CN' }],
-    // Twitter Card
+    // Twitter Card（title/description 缺省时 X 会回退读 OG 标签）
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'hudo - Windows 开发环境一键引导工具' }],
-    ['meta', { name: 'twitter:description', content: '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 20+ 开发工具，告别手动折腾环境变量。' }],
-    ['meta', { name: 'twitter:image', content: 'https://hudo.zexa.cc/og-image.svg' }],
-    // Schema.org 结构化数据
+    ['meta', { name: 'twitter:image', content: `${SITE}/og-image.png` }],
+    // Schema.org 结构化数据（SoftwareApplication 是 Google 仍支持的富结果类型）
     ['script', { type: 'application/ld+json' }, JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
       'name': 'hudo',
       'applicationCategory': 'DeveloperApplication',
       'operatingSystem': 'Windows',
-      'description': 'Windows 开发环境一键引导工具，支持 Git/Node.js/Rust/Go/JDK/Python 等 20+ 工具自动安装配置。',
-      'url': 'https://hudo.zexa.cc',
+      'description': 'Windows 开发环境一键引导工具：一条命令安装 27 款开发工具（Git/Node.js/Rust/Go/JDK/Python/MySQL 等），免管理员权限，自动配置环境变量，支持国内镜像与环境档案一键还原。',
+      'url': SITE,
       'downloadUrl': 'https://github.com/zexadev/hudo/releases',
       'author': {
         '@type': 'Organization',
@@ -206,40 +194,56 @@ export default defineConfig({
     // page 在 TransformContext 顶层（如 "tools/git.md"），pageData 里没有这个字段
     const page = context.page
     const pagePath = page.replace(/\.md$/, '').replace(/\/index$/, '')
+    const url = pageUrl(page)
+    const title = (frontmatter.title as string) || SITE_TITLE
+    const desc = (frontmatter.description as string) || SITE_DESC
+    const isBlogPost = pagePath.startsWith('blog/') && pagePath !== 'blog'
+
+    // canonical + 逐页 OG：合并 .html/尾斜杠等 URL 变体信号，社交分享显示每页真实标题
+    head.push(['link', { rel: 'canonical', href: url }])
+    head.push(['meta', { property: 'og:title', content: title }])
+    head.push(['meta', { property: 'og:description', content: desc }])
+    head.push(['meta', { property: 'og:url', content: url }])
+    head.push(['meta', { property: 'og:type', content: isBlogPost ? 'article' : 'website' }])
+
+    // 面包屑（首页不输出；有真实索引页的分区给三级，其余两级）
+    if (page !== 'index.md') {
+      const shortTitle = title.split(/\s+[-—|]\s+/)[0]
+      const section = SECTIONS[pagePath.split('/')[0]]
+      const items: Record<string, unknown>[] = [
+        { '@type': 'ListItem', 'position': 1, 'name': '首页', 'item': `${SITE}/` },
+      ]
+      if (section && pagePath.includes('/')) {
+        items.push({ '@type': 'ListItem', 'position': 2, 'name': section.name, 'item': section.url })
+        items.push({ '@type': 'ListItem', 'position': 3, 'name': shortTitle })
+      } else {
+        items.push({ '@type': 'ListItem', 'position': 2, 'name': shortTitle })
+      }
+      head.push(['script', { type: 'application/ld+json' }, JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': items,
+      })])
+    }
 
     // 博客文章 → Article schema
-    if (pagePath.startsWith('blog/') && pagePath !== 'blog') {
+    if (isBlogPost) {
       const article: Record<string, unknown> = {
         '@context': 'https://schema.org',
         '@type': 'Article',
-        'headline': frontmatter.title || '',
-        'description': frontmatter.description || '',
+        'headline': title,
+        'description': desc,
         'author': { '@type': 'Organization', 'name': 'Zexa', 'url': 'https://zexa.cc' },
         'publisher': { '@type': 'Organization', 'name': 'Zexa', 'url': 'https://zexa.cc' },
-        'mainEntityOfPage': `https://hudo.zexa.cc/${pagePath}`,
+        'mainEntityOfPage': url,
+        'image': `${SITE}/og-image.png`,
       }
       if (frontmatter.date) {
         article['datePublished'] = frontmatter.date
       }
       head.push(['script', { type: 'application/ld+json' }, JSON.stringify(article)])
     }
-
-    // 工具页 → HowTo schema
-    const howto = toolHowTo[pagePath]
-    if (howto) {
-      head.push(['script', { type: 'application/ld+json' }, JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'HowTo',
-        'name': howto.name,
-        'description': frontmatter.description || '',
-        'step': howto.steps.map((text, i) => ({
-          '@type': 'HowToStep',
-          'position': i + 1,
-          'text': text,
-        })),
-        'tool': { '@type': 'SoftwareApplication', 'name': 'hudo', 'url': 'https://hudo.zexa.cc' },
-      })])
-    }
+    // 工具页不再输出 HowTo schema：Google 已于 2023-09 停用 HowTo 富结果，属无效投入
 
     return head
   },
