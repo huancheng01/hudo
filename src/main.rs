@@ -1562,50 +1562,26 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
     println!("  {}  {}", ui::pad("java.version", 20), config.java.version);
     println!("  {}  {}", ui::pad("go.version", 20), config.go.version);
 
-    let versions = [
-        ("versions.git", &config.versions.git),
-        ("versions.gh", &config.versions.gh),
-        ("versions.nodejs", &config.versions.nodejs),
-        ("versions.fnm", &config.versions.fnm),
-        ("versions.mysql", &config.versions.mysql),
-        ("versions.pgsql", &config.versions.pgsql),
-        ("versions.pycharm", &config.versions.pycharm),
-        ("versions.maven", &config.versions.maven),
-        ("versions.gradle", &config.versions.gradle),
-        ("versions.claude_code", &config.versions.claude_code),
-        ("versions.redis", &config.versions.redis),
-    ];
-    let has_versions = versions.iter().any(|(_, v)| v.is_some());
-    if has_versions {
+    // 遍历 KEYS 展示已设置项：键表来自 config 单一来源，加新键无需改这里
+    let versions: Vec<(String, &String)> = config::VersionConfig::KEYS
+        .iter()
+        .filter_map(|&k| config.versions.get(k).map(|v| (format!("versions.{}", k), v)))
+        .collect();
+    if !versions.is_empty() {
         println!();
         for (key, val) in &versions {
-            if let Some(v) = val {
-                println!("  {}  {}", ui::pad(key, 20), v);
-            }
+            println!("  {}  {}", ui::pad(key, 20), val);
         }
     }
 
-    let mirrors = [
-        ("mirrors.uv", &config.mirrors.uv),
-        ("mirrors.nodejs", &config.mirrors.nodejs),
-        ("mirrors.fnm", &config.mirrors.fnm),
-        ("mirrors.go", &config.mirrors.go),
-        ("mirrors.java", &config.mirrors.java),
-        ("mirrors.vscode", &config.mirrors.vscode),
-        ("mirrors.pycharm", &config.mirrors.pycharm),
-        ("mirrors.mysql", &config.mirrors.mysql),
-        ("mirrors.pgsql", &config.mirrors.pgsql),
-        ("mirrors.maven", &config.mirrors.maven),
-        ("mirrors.gradle", &config.mirrors.gradle),
-        ("mirrors.redis", &config.mirrors.redis),
-    ];
-    let has_mirrors = mirrors.iter().any(|(_, v)| v.is_some());
-    if has_mirrors {
+    let mirrors: Vec<(String, &String)> = config::MirrorConfig::KEYS
+        .iter()
+        .filter_map(|&k| config.mirrors.get(k).map(|v| (format!("mirrors.{}", k), v)))
+        .collect();
+    if !mirrors.is_empty() {
         println!();
         for (key, val) in &mirrors {
-            if let Some(v) = val {
-                println!("  {}  {}", ui::pad(key, 20), v);
-            }
+            println!("  {}  {}", ui::pad(key, 20), val);
         }
     }
     Ok(())

@@ -98,26 +98,43 @@ impl Installer for VscodeInstaller {
     }
 
     fn resolve_download(&self, config: &HudoConfig) -> (String, String) {
-        let url = config.mirrors.vscode.as_deref()
-            .unwrap_or("https://update.code.visualstudio.com/latest/win32-x64-archive/stable")
-            .to_string();
-        (url, "vscode-win32-x64.zip".to_string())
+        // 镜像 URL 优先级最高；官方源支持 /{版本}/win32-x64-archive/stable 的版本化归档
+        if let Some(m) = config.mirrors.vscode.as_deref() {
+            return (m.to_string(), "vscode-win32-x64.zip".to_string());
+        }
+        match config.versions.vscode.as_deref() {
+            Some(v) => (
+                format!("https://update.code.visualstudio.com/{}/win32-x64-archive/stable", v),
+                format!("vscode-{}-win32-x64.zip", v),
+            ),
+            None => (
+                "https://update.code.visualstudio.com/latest/win32-x64-archive/stable".to_string(),
+                "vscode-win32-x64.zip".to_string(),
+            ),
+        }
     }
 
     async fn install(&self, ctx: &InstallContext<'_>) -> Result<InstallResult> {
         let config = ctx.config;
         let install_dir = config.ide_dir().join("vscode");
         let (url, filename) = self.resolve_download(config);
+        let locked = config.versions.vscode.is_some();
 
-        // 每次下载最新版
-        let cached = config.cache_dir().join(&filename);
-        if cached.exists() {
-            std::fs::remove_file(&cached).ok();
+        // 未锁定时文件名不含版本号，命中缓存会永远装同一个旧版，先清缓存
+        if !locked {
+            let cached = config.cache_dir().join(&filename);
+            if cached.exists() {
+                std::fs::remove_file(&cached).ok();
+            }
         }
 
-        // 下载（回退 Azure 中国 CDN）
-        let fallback_url = "https://vscode.cdn.azure.cn/stable/latest/vscode-win32-x64.zip";
-        let zip_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
+        // 未锁定走 latest 并回退 Azure 中国 CDN；锁定版本时 CDN 无对应版本化路径，不回退
+        let zip_path = if locked {
+            download::download(&url, &config.cache_dir(), &filename).await?
+        } else {
+            let fallback_url = "https://vscode.cdn.azure.cn/stable/latest/vscode-win32-x64.zip";
+            download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?
+        };
 
         crate::ui::print_action("解压 VS Code...");
         if install_dir.exists() {

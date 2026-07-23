@@ -39,10 +39,15 @@ impl Installer for MinicondaInstaller {
         Ok(DetectResult::NotInstalled)
     }
 
-    fn resolve_download(&self, _config: &HudoConfig) -> (String, String) {
+    fn resolve_download(&self, config: &HudoConfig) -> (String, String) {
+        // 版本锁定用官方发布串（如 "py313_25.5.1-1"），对应文件 Miniconda3-{串}-Windows-x86_64.exe
+        let filename = match config.versions.miniconda.as_deref() {
+            Some(rel) => format!("Miniconda3-{}-Windows-x86_64.exe", rel),
+            None => "Miniconda3-latest-Windows-x86_64.exe".to_string(),
+        };
         (
-            "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe".to_string(),
-            "Miniconda3-latest-Windows-x86_64.exe".to_string(),
+            format!("https://repo.anaconda.com/miniconda/{}", filename),
+            filename,
         )
     }
 
@@ -51,9 +56,20 @@ impl Installer for MinicondaInstaller {
         let install_dir = config.tools_dir().join("miniconda");
         let (url, filename) = self.resolve_download(config);
 
-        // 下载（回退 TUNA 镜像）
-        let fallback_url = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Windows-x86_64.exe";
-        let exe_path = download::download_with_fallback(&url, fallback_url, &config.cache_dir(), &filename).await?;
+        // 未锁定时文件名固定为 -latest，命中缓存会永远装同一个旧版，先清缓存
+        if config.versions.miniconda.is_none() {
+            let cached = config.cache_dir().join(&filename);
+            if cached.exists() {
+                std::fs::remove_file(&cached).ok();
+            }
+        }
+
+        // 下载（回退 TUNA 镜像，目录结构与官方一致，锁定版本同样适用）
+        let fallback_url = format!(
+            "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/{}",
+            filename
+        );
+        let exe_path = download::download_with_fallback(&url, &fallback_url, &config.cache_dir(), &filename).await?;
 
         // Miniconda 支持静默安装到指定目录
         let sp = crate::ui::spinner("正在运行 Miniconda 安装程序（可能需要几分钟）...");

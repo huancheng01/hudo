@@ -113,6 +113,10 @@ keyed_options!(VersionConfig {
     "gradle" => gradle,
     "claude_code" => claude_code,
     "redis" => redis,
+    "bun" => bun,
+    "uv" => uv,
+    "vscode" => vscode,
+    "miniconda" => miniconda,
 });
 
 impl HudoConfig {

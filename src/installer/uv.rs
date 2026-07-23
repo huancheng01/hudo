@@ -42,9 +42,12 @@ impl Installer for UvInstaller {
     }
 
     fn resolve_download(&self, config: &HudoConfig) -> (String, String) {
-        let url = config.mirrors.uv.as_deref()
-            .unwrap_or("https://astral.sh/uv/install.ps1")
-            .to_string();
+        // 镜像给的是完整脚本 URL，优先级最高；astral.sh 提供 /uv/{版本}/install.ps1 的版本化脚本
+        let url = match (config.mirrors.uv.as_deref(), config.versions.uv.as_deref()) {
+            (Some(m), _) => m.to_string(),
+            (None, Some(v)) => format!("https://astral.sh/uv/{}/install.ps1", v),
+            (None, None) => "https://astral.sh/uv/install.ps1".to_string(),
+        };
         (url, "uv-installer.ps1".to_string())
     }
 

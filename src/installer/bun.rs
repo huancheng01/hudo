@@ -39,19 +39,36 @@ impl Installer for BunInstaller {
         Ok(DetectResult::NotInstalled)
     }
 
-    fn resolve_download(&self, _config: &HudoConfig) -> (String, String) {
-        // Bun 官方提供 Windows x64 zip
-        (
-            "https://github.com/oven-sh/bun/releases/latest/download/bun-windows-x64.zip"
-                .to_string(),
-            "bun-windows-x64.zip".to_string(),
-        )
+    fn resolve_download(&self, config: &HudoConfig) -> (String, String) {
+        // Bun 官方提供 Windows x64 zip；release tag 格式为 bun-v{版本}
+        match config.versions.bun.as_deref() {
+            Some(v) => (
+                format!(
+                    "https://github.com/oven-sh/bun/releases/download/bun-v{}/bun-windows-x64.zip",
+                    v
+                ),
+                format!("bun-{}-windows-x64.zip", v),
+            ),
+            None => (
+                "https://github.com/oven-sh/bun/releases/latest/download/bun-windows-x64.zip"
+                    .to_string(),
+                "bun-windows-x64.zip".to_string(),
+            ),
+        }
     }
 
     async fn install(&self, ctx: &InstallContext<'_>) -> Result<InstallResult> {
         let config = ctx.config;
         let install_dir = config.tools_dir().join("bun");
         let (url, filename) = self.resolve_download(config);
+
+        // 未锁定版本时文件名不含版本号，命中缓存会永远装同一个旧版，先清缓存
+        if config.versions.bun.is_none() {
+            let cached = config.cache_dir().join(&filename);
+            if cached.exists() {
+                std::fs::remove_file(&cached).ok();
+            }
+        }
 
         let zip_path = download::download(&url, &config.cache_dir(), &filename).await?;
 
