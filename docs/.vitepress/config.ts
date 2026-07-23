@@ -202,7 +202,9 @@ export default defineConfig({
 
   transformHead(context) {
     const head: HeadConfig[] = []
-    const { frontmatter, page } = context.pageData
+    const { frontmatter } = context.pageData
+    // page 在 TransformContext 顶层（如 "tools/git.md"），pageData 里没有这个字段
+    const page = context.page
     const pagePath = page.replace(/\.md$/, '').replace(/\/index$/, '')
 
     // 博客文章 → Article schema
