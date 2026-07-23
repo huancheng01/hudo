@@ -72,7 +72,7 @@ vscode = "1.95.0"
 ### 第一步：旧电脑导出
 
 ```powershell
-hudo profile export
+hudo export
 ```
 
 当前目录下会生成 `hudo-profile.toml`，你的整个开发环境就在这个文件里了。
@@ -90,10 +90,10 @@ irm hudo.zexa.cc/install.ps1 | iex
 把 `hudo-profile.toml` 拷贝到新电脑，然后执行：
 
 ```powershell
-hudo profile import
+hudo import hudo-profile.toml
 ```
 
-按提示选择档案文件，hudo 会：
+hudo 会：
 
 1. 解析档案中的工具列表
 2. 显示即将安装的工具，等你确认
@@ -103,6 +103,17 @@ hudo profile import
 6. 恢复 Git 全局配置
 
 泡杯咖啡回来，环境就好了。
+
+### 更快：两步并一步
+
+把档案放到能访问的位置（私有网盘、内网、团队仓库），第二三步可以合并成一条命令——装 hudo 和还原环境一气呵成，全程无人值守：
+
+```powershell
+$env:HUDO_PROFILE = "https://example.com/hudo-profile.toml"   # 也可以是本地路径
+irm hudo.zexa.cc/install.ps1 | iex
+```
+
+注意：档案可能包含 Claude Code API 密钥明文，不要放到公开可访问的地址。
 
 ## 哪些会保留，哪些不会
 
@@ -130,7 +141,7 @@ project-repo/
 └── README.md
 ```
 
-新人入职，克隆仓库后执行 `hudo profile import`，5 分钟就拥有和团队一致的开发环境。
+新人入职，克隆仓库后执行 `hudo import hudo-profile.toml`，几分钟就拥有和团队一致的开发环境。
 
 再也不会出现这些问题：
 
@@ -142,7 +153,7 @@ project-repo/
 
 | 传统迁移 | hudo 档案迁移 |
 |---------|--------------|
-| 回忆 + 逐个下载 + 手动配置 | `hudo profile export` → 拷文件 → `hudo profile import` |
+| 回忆 + 逐个下载 + 手动配置 | `hudo export` → 拷文件 → `hudo import`（或一条安装命令带档案直接还原） |
 | 4-8 小时 | 10-20 分钟 |
 | 大概率漏装 | 完整还原 |
 | 每次从零开始 | 一份档案反复使用 |
