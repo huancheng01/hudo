@@ -125,6 +125,7 @@ keyed_options!(VersionConfig {
     "miniconda" => miniconda,
     "idea" => idea,
     "7zip" => sevenzip,
+    "pwsh" => pwsh,
 });
 
 impl HudoConfig {

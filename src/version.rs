@@ -137,6 +137,22 @@ pub async fn pycharm_latest() -> Option<String> {
     resp["PCC"][0]["version"].as_str().map(|s| s.to_string())
 }
 
+/// PowerShell 7: GitHub API → 最新版本号（tag "v7.6.4" → "7.6.4"）
+pub async fn pwsh_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/PowerShell/PowerShell/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    Some(tag.trim_start_matches('v').to_string())
+}
+
 /// 7-Zip: GitHub API (ip7z/7zip 官方镜像) → 最新版本号（tag 即版本，如 "26.02"）
 pub async fn sevenzip_latest() -> Option<String> {
     let client = make_client().ok()?;

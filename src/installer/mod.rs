@@ -36,6 +36,8 @@ pub mod idea;
 #[cfg(windows)]
 pub mod pycharm;
 #[cfg(windows)]
+pub mod pwsh;
+#[cfg(windows)]
 pub mod rustup;
 #[cfg(windows)]
 pub mod sevenzip;
@@ -337,6 +339,7 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         // 编辑器 / IDE
         // 系统工具
         list.push(Box::new(sevenzip::SevenzipInstaller));
+        list.push(Box::new(pwsh::PwshInstaller));
         // 编辑器 / IDE
         list.push(Box::new(vscode::VscodeInstaller));
         list.push(Box::new(pycharm::PycharmInstaller));
