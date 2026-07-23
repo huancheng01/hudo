@@ -32,6 +32,8 @@ pub mod pgsql;
 #[cfg(windows)]
 pub mod redis;
 #[cfg(windows)]
+pub mod idea;
+#[cfg(windows)]
 pub mod pycharm;
 #[cfg(windows)]
 pub mod rustup;
@@ -333,6 +335,7 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         // 编辑器 / IDE
         list.push(Box::new(vscode::VscodeInstaller));
         list.push(Box::new(pycharm::PycharmInstaller));
+        list.push(Box::new(idea::IdeaInstaller));
         list.push(Box::new(chrome::ChromeInstaller));
     }
 

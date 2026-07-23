@@ -499,6 +499,10 @@ async fn resolve_upgrade_target(config: &HudoConfig, id: &str) -> Option<String>
         "gradle" => lock_or(&v.gradle, version::gradle_latest()).await,
         "vscode" => lock_or(&v.vscode, version::vscode_latest()).await,
         "pycharm" => lock_or(&v.pycharm, version::pycharm_latest()).await,
+        "idea" => match &v.idea {
+            Some(x) => Some(x.clone()),
+            None => version::idea_latest().await.map(|(ver, _)| ver),
+        },
         "claude-code" => lock_or(&v.claude_code, version::claude_code_latest()).await,
         "go" => match config.go.version.as_str() {
             "latest" | "" => version::go_latest().await,
@@ -822,6 +826,7 @@ fn uninstall_from_system(tool_id: &str) -> Result<()> {
         "mysql" => uninstall_green(&["mysql"], &[]),
         "pgsql" => uninstall_green(&["psql"], &[]),
         "pycharm" => uninstall_green(&["pycharm64"], &[]),
+        "idea" => uninstall_green(&["idea64"], &[]),
         "claude-code" => uninstall_claude_code(),
         _ => anyhow::bail!("不支持自动卸载: {}", tool_id),
     }

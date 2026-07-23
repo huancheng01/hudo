@@ -47,7 +47,7 @@ hudo
 
 ---
 
-## 支持的工具（21 个）
+## 支持的工具（22 个）
 
 ### 工具
 | ID | 工具 | 说明 |
@@ -83,6 +83,7 @@ hudo
 |----|------|------|
 | `vscode` | VS Code | Visual Studio Code 编辑器 |
 | `pycharm` | PyCharm | PyCharm Community IDE |
+| `idea` | IntelliJ IDEA | IntelliJ IDEA Community IDE |
 | `chrome` | Chrome | Google Chrome 浏览器 |
 
 ---

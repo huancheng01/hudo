@@ -52,6 +52,7 @@ hudo 支持安装以下工具，按分类列出：
 |------|------|
 | [VS Code](./vscode) | 微软 Visual Studio Code |
 | [PyCharm](./pycharm) | JetBrains Python IDE |
+| [IntelliJ IDEA](./idea) | JetBrains Java/Kotlin IDE |
 
 ## 系统工具
 

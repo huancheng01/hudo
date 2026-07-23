@@ -104,6 +104,7 @@ keyed_options!(MirrorConfig {
     "maven" => maven,
     "gradle" => gradle,
     "redis" => redis,
+    "idea" => idea,
 });
 
 keyed_options!(VersionConfig {
@@ -122,6 +123,7 @@ keyed_options!(VersionConfig {
     "uv" => uv,
     "vscode" => vscode,
     "miniconda" => miniconda,
+    "idea" => idea,
 });
 
 impl HudoConfig {

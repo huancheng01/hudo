@@ -30,7 +30,7 @@ version = "latest"    # Go 版本，latest 表示自动获取最新版
 [versions]
 # 固定各工具版本，不填则自动获取最新版
 # 可用键: git, gh, nodejs, fnm, mysql, pgsql, pycharm, maven, gradle, claude_code, redis,
-#         bun, uv, vscode, miniconda
+#         bun, uv, vscode, miniconda, idea
 # git = "2.47.0"
 # miniconda 使用官方发布串（对应 Miniconda3-{串}-Windows-x86_64.exe 文件名）:
 # miniconda = "py313_25.5.1-1"
@@ -38,7 +38,7 @@ version = "latest"    # Go 版本，latest 表示自动获取最新版
 
 [mirrors]
 # 自定义下载镜像（可选）
-# 可用键: uv, nodejs, fnm, go, java, vscode, pycharm, mysql, pgsql, maven, gradle, redis
+# 可用键: uv, nodejs, fnm, go, java, vscode, pycharm, mysql, pgsql, maven, gradle, redis, idea
 # nodejs = "https://npmmirror.com/mirrors/node"
 ```
 

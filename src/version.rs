@@ -137,6 +137,43 @@ pub async fn pycharm_latest() -> Option<String> {
     resp["PCC"][0]["version"].as_str().map(|s| s.to_string())
 }
 
+/// IntelliJ IDEA: JetBrains API → (最新版本, Windows zip 下载链接)
+/// 链接直接取 API 返回：2025.3 起社区版并入统一发行版，文件命名跨代变化，不手拼
+pub async fn idea_latest() -> Option<(String, String)> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://data.services.jetbrains.com/products/releases?code=IIC&latest=true&type=release")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let entry = &resp["IIC"][0];
+    let version = entry["version"].as_str()?.to_string();
+    let link = entry["downloads"]["windowsZip"]["link"].as_str()?.to_string();
+    Some((version, link))
+}
+
+/// IntelliJ IDEA: 查指定版本的 Windows zip 下载链接（版本锁定用）
+pub async fn idea_release_link(version: &str) -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://data.services.jetbrains.com/products/releases?code=IIC&type=release")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    resp["IIC"]
+        .as_array()?
+        .iter()
+        .find(|e| e["version"].as_str() == Some(version))
+        .and_then(|e| e["downloads"]["windowsZip"]["link"].as_str())
+        .map(|s| s.to_string())
+}
+
 /// Claude Code: GCS → 最新版本号
 pub async fn claude_code_latest() -> Option<String> {
     let client = make_client().ok()?;

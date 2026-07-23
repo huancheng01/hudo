@@ -90,6 +90,8 @@ src/
     ├── redis.rs
     ├── vscode.rs
     ├── pycharm.rs
+    ├── idea.rs      # IntelliJ IDEA
+
     ├── chrome.rs
     └── claude_code.rs
 ```
@@ -131,14 +133,14 @@ irm hudo.zexa.cc/install.ps1 | iex
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 
-### 支持的工具（21 个）
+### 支持的工具（22 个）
 | 分类 | 工具 ID |
 |------|---------|
 | 版本控制 | git, gh |
 | 运行时 | nodejs, fnm, bun, uv（Python）, miniconda, go, rust |
 | JVM | jdk, maven, gradle |
 | 数据库 | mysql, pgsql, redis |
-| IDE | vscode, pycharm |
+| IDE | vscode, pycharm, idea |
 | 系统工具 | c（MinGW）, chrome, claude-code |
 
 ### 核心架构
