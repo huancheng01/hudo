@@ -51,7 +51,7 @@ hudo install mysql
 
 这条命令背后自动完成了以下所有步骤：
 
-- **下载解压**：从 MySQL 官方 CDN 下载 ZIP 包并解压到 `{安装盘}:\hudo\lang\mysql`
+- **下载解压**：从 MySQL 官方 CDN 下载 ZIP 包并解压到 `{安装盘}:\hudo\tools\mysql`
 - **生成 my.ini**：自动写入配置文件，默认 UTF8MB4 字符集、3306 端口、InnoDB 引擎、150 最大连接数
 - **初始化数据目录**：执行 `mysqld --initialize-insecure`，root 账户无初始密码，省去找临时密码的麻烦
 - **注册 Windows 服务**：自动调用 `mysqld --install`，权限不足时会弹出 UAC 提权窗口
@@ -73,8 +73,8 @@ hudo 生成的配置文件位于安装目录下的 `my.ini`，内容简洁实用
 
 ```ini
 [mysqld]
-basedir=D:/hudo/lang/mysql
-datadir=D:/hudo/lang/mysql/data
+basedir=D:/hudo/tools/mysql
+datadir=D:/hudo/tools/mysql/data
 port=3306
 character-set-server=utf8mb4
 collation-server=utf8mb4_unicode_ci

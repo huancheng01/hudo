@@ -57,7 +57,7 @@ hudo install pgsql
 
 这条命令自动完成以下所有步骤：
 
-- **下载解压**：从官方源下载 ZIP 二进制包，解压到 `{安装盘}:\hudo\lang\pgsql`
+- **下载解压**：从官方源下载 ZIP 二进制包，解压到 `{安装盘}:\hudo\tools\pgsql`
 - **初始化数据库**：执行 `initdb`，使用 UTF-8 编码，创建 `postgres` 超级用户
 - **注册 Windows 服务**：调用 `pg_ctl register`，权限不足时自动弹出 UAC 提权
 - **启动服务**：自动启动 PostgreSQL 服务

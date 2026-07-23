@@ -19,7 +19,7 @@ PostgreSQL 关系型数据库。
 hudo install pgsql
 ```
 
-安装到 `{install_root}\lang\pgsql\`，自动获取最新版本，自动注册为 Windows 服务（需要 UAC 提权）。
+安装到 `{install_root}\tools\pgsql\`，自动获取最新版本，自动注册为 Windows 服务（需要 UAC 提权）。
 
 ## 安装后
 
