@@ -27,7 +27,7 @@
       <div class="wrap">
         <div class="badge" data-reveal>
           <span class="badge-dot"></span>
-          <span class="badge-text">v0.2.12 — MIT Licensed</span>
+          <span class="badge-text">v0.3.0 — MIT Licensed</span>
           <span class="badge-arrow">→</span>
         </div>
 
@@ -249,7 +249,7 @@ const features = [
 // ─── Terminal typewriter ───
 const termLines = ref([
   { k: 'cmd', t: 'hudo' },
-  { k: 'dim', t: 'hudo v0.2.12 — The Chaos Bootstrapper' },
+  { k: 'dim', t: 'hudo v0.3.0 — The Chaos Bootstrapper' },
   { k: 'txt', t: 'Select tools to install:' },
   { k: 'on',  t: '◉  Git            2.47.1' },
   { k: 'on',  t: '◉  Node.js        22.13.0' },
