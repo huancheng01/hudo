@@ -516,6 +516,7 @@ async fn resolve_upgrade_target(config: &HudoConfig, id: &str) -> Option<String>
             version::jdk_latest(major).await
         }
         "c" => version::mingw_latest().await.map(|(_, _, gcc)| gcc),
+        "7zip" => lock_or(&v.sevenzip, version::sevenzip_latest()).await,
         _ => None,
     }
 }

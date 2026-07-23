@@ -124,6 +124,7 @@ keyed_options!(VersionConfig {
     "vscode" => vscode,
     "miniconda" => miniconda,
     "idea" => idea,
+    "7zip" => sevenzip,
 });
 
 impl HudoConfig {

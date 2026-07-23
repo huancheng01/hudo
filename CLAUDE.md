@@ -82,6 +82,7 @@ src/
     ├── nodejs.rs
     ├── bun.rs
     ├── rustup.rs
+    ├── sevenzip.rs  # 7-Zip（id: 7zip，便携解包免管理员）
     ├── uv.rs
     ├── mingw.rs
     ├── miniconda.rs
@@ -133,7 +134,7 @@ irm hudo.zexa.cc/install.ps1 | iex
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 
-### 支持的工具（22 个）
+### 支持的工具（23 个）
 | 分类 | 工具 ID |
 |------|---------|
 | 版本控制 | git, gh |
@@ -141,7 +142,7 @@ irm hudo.zexa.cc/install.ps1 | iex
 | JVM | jdk, maven, gradle |
 | 数据库 | mysql, pgsql, redis |
 | IDE | vscode, pycharm, idea |
-| 系统工具 | c（MinGW）, chrome, claude-code |
+| 系统工具 | c（MinGW）, 7zip, chrome, claude-code |
 
 ### 核心架构
 - `Installer` trait：每个工具实现 `info / detect_installed / resolve_download / install / env_actions / configure`

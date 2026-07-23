@@ -38,6 +38,8 @@ pub mod pycharm;
 #[cfg(windows)]
 pub mod rustup;
 #[cfg(windows)]
+pub mod sevenzip;
+#[cfg(windows)]
 pub mod uv;
 #[cfg(windows)]
 pub mod vscode;
@@ -332,6 +334,9 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         list.push(Box::new(mysql::MysqlInstaller));
         list.push(Box::new(pgsql::PgsqlInstaller));
         list.push(Box::new(redis::RedisInstaller));
+        // 编辑器 / IDE
+        // 系统工具
+        list.push(Box::new(sevenzip::SevenzipInstaller));
         // 编辑器 / IDE
         list.push(Box::new(vscode::VscodeInstaller));
         list.push(Box::new(pycharm::PycharmInstaller));

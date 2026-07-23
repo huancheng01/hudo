@@ -59,5 +59,6 @@ hudo 支持安装以下工具，按分类列出：
 | 工具 | 说明 |
 |------|------|
 | [MinGW](./mingw) | Windows GCC 编译器工具链 |
+| [7-Zip](./7zip) | 压缩/解压工具（便携免管理员） |
 | [Google Chrome](./chrome) | Google Chrome 浏览器（企业版静默安装） |
 | [Claude Code](./claude-code) | Anthropic Claude Code CLI |

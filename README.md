@@ -47,7 +47,7 @@ hudo
 
 ---
 
-## 支持的工具（22 个）
+## 支持的工具（23 个）
 
 ### 工具
 | ID | 工具 | 说明 |
@@ -55,6 +55,7 @@ hudo
 | `git` | Git | 分布式版本控制系统 |
 | `gh` | GitHub CLI | GitHub 命令行工具 |
 | `claude-code` | Claude Code | Anthropic AI 编程助手 |
+| `7zip` | 7-Zip | 压缩/解压工具（便携免管理员） |
 
 ### 语言 & 运行时
 | ID | 工具 | 说明 |

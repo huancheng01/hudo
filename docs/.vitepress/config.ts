@@ -23,6 +23,7 @@ const toolHowTo: Record<string, { name: string; steps: string[] }> = {
   'tools/gh': { name: '在 Windows 安装 GitHub CLI', steps: ['运行 hudo install gh', 'hudo 下载 GitHub CLI', '自动配置 PATH 并引导登录'] },
   'tools/chrome': { name: '在 Windows 安装 Google Chrome', steps: ['运行 hudo install chrome', 'hudo 下载 Chrome 企业版 MSI', '自动 UAC 提权并静默安装'] },
   'tools/claude-code': { name: '在 Windows 安装 Claude Code', steps: ['运行 hudo install claude-code', 'hudo 下载 Claude Code CLI 二进制', '自动配置 PATH 和 SHA256 校验'] },
+  'tools/7zip': { name: '在 Windows 安装 7-Zip', steps: ['运行 hudo install 7zip', 'hudo 用官方 7zr 解出便携载荷', '免管理员安装并配置 PATH'] },
 }
 
 export default defineConfig({
@@ -135,6 +136,7 @@ export default defineConfig({
             { text: 'PyCharm', link: '/tools/pycharm' },
             { text: 'IntelliJ IDEA', link: '/tools/idea' },
             { text: 'MinGW', link: '/tools/mingw' },
+            { text: '7-Zip', link: '/tools/7zip' },
             { text: 'Google Chrome', link: '/tools/chrome' },
             { text: 'Claude Code', link: '/tools/claude-code' },
           ]
