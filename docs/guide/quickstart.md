@@ -53,9 +53,9 @@ hudo uninstall git
 ## 配置档案
 
 ```powershell
-# 导出当前配置
-hudo profile export
+# 导出当前环境档案（默认 hudo-profile.toml）
+hudo export
 
 # 在新电脑上还原
-hudo profile import
+hudo import hudo-profile.toml
 ```
