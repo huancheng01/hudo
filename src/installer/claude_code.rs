@@ -86,7 +86,7 @@ fn parse_claude_version(output: &str) -> String {
 /// 获取 manifest.json 中目标平台的 SHA256
 async fn fetch_manifest_sha256(version: &str, platform: &str) -> Result<String> {
     let url = format!("{}/{}/manifest.json", GCS_BUCKET, version);
-    let client = reqwest::Client::builder()
+    let client = crate::download::client_builder()
         .timeout(std::time::Duration::from_secs(15))
         .build()?;
     let manifest: serde_json::Value = client

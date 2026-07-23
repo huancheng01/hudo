@@ -7,6 +7,11 @@ pub struct HudoConfig {
     /// 安装根目录（如 D:\hudo）
     pub root_dir: String,
 
+    /// HTTP(S) 代理（如 http://127.0.0.1:7890），作用于版本查询与下载；
+    /// 未设置时 reqwest 仍读系统 http_proxy/https_proxy 环境变量
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy: Option<String>,
+
     #[serde(default)]
     pub java: JavaConfig,
 

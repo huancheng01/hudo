@@ -2,6 +2,31 @@ use anyhow::{Context, Result};
 use futures_util::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+
+/// 进程级代理地址，启动时从 config 注入一次，作用于所有 reqwest 客户端
+static PROXY: OnceLock<String> = OnceLock::new();
+
+/// 设置全局代理（config.proxy）。地址无效时告警并忽略，不中断流程
+pub fn set_proxy(url: &str) {
+    match reqwest::Proxy::all(url) {
+        Ok(_) => {
+            let _ = PROXY.set(url.to_string());
+        }
+        Err(e) => crate::ui::print_warning(&format!("代理地址无效，已忽略: {} ({})", url, e)),
+    }
+}
+
+/// 统一的 reqwest 客户端构建入口：带上全局代理；未设置时 reqwest 默认仍读系统代理环境变量
+pub fn client_builder() -> reqwest::ClientBuilder {
+    let mut builder = reqwest::Client::builder();
+    if let Some(p) = PROXY.get() {
+        if let Ok(proxy) = reqwest::Proxy::all(p.as_str()) {
+            builder = builder.proxy(proxy);
+        }
+    }
+    builder
+}
 
 /// 异步下载文件到 cache_dir，返回本地文件路径
 /// 如果文件已存在则跳过下载
@@ -19,7 +44,7 @@ pub async fn download(url: &str, cache_dir: &Path, filename: &str) -> Result<Pat
 
     println!("  {} {}", console::style("↓").cyan(), console::style(url).dim());
 
-    let client = reqwest::Client::builder()
+    let client = client_builder()
         .connect_timeout(std::time::Duration::from_secs(10))
         .build()
         .unwrap_or_else(|_| reqwest::Client::new());
@@ -133,7 +158,7 @@ async fn try_download(url: &str, cache_dir: &Path, filename: &str) -> Result<Pat
 
     println!("  {} {}", console::style("↓").cyan(), console::style(url).dim());
 
-    let client = reqwest::Client::builder()
+    let client = client_builder()
         .connect_timeout(std::time::Duration::from_secs(10))
         .build()
         .unwrap_or_else(|_| reqwest::Client::new());

@@ -17,6 +17,10 @@ hudo 的配置文件位于 `%USERPROFILE%\.hudo\config.toml`，首次运行时�
 # 工具安装根目录
 root_dir = "D:\\hudo"
 
+# HTTP(S) 代理（可选），作用于版本查询和所有下载
+# 设为 "off" 或空可清除；未设置时仍读系统 http_proxy/https_proxy 环境变量
+# proxy = "http://127.0.0.1:7890"
+
 [java]
 version = "21"        # JDK 大版本
 
@@ -46,6 +50,7 @@ version = "latest"    # Go 版本，latest 表示自动获取最新版
 # 1. 命令行设置单项（键名见上方注释，未知键会列出全部可用键）
 hudo config set mirrors.nodejs https://npmmirror.com/mirrors/node
 hudo config set versions.git 2.47.0
+hudo config set proxy http://127.0.0.1:7890   # 清除: hudo config set proxy off
 
 # 2. 交互菜单：主菜单 [*] 配置 → 设置镜像 / 设置固定版本（本次会话立即生效）
 

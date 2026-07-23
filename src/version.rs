@@ -3,9 +3,9 @@ use reqwest::Client;
 /// GitHub 仓库（owner/repo），用于自更新检查
 pub const GITHUB_REPO: &str = "zexadev/hudo";
 
-/// 复用同一个 client，带 5 秒超时
+/// 复用同一个 client，带 5 秒超时（经 download::client_builder 统一走全局代理）
 fn make_client() -> reqwest::Result<Client> {
-    Client::builder()
+    crate::download::client_builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()
 }

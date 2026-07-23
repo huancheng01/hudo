@@ -35,6 +35,7 @@ fn ensure_config() -> Result<HudoConfig> {
 
     let config = HudoConfig {
         root_dir: root_dir.clone(),
+        proxy: None,
         java: Default::default(),
         go: Default::default(),
         versions: Default::default(),
@@ -1288,7 +1289,7 @@ async fn cmd_update() -> Result<()> {
     pb.set_message(format!("下载 hudo v{}...", latest));
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let client = reqwest::Client::builder()
+    let client = download::client_builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
     let resp = client
@@ -1559,6 +1560,9 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
     ui::print_title("当前配置");
 
     println!("  {}  {}", ui::pad("root_dir", 20), config.root_dir);
+    if let Some(ref p) = config.proxy {
+        println!("  {}  {}", ui::pad("proxy", 20), p);
+    }
     println!("  {}  {}", ui::pad("java.version", 20), config.java.version);
     println!("  {}  {}", ui::pad("go.version", 20), config.go.version);
 
@@ -1609,6 +1613,14 @@ fn apply_config_kv(config: &mut HudoConfig, key: &str, value: &str) -> Result<()
             config.go.version = value.to_string();
             true
         }
+        // 空值/off 视为清除代理（Option 键没有别的清除入口）
+        "proxy" => {
+            config.proxy = match value {
+                "" | "off" | "none" => None,
+                v => Some(v.to_string()),
+            };
+            true
+        }
         k => {
             if let Some(m) = k.strip_prefix("mirrors.") {
                 config.mirrors.set(m, val)
@@ -1621,7 +1633,7 @@ fn apply_config_kv(config: &mut HudoConfig, key: &str, value: &str) -> Result<()
     };
     if !handled {
         anyhow::bail!(
-            "未知配置项: {}。可用: root_dir, java.version, go.version, mirrors.{{{}}}, versions.{{{}}}",
+            "未知配置项: {}。可用: root_dir, proxy, java.version, go.version, mirrors.{{{}}}, versions.{{{}}}",
             key,
             MIRROR_KEYS.join("|"),
             VERSION_KEYS.join("|")
@@ -1915,6 +1927,13 @@ fn interactive_config_set(config: &mut HudoConfig, prefix: &str, keys: &[&str]) 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // 进程级代理注入：静默读取配置（不触发首次初始化），对版本查询/下载/自更新统一生效
+    if let Ok(Some(cfg)) = HudoConfig::load() {
+        if let Some(ref p) = cfg.proxy {
+            download::set_proxy(p);
+        }
+    }
 
     match cli.command {
         Some(cmd) => match cmd {
