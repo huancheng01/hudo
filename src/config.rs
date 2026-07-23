@@ -67,7 +67,12 @@ macro_rules! keyed_options {
     ($name:ident { $($key:literal => $field:ident),+ $(,)? }) => {
         #[derive(Debug, Serialize, Deserialize, Clone, Default)]
         pub struct $name {
-            $(pub $field: Option<String>,)+
+            // serde 统一按键名序列化：保证 config.toml 中的键与文档/config set 的键一致
+            // （多数字段键=字段名时 rename 是空操作，但 "7zip"=>sevenzip 这类必须靠它）
+            $(
+                #[serde(rename = $key)]
+                pub $field: Option<String>,
+            )+
         }
 
         impl $name {
