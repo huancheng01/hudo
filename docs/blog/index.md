@@ -9,6 +9,15 @@ Windows 开发环境搭建教程与工具使用指南。
 
 ## 最新文章
 
+- [程序员换电脑完整迁移指南（2026）：环境变量、工具链、配置一个不落](./windows-pc-migration-guide)
+- [Windows 终端美化保姆级教程（2026）：PowerShell 7 + Oh My Posh + Nerd Font 一步到位](./windows-terminal-beautify)
+- [终端图标乱码、显示方框怎么办？Nerd Font 从装字体到终端关联彻底解决](./windows-nerd-font-fix)
+- [Windows 环境变量彻底讲清：PATH、用户变量与系统变量、改完不生效怎么办](./windows-env-variables)
+- [PowerShell 7 是干嘛的？要不要升级？与 5.1 的区别和共存关系](./windows-powershell7-guide)
+- [Java 开发环境搭建 2026：一条命令装齐 JDK + Maven + IntelliJ IDEA](./windows-java-env-setup)
+- [7z 命令行完全速查：压缩、解压、加密、分卷、排除文件](./windows-7zip-cli)
+- [.NET SDK 安装教程：环境变量、多版本共存与 global.json 一次讲清](./windows-dotnet-install)
+- [PowerToys 值得装吗？开发者最常用的 5 个功能与静默安装方法](./windows-powertoys-guide)
 - [换电脑不再重装一天：hudo 配置档案一键迁移开发环境](./windows-dev-env-migration)
 - [Claude Code 完整安装教程：Windows 上的 AI 编程助手](./windows-claude-code-install)
 - [新电脑到手后，用 hudo 20 分钟配好完整 Windows 开发环境](./windows-dev-environment-setup)
