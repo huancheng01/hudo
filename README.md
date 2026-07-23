@@ -41,6 +41,7 @@ hudo
 | `hudo config show` | 显示当前配置 |
 | `hudo config set <key> <value>` | 修改配置项 |
 | `hudo config edit` | 用编辑器打开配置文件 |
+| `hudo upgrade [工具]` | 升级 hudo 安装的工具（省略工具名检查全部） |
 | `hudo update` | 更新 hudo 到最新版本 |
 | `-y` / `--yes` | 非交互模式（任意命令后附加），跳过确认提示 |
 

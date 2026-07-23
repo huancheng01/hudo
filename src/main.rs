@@ -454,6 +454,226 @@ async fn cmd_install_inner(config: &HudoConfig, tool_id: &str, skip_configure: b
     Ok(())
 }
 
+/// 不支持自动升级的工具及替代指引
+fn upgrade_unsupported_reason(id: &str) -> Option<&'static str> {
+    match id {
+        // 数据目录/环境在安装目录内，重装即清空，绝不能自动覆盖
+        "mysql" | "pgsql" | "redis" => {
+            Some("数据目录在安装目录内，自动重装会丢数据；请备份数据后手动 uninstall + install")
+        }
+        "miniconda" => Some("conda 环境保存在安装目录内；请运行 conda update conda"),
+        "rust" => Some("由 rustup 自管理；请运行 rustup update"),
+        "chrome" => Some("Chrome 自带自动更新"),
+        _ => None,
+    }
+}
+
+/// 配置锁定优先，未锁定时才发起最新版查询（async fn 未被 await 前不会执行）
+async fn lock_or<F>(lock: &Option<String>, latest: F) -> Option<String>
+where
+    F: std::future::Future<Output = Option<String>>,
+{
+    match lock {
+        Some(v) => Some(v.clone()),
+        None => latest.await,
+    }
+}
+
+/// 解析升级目标版本；None = 查询失败
+async fn resolve_upgrade_target(config: &HudoConfig, id: &str) -> Option<String> {
+    let v = &config.versions;
+    match id {
+        "git" => lock_or(&v.git, version::git_latest()).await,
+        "gh" => lock_or(&v.gh, version::gh_latest()).await,
+        "nodejs" => lock_or(&v.nodejs, version::nodejs_lts_latest()).await,
+        "fnm" => lock_or(&v.fnm, version::fnm_latest()).await,
+        "bun" => lock_or(&v.bun, version::bun_latest()).await,
+        "uv" => lock_or(&v.uv, version::uv_latest()).await,
+        "maven" => lock_or(&v.maven, version::maven_latest()).await,
+        "gradle" => lock_or(&v.gradle, version::gradle_latest()).await,
+        "vscode" => lock_or(&v.vscode, version::vscode_latest()).await,
+        "pycharm" => lock_or(&v.pycharm, version::pycharm_latest()).await,
+        "claude-code" => lock_or(&v.claude_code, version::claude_code_latest()).await,
+        "go" => match config.go.version.as_str() {
+            "latest" | "" => version::go_latest().await,
+            s => Some(s.to_string()),
+        },
+        "jdk" => {
+            let major = match config.java.version.as_str() {
+                "" => "21",
+                m => m,
+            };
+            version::jdk_latest(major).await
+        }
+        "c" => version::mingw_latest().await.map(|(_, _, gcc)| gcc),
+        _ => None,
+    }
+}
+
+/// 从任意版本输出中提取可比较的版本号：
+/// "git version 2.47.1" → "2.47.1"; "v24.14.1" → "24.14.1";
+/// "openjdk version \"21.0.11\" 2026-04-15" → "21.0.11"; "go1.24.0" → "1.24.0"（比较用，前缀无关紧要）;
+/// "21.0.11+10.0.LTS" → "21.0.11"
+fn normalize_version(raw: &str) -> String {
+    for token in raw.split_whitespace() {
+        let t = token.trim_matches(|c: char| c == '"' || c == '\'' || c == ',');
+        let stripped = t.trim_start_matches(|c: char| !c.is_ascii_digit());
+        // 要求含 '.'：排除 "2026-04-15" 日期与构建哈希等数字开头的非版本 token
+        if !stripped.is_empty() && stripped.contains('.') {
+            return stripped.split('+').next().unwrap_or(stripped).to_string();
+        }
+    }
+    raw.trim().to_string()
+}
+
+/// 升级 hudo 安装的工具：state.json 记录版本 vs 目标版本（锁定 > API 最新），
+/// 不重跑 configure、不改环境变量（安装路径固定不变）
+async fn cmd_upgrade(config: &HudoConfig, tool: Option<String>) -> Result<()> {
+    ui::print_title("升级工具");
+
+    let installers = all_installers();
+    let reg = registry::InstallRegistry::load(&config.state_path())?;
+
+    if let Some(ref t) = tool {
+        if installers.iter().all(|i| i.info().id != t.as_str()) {
+            anyhow::bail!("未知工具: {}", t);
+        }
+        if !reg.tools.contains_key(t.as_str()) {
+            ui::print_warning(&format!("{} 未由 hudo 安装（无安装记录），如需安装: hudo install {}", t, t));
+            return Ok(());
+        }
+        if let Some(reason) = upgrade_unsupported_reason(t) {
+            ui::print_warning(&format!("{} 不支持自动升级: {}", t, reason));
+            return Ok(());
+        }
+    }
+
+    // 候选 = state.json 里记录的 hudo 安装工具（可选按参数过滤），排除不支持项
+    let mut skipped: Vec<(&str, &str)> = Vec::new();
+    let candidates: Vec<&dyn installer::Installer> = installers
+        .iter()
+        .map(|b| b.as_ref())
+        .filter(|inst| {
+            let id = inst.info().id;
+            if !reg.tools.contains_key(id) {
+                return false;
+            }
+            if let Some(ref t) = tool {
+                if id != t.as_str() {
+                    return false;
+                }
+            }
+            if let Some(reason) = upgrade_unsupported_reason(id) {
+                skipped.push((id, reason));
+                return false;
+            }
+            true
+        })
+        .collect();
+
+    if candidates.is_empty() && skipped.is_empty() {
+        ui::print_info("尚无 hudo 安装的工具，运行 hudo setup 开始安装");
+        return Ok(());
+    }
+
+    // 并发解析目标版本（每个查询各自带 5 秒超时）
+    let sp = ui::spinner("查询最新版本...");
+    let resolved = futures_util::future::join_all(
+        candidates
+            .iter()
+            .map(|inst| resolve_upgrade_target(config, inst.info().id)),
+    )
+    .await;
+    sp.finish_and_clear();
+
+    let mut upgradable: Vec<(&dyn installer::Installer, String, String)> = Vec::new();
+    let mut up_to_date = 0u32;
+    for (inst, target) in candidates.iter().zip(resolved) {
+        let info = inst.info();
+        let current = reg
+            .tools
+            .get(info.id)
+            .map(|s| s.version.clone())
+            .unwrap_or_default();
+        match target {
+            None => ui::print_warning(&format!("{} 版本查询失败，跳过", info.name)),
+            Some(t) => {
+                if normalize_version(&current) == normalize_version(&t) {
+                    up_to_date += 1;
+                } else {
+                    upgradable.push((*inst, current, t));
+                }
+            }
+        }
+    }
+
+    for (id, reason) in &skipped {
+        ui::print_info(&format!("跳过 {}: {}", id, reason));
+    }
+
+    if upgradable.is_empty() {
+        ui::print_success(&format!("{} 个工具均已是目标版本", up_to_date));
+        return Ok(());
+    }
+
+    println!();
+    ui::print_info(&format!("{} 个工具可升级:", upgradable.len()));
+    for (inst, current, target) in &upgradable {
+        println!(
+            "    {}  {} {} {}",
+            console::style(ui::pad(inst.info().name, 12)).bold(),
+            console::style(normalize_version(current)).dim(),
+            console::style("→").cyan(),
+            console::style(normalize_version(target)).green()
+        );
+    }
+    println!();
+
+    if !ui::confirm_proceed(&format!("升级这 {} 个工具？", upgradable.len()), true)? {
+        ui::print_info("已取消");
+        return Ok(());
+    }
+
+    let ctx = InstallContext { config };
+    let total = upgradable.len();
+    let mut success = 0u32;
+    let mut fail_names: Vec<&str> = Vec::new();
+    for (idx, (inst, _, target)) in upgradable.iter().enumerate() {
+        let info = inst.info();
+        println!();
+        ui::print_step((idx + 1) as u32, total as u32, &format!("升级 {}", info.name));
+        match inst.install(&ctx).await {
+            Ok(result) => {
+                let mut reg = registry::InstallRegistry::load(&config.state_path())?;
+                reg.mark_installed(info.id, &result.version, &result.install_path.to_string_lossy());
+                reg.save(&config.state_path())?;
+                ui::print_success(&format!("{} 已升级到 {}", info.name, result.version));
+                success += 1;
+            }
+            Err(e) => {
+                ui::print_error(&format!("{} 升级到 {} 失败: {:#}", info.name, target, e));
+                fail_names.push(info.name);
+                if !ui::confirm_proceed("是否继续升级其余工具？", true).unwrap_or(false) {
+                    break;
+                }
+            }
+        }
+    }
+
+    println!();
+    if fail_names.is_empty() {
+        ui::print_success(&format!("{} 个工具升级完成", success));
+    } else {
+        ui::print_warning(&format!(
+            "{} 个升级成功，{} 个失败: {}",
+            success,
+            fail_names.len(),
+            fail_names.join(", ")
+        ));
+    }
+    Ok(())
+}
+
 /// 运行工具的交互式配置；失败降级为警告（安装本身已完成并记录到 state.json）
 async fn run_configure(
     inst: &dyn installer::Installer,
@@ -1712,6 +1932,7 @@ async fn interactive_menu(config: &mut HudoConfig) -> Result<()> {
 
         let menu_items = &[
             "[+] 安装工具",
+            "[^] 升级工具",
             "[=] 查看已安装",
             "[-] 卸载工具",
             "[>] 环境档案",
@@ -1733,15 +1954,21 @@ async fn interactive_menu(config: &mut HudoConfig) -> Result<()> {
         let result = match selection {
             Some(0) => cmd_setup(config).await,
             Some(1) => {
+                ui::page_header("升级工具");
+                let r = cmd_upgrade(config, None).await;
+                ui::wait_for_key();
+                r
+            }
+            Some(2) => {
                 let r = cmd_list(config, false, true).await;
                 ui::wait_for_key();
                 r
             }
-            Some(2) => interactive_uninstall(config).await,
-            Some(3) => interactive_profile(config).await,
-            Some(4) => interactive_config(config).await,
-            Some(5) => cc::cmd_cc(),
-            Some(6) | None => break,
+            Some(3) => interactive_uninstall(config).await,
+            Some(4) => interactive_profile(config).await,
+            Some(5) => interactive_config(config).await,
+            Some(6) => cc::cmd_cc(),
+            Some(7) | None => break,
             _ => unreachable!(),
         };
 
@@ -1976,6 +2203,11 @@ async fn main() -> Result<()> {
             Commands::Import { file } => {
                 let mut config = ensure_config()?;
                 cmd_import(&mut config, &file).await?;
+            }
+            Commands::Upgrade { tool } => {
+                if let Some(config) = load_config_readonly()? {
+                    cmd_upgrade(&config, tool.map(|t| t.to_lowercase())).await?;
+                }
             }
             Commands::List { all } => {
                 if let Some(config) = load_config_readonly()? {

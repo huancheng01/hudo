@@ -178,6 +178,7 @@ irm hudo.zexa.cc/install.ps1 | iex
 - **Windows 服务注册**（MySQL/PostgreSQL/Redis）：`mysqld --install` 退出码不可信，必须用 `sc query` 二次验证；服务注册和停止需要 UAC 提权（`run_as_admin`）
 - **`reg.save()` 必须在 `configure()` 之前**：否则 configure 失败时工具不会被记录到 state.json
 - **`detect_all_parallel`** 用于卸载列表，不能用 `fast_detect`（后者只读 state.json）
+- **`hudo upgrade` 有排除表**（`upgrade_unsupported_reason`）：mysql/pgsql/redis/miniconda 的数据或环境在安装目录内，自动重装会清空，绝不能加入自动升级；rust 走 rustup update、chrome 自更新
 - **gh auth token** 不导出到 profile 文件（安全考虑），新设备安装后自动引导 `gh auth login`
 - **install.ps1 有两份**：根目录 `install.ps1` 和 `docs/public/install.ps1`（Cloudflare Pages 部署用），修改时必须同步更新两份
 - **install.ps1 必须使用纯 ASCII 英文**：通过 `irm | iex` 执行时 PowerShell 5.x 可能用 GBK 解码，中文和 Unicode 字符会乱码

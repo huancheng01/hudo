@@ -37,10 +37,27 @@ hudo install vscode
 hudo list
 ```
 
-## 更新工具
+## 升级工具
 
 ```powershell
-# 更新 hudo 自身
+# 检查全部 hudo 安装的工具并升级
+hudo upgrade
+
+# 升级单个工具 / 非交互升级
+hudo upgrade nodejs
+hudo upgrade -y
+```
+
+升级目标为配置锁定版本（如有）或 API 查询到的最新版；升级不重跑配置、不改环境变量。以下工具不参与自动升级：
+
+- **mysql / pgsql / redis** — 数据目录在安装目录内，自动重装会丢数据，请备份后手动 uninstall + install
+- **miniconda** — conda 环境在安装目录内，用 `conda update conda`
+- **rust** — 用 `rustup update`
+- **chrome** — 自带自动更新
+
+## 更新 hudo 自身
+
+```powershell
 hudo update
 ```
 

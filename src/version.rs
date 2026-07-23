@@ -253,6 +253,86 @@ pub async fn mingw_latest() -> Option<(String, String, String)> {
     Some((tag, filename, gcc_version))
 }
 
+/// fnm: GitHub API → 最新版本号（tag "v1.39.0" → "1.39.0"）
+pub async fn fnm_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/Schniz/fnm/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    Some(tag.trim_start_matches('v').to_string())
+}
+
+/// Bun: GitHub API → 最新版本号（tag "bun-v1.3.14" → "1.3.14"）
+pub async fn bun_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/oven-sh/bun/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    tag.strip_prefix("bun-v").map(|s| s.to_string())
+}
+
+/// uv: GitHub API → 最新版本号（tag 无前缀，如 "0.11.31"）
+pub async fn uv_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/astral-sh/uv/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    Some(tag.trim_start_matches('v').to_string())
+}
+
+/// VS Code: releases API → 最新稳定版（数组按新到旧排列，如 "1.130.0"）
+pub async fn vscode_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: Vec<String> = client
+        .get("https://update.code.visualstudio.com/api/releases/stable")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    resp.into_iter().next()
+}
+
+/// JDK: Adoptium API → 指定主版本的最新 GA 版本（semver "21.0.11+10.0.LTS" → "21.0.11"）
+pub async fn jdk_latest(major: &str) -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: Vec<serde_json::Value> = client
+        .get(format!(
+            "https://api.adoptium.net/v3/assets/latest/{}/hotspot?image_type=jdk&os=windows&architecture=x64",
+            major
+        ))
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let semver = resp.first()?["version"]["semver"].as_str()?;
+    Some(semver.split('+').next()?.to_string())
+}
+
 /// hudo 自身：GitHub Releases → 最新版本号（如 "0.2.0"）
 pub async fn hudo_latest() -> Option<String> {
     let client = make_client().ok()?;

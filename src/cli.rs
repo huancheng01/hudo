@@ -32,6 +32,11 @@ pub enum Commands {
         #[arg(long = "self")]
         uninstall_self: bool,
     },
+    /// 升级由 hudo 安装的工具到最新（或配置锁定的）版本
+    Upgrade {
+        /// 工具名称（省略则检查全部已安装工具）
+        tool: Option<String>,
+    },
     /// 列出所有工具及安装状态
     List {
         /// 显示所有工具（含未安装）
