@@ -82,6 +82,7 @@ src/
     ├── nodejs.rs
     ├── bun.rs
     ├── dotnet.rs    # .NET SDK（官方脚本用户级安装，默认 LTS）
+    ├── powertoys.rs # PowerToys（UserSetup 用户级静默安装，state.json 归属）
     ├── pwsh.rs      # PowerShell 7（zip 便携版）
     ├── rustup.rs
     ├── sevenzip.rs  # 7-Zip（id: 7zip，便携解包免管理员）
@@ -136,7 +137,7 @@ irm hudo.zexa.cc/install.ps1 | iex
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 
-### 支持的工具（25 个）
+### 支持的工具（26 个）
 | 分类 | 工具 ID |
 |------|---------|
 | 版本控制 | git, gh |
@@ -144,7 +145,7 @@ irm hudo.zexa.cc/install.ps1 | iex
 | JVM | jdk, maven, gradle |
 | 数据库 | mysql, pgsql, redis |
 | IDE | vscode, pycharm, idea |
-| 系统工具 | c（MinGW）, 7zip, pwsh, chrome, claude-code |
+| 系统工具 | c（MinGW）, 7zip, pwsh, powertoys, chrome, claude-code |
 
 ### 核心架构
 - `Installer` trait：每个工具实现 `info / detect_installed / resolve_download / install / env_actions / configure`

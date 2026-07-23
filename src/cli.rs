@@ -21,7 +21,7 @@ pub enum Commands {
     Setup,
     /// 安装单个工具
     Install {
-        /// 工具名称（git, gh, nodejs, fnm, bun, uv, miniconda, rust, go, jdk, maven, gradle, c, dotnet, mysql, pgsql, redis, vscode, pycharm, idea, chrome, claude-code, 7zip, pwsh）
+        /// 工具名称（git, gh, nodejs, fnm, bun, uv, miniconda, rust, go, jdk, maven, gradle, c, dotnet, mysql, pgsql, redis, vscode, pycharm, idea, chrome, claude-code, 7zip, pwsh, powertoys）
         tool: String,
     },
     /// 卸载由 hudo 安装的工具，或卸载 hudo 自身

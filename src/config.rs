@@ -127,6 +127,7 @@ keyed_options!(VersionConfig {
     "7zip" => sevenzip,
     "pwsh" => pwsh,
     "dotnet" => dotnet,
+    "powertoys" => powertoys,
 });
 
 impl HudoConfig {

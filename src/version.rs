@@ -137,6 +137,22 @@ pub async fn pycharm_latest() -> Option<String> {
     resp["PCC"][0]["version"].as_str().map(|s| s.to_string())
 }
 
+/// PowerToys: GitHub API → 最新版本号（tag "v0.100.2" → "0.100.2"）
+pub async fn powertoys_latest() -> Option<String> {
+    let client = make_client().ok()?;
+    let resp: serde_json::Value = client
+        .get("https://api.github.com/repos/microsoft/PowerToys/releases/latest")
+        .header("User-Agent", "hudo")
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
+    let tag = resp["tag_name"].as_str()?;
+    Some(tag.trim_start_matches('v').to_string())
+}
+
 /// .NET SDK: releases-index.json → 最新活跃 LTS 通道的 latest-sdk（如 "10.0.302"）
 /// 只取 LTS：STS 通道 18 个月即停止支持，不适合默认安装
 pub async fn dotnet_latest() -> Option<String> {

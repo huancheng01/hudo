@@ -38,6 +38,8 @@ pub mod idea;
 #[cfg(windows)]
 pub mod pycharm;
 #[cfg(windows)]
+pub mod powertoys;
+#[cfg(windows)]
 pub mod pwsh;
 #[cfg(windows)]
 pub mod rustup;
@@ -343,6 +345,7 @@ pub fn all_installers() -> Vec<Box<dyn Installer>> {
         // 系统工具
         list.push(Box::new(sevenzip::SevenzipInstaller));
         list.push(Box::new(pwsh::PwshInstaller));
+        list.push(Box::new(powertoys::PowertoysInstaller));
         // 编辑器 / IDE
         list.push(Box::new(vscode::VscodeInstaller));
         list.push(Box::new(pycharm::PycharmInstaller));
