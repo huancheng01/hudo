@@ -80,57 +80,19 @@ impl HudoProfile {
             }
         }
 
-        // 收集 settings
+        // 收集 settings（遍历 KEYS：加新配置键时导出自动覆盖，不再手抄字段表）
         let mut mirrors = BTreeMap::new();
-        if let Some(ref v) = config.mirrors.uv {
-            mirrors.insert("uv".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.nodejs {
-            mirrors.insert("nodejs".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.go {
-            mirrors.insert("go".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.java {
-            mirrors.insert("java".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.vscode {
-            mirrors.insert("vscode".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.pycharm {
-            mirrors.insert("pycharm".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.mysql {
-            mirrors.insert("mysql".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.pgsql {
-            mirrors.insert("pgsql".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.maven {
-            mirrors.insert("maven".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.mirrors.gradle {
-            mirrors.insert("gradle".to_string(), v.clone());
+        for &key in crate::config::MirrorConfig::KEYS {
+            if let Some(v) = config.mirrors.get(key) {
+                mirrors.insert(key.to_string(), v.clone());
+            }
         }
 
         let mut versions = BTreeMap::new();
-        if let Some(ref v) = config.versions.git {
-            versions.insert("git".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.versions.gh {
-            versions.insert("gh".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.versions.nodejs {
-            versions.insert("nodejs".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.versions.mysql {
-            versions.insert("mysql".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.versions.pgsql {
-            versions.insert("pgsql".to_string(), v.clone());
-        }
-        if let Some(ref v) = config.versions.pycharm {
-            versions.insert("pycharm".to_string(), v.clone());
+        for &key in crate::config::VersionConfig::KEYS {
+            if let Some(v) = config.versions.get(key) {
+                versions.insert(key.to_string(), v.clone());
+            }
         }
 
         let settings = ProfileSettings {

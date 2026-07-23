@@ -56,36 +56,64 @@ fn default_go_version() -> String {
     "latest".to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct MirrorConfig {
-    pub uv: Option<String>,
-    pub nodejs: Option<String>,
-    pub fnm: Option<String>,
-    pub go: Option<String>,
-    pub java: Option<String>,
-    pub vscode: Option<String>,
-    pub pycharm: Option<String>,
-    pub mysql: Option<String>,
-    pub pgsql: Option<String>,
-    pub maven: Option<String>,
-    pub gradle: Option<String>,
-    pub redis: Option<String>,
+/// 生成 Option<String> 键值配置结构：字段定义、键表 KEYS、按键 get/set 由同一张表展开，
+/// 加新键只改一处，杜绝 config set / profile 导出 / 导入校验之间的键表漂移
+macro_rules! keyed_options {
+    ($name:ident { $($key:literal => $field:ident),+ $(,)? }) => {
+        #[derive(Debug, Serialize, Deserialize, Clone, Default)]
+        pub struct $name {
+            $(pub $field: Option<String>,)+
+        }
+
+        impl $name {
+            pub const KEYS: &'static [&'static str] = &[$($key),+];
+
+            pub fn get(&self, key: &str) -> Option<&String> {
+                match key {
+                    $($key => self.$field.as_ref(),)+
+                    _ => None,
+                }
+            }
+
+            /// 返回 false 表示键不存在
+            pub fn set(&mut self, key: &str, value: Option<String>) -> bool {
+                match key {
+                    $($key => { self.$field = value; true })+
+                    _ => false,
+                }
+            }
+        }
+    };
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct VersionConfig {
-    pub git: Option<String>,
-    pub gh: Option<String>,
-    pub nodejs: Option<String>,
-    pub fnm: Option<String>,
-    pub mysql: Option<String>,
-    pub pgsql: Option<String>,
-    pub pycharm: Option<String>,
-    pub maven: Option<String>,
-    pub gradle: Option<String>,
-    pub claude_code: Option<String>,
-    pub redis: Option<String>,
-}
+keyed_options!(MirrorConfig {
+    "uv" => uv,
+    "nodejs" => nodejs,
+    "fnm" => fnm,
+    "go" => go,
+    "java" => java,
+    "vscode" => vscode,
+    "pycharm" => pycharm,
+    "mysql" => mysql,
+    "pgsql" => pgsql,
+    "maven" => maven,
+    "gradle" => gradle,
+    "redis" => redis,
+});
+
+keyed_options!(VersionConfig {
+    "git" => git,
+    "gh" => gh,
+    "nodejs" => nodejs,
+    "fnm" => fnm,
+    "mysql" => mysql,
+    "pgsql" => pgsql,
+    "pycharm" => pycharm,
+    "maven" => maven,
+    "gradle" => gradle,
+    "claude_code" => claude_code,
+    "redis" => redis,
+});
 
 impl HudoConfig {
     /// 配置文件路径: %USERPROFILE%\.hudo\config.toml

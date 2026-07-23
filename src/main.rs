@@ -1612,53 +1612,44 @@ fn cmd_config_show(config: &HudoConfig) -> Result<()> {
 }
 
 /// mirrors.* 支持的键（与 config::MirrorConfig 字段一一对应）
-const MIRROR_KEYS: &[&str] = &[
-    "uv", "nodejs", "fnm", "go", "java", "vscode", "pycharm",
-    "mysql", "pgsql", "maven", "gradle", "redis",
-];
+const MIRROR_KEYS: &[&str] = config::MirrorConfig::KEYS;
 
 /// versions.* 支持的键（与 config::VersionConfig 字段一一对应）
-const VERSION_KEYS: &[&str] = &[
-    "git", "gh", "nodejs", "fnm", "mysql", "pgsql", "pycharm",
-    "maven", "gradle", "claude_code", "redis",
-];
+const VERSION_KEYS: &[&str] = config::VersionConfig::KEYS;
 
 /// 将 key=value 写入 config（不落盘、不打印，供 config set 与档案导入共用）
 fn apply_config_kv(config: &mut HudoConfig, key: &str, value: &str) -> Result<()> {
     let val = Some(value.to_string());
-    match key {
-        "root_dir" => config.root_dir = value.to_string(),
-        "java.version" => config.java.version = value.to_string(),
-        "go.version" => config.go.version = value.to_string(),
-        "mirrors.uv" => config.mirrors.uv = val,
-        "mirrors.nodejs" => config.mirrors.nodejs = val,
-        "mirrors.fnm" => config.mirrors.fnm = val,
-        "mirrors.go" => config.mirrors.go = val,
-        "mirrors.java" => config.mirrors.java = val,
-        "mirrors.vscode" => config.mirrors.vscode = val,
-        "mirrors.pycharm" => config.mirrors.pycharm = val,
-        "mirrors.mysql" => config.mirrors.mysql = val,
-        "mirrors.pgsql" => config.mirrors.pgsql = val,
-        "mirrors.maven" => config.mirrors.maven = val,
-        "mirrors.gradle" => config.mirrors.gradle = val,
-        "mirrors.redis" => config.mirrors.redis = val,
-        "versions.git" => config.versions.git = val,
-        "versions.gh" => config.versions.gh = val,
-        "versions.nodejs" => config.versions.nodejs = val,
-        "versions.fnm" => config.versions.fnm = val,
-        "versions.mysql" => config.versions.mysql = val,
-        "versions.pgsql" => config.versions.pgsql = val,
-        "versions.pycharm" => config.versions.pycharm = val,
-        "versions.maven" => config.versions.maven = val,
-        "versions.gradle" => config.versions.gradle = val,
-        "versions.claude_code" => config.versions.claude_code = val,
-        "versions.redis" => config.versions.redis = val,
-        _ => anyhow::bail!(
+    let handled = match key {
+        "root_dir" => {
+            config.root_dir = value.to_string();
+            true
+        }
+        "java.version" => {
+            config.java.version = value.to_string();
+            true
+        }
+        "go.version" => {
+            config.go.version = value.to_string();
+            true
+        }
+        k => {
+            if let Some(m) = k.strip_prefix("mirrors.") {
+                config.mirrors.set(m, val)
+            } else if let Some(v) = k.strip_prefix("versions.") {
+                config.versions.set(v, val)
+            } else {
+                false
+            }
+        }
+    };
+    if !handled {
+        anyhow::bail!(
             "未知配置项: {}。可用: root_dir, java.version, go.version, mirrors.{{{}}}, versions.{{{}}}",
             key,
             MIRROR_KEYS.join("|"),
             VERSION_KEYS.join("|")
-        ),
+        );
     }
     Ok(())
 }
