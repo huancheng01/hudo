@@ -235,6 +235,7 @@ async fn setup_category(
     // 第二轮：构建标签
     let mut labels = Vec::new();
     let mut defaults = Vec::new();
+    let mut has_external = false;
 
     for (info, detect) in &tool_data {
         let status = match detect {
@@ -243,6 +244,7 @@ async fn setup_category(
                 format!("{}", console::style(format!("✓ hudo {}", short)).green())
             }
             Ok(DetectResult::InstalledExternal(ver)) => {
+                has_external = true;
                 let short = truncate_version(ver, 16);
                 format!("{}", console::style(format!("● 系统 {}", short)).yellow())
             }
@@ -260,6 +262,9 @@ async fn setup_category(
     }
 
     println!("  {}", console::style("空格勾选，a 全选/取消全选，回车确认，Esc 返回").dim());
+    if has_external {
+        println!("  {}", console::style("● 系统 = 已有系统安装，勾选后可选择由 hudo 接管").dim());
+    }
     println!();
 
     let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -1043,7 +1048,10 @@ async fn cmd_import(config: &mut HudoConfig, file: &str) -> Result<()> {
                         skip_lines.push(format!("{} 已安装 (hudo): {} — 跳过", inst.info().name, ver));
                     }
                     Ok(DetectResult::InstalledExternal(ver)) => {
-                        skip_lines.push(format!("{} 已安装 (系统): {} — 跳过", inst.info().name, ver));
+                        skip_lines.push(format!(
+                            "{} 已安装 (系统): {} — 跳过（如需由 hudo 接管，运行 hudo install {}）",
+                            inst.info().name, ver, inst.info().id
+                        ));
                     }
                     _ => {
                         to_install.push(inst.info());
@@ -1535,6 +1543,9 @@ async fn cmd_list(config: &HudoConfig, show_all: bool, deep: bool) -> Result<()>
             ));
         } else {
             ui::print_info(&format!("共 {} 个工具由 hudo 安装", total));
+        }
+        if external_count > 0 {
+            ui::print_info("(非 hudo) 为系统已有安装，运行 hudo install <工具> 可选择由 hudo 接管");
         }
     }
     if !show_all && !deep && total > 0 {
