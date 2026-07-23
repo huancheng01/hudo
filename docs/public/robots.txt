@@ -1,4 +1,35 @@
+﻿# hudo.zexa.cc - all crawlers welcome
+
 User-agent: *
+Allow: /
+
+# AI search crawlers (answer engines with citations) - explicitly allowed
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# AI training crawlers - explicitly allowed (open-source tool, distribution welcome)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://hudo.zexa.cc/sitemap.xml
