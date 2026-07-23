@@ -1,8 +1,10 @@
 # hudo 混沌
 
-**Windows 开发环境一键引导工具**
+**Windows 开发环境一键引导工具** · [官网与文档 hudo.zexa.cc](https://hudo.zexa.cc)
 
-用一条命令装好开发所需的全部工具，并自动配置好环境变量。支持国内镜像自动回退，大陆用户也能流畅安装。
+一条命令装好 27 款开发工具（Git、Node.js、Rust、Go、JDK、Python、MySQL、VS Code 等），自动配置环境变量。免管理员权限、国内镜像自动回退、环境档案换机一键还原。
+
+> **hudo** is a one-command Windows dev environment bootstrapper: installs 27 developer tools (Git, Node.js, Rust, Go, JDK, Python, MySQL, VS Code, ...) with automatic PATH/env configuration, no admin rights required, China-mirror fallback, and profile export/import for one-command machine migration. Docs: [hudo.zexa.cc](https://hudo.zexa.cc)
 
 ---
 

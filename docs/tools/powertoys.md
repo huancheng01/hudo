@@ -46,3 +46,8 @@ powertoys = "0.100.2"
 
 - 与 [Chrome](/tools/chrome) 相同，安装路径由官方安装器决定，hudo 通过安装记录（state.json）区分是否由 hudo 安装
 - 若系统中已有 PowerToys（winget/手动安装），hudo 检测后不会重复安装
+
+## 相关阅读
+
+- [PowerToys 值得装吗？开发者最常用的 5 个功能](/blog/windows-powertoys-guide) — 功能精选与静默安装
+

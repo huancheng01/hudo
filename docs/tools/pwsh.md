@@ -60,3 +60,9 @@ pwsh = "7.6.4"
 ### 为什么 Windows Terminal 里没有它？
 
 便携版不向系统注册 Terminal 配置文件。在 Windows Terminal 设置中手动添加一个配置文件，命令行填 `{install_root}\tools\pwsh\pwsh.exe` 即可。
+
+## 相关阅读
+
+- [PowerShell 7 是干嘛的？要不要升级？](/blog/windows-powershell7-guide) — 与 5.1 的区别和共存关系
+- [Windows 终端美化保姆级教程](/blog/windows-terminal-beautify) — PowerShell 7 + Oh My Posh 全链路
+

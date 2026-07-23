@@ -55,3 +55,8 @@ Chrome 企业版 MSI 安装到 `Program Files` 系统目录，这是 Google 安�
 ### Chrome 安装后可以正常自动更新吗？
 
 可以。通过 hudo 安装的 Chrome 和手动安装的完全一致，Google 内置的自动更新机制正常工作。
+
+## 相关阅读
+
+- [20 分钟配好完整 Windows 开发环境](/blog/windows-dev-environment-setup) — 新机装机完整流程
+

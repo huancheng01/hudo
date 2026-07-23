@@ -80,3 +80,8 @@ fnm 依赖 PowerShell profile 中的 `fnm env` 初始化 PATH。请确认新开�
 **Q: CMD 里 fnm 能用吗？**
 
 可以。`fnm env --shell cmd` 可以生成 CMD 用的初始化脚本，但 hudo 默认只写入 PowerShell profile，CMD 需手动配置。
+
+## 相关阅读
+
+- [Windows Node.js 环境搭建教程](/blog/windows-nodejs-install) — Node.js 安装与 npm 配置完整流程
+

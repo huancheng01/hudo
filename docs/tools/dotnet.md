@@ -57,3 +57,8 @@ dotnet = "10.0.302"
 ### 需要装运行时吗？
 
 SDK 已包含运行时，开发机装 SDK 即可；只跑别人程序的机器才需要单独的 Runtime。
+
+## 相关阅读
+
+- [.NET SDK 安装教程：环境变量、多版本共存与 global.json](/blog/windows-dotnet-install) — 多版本共存的完整讲解
+

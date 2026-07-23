@@ -61,3 +61,9 @@ omp = "29.35.1"
 ### 想用别的 Nerd Font？
 
 hudo 默认装 CaskaydiaCove（微软 Cascadia Code 的 Nerd Font 版本，Windows 终端观感最协调）。其他字体可从 [nerdfonts.com](https://www.nerdfonts.com/) 下载后双击安装。
+
+## 相关阅读
+
+- [Windows 终端美化保姆级教程：PowerShell 7 + Oh My Posh + Nerd Font](/blog/windows-terminal-beautify) — 三件套完整配置流程
+- [终端图标乱码、显示方框怎么办](/blog/windows-nerd-font-fix) — Nerd Font 三层排查
+

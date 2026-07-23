@@ -64,3 +64,8 @@ idea = "2025.3"
 ### JDK 没有被识别？
 
 先用 `hudo install jdk` 安装 JDK（自动配置 `JAVA_HOME`），再在 IDEA 的 Project Structure → SDK 里选择 `{install_root}\lang\java`。
+
+## 相关阅读
+
+- [Java 开发环境搭建 2026：一条命令装齐 JDK + Maven + IntelliJ IDEA](/blog/windows-java-env-setup) — 从零到能跑工程的完整流程
+
