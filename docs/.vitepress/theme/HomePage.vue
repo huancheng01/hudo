@@ -56,7 +56,9 @@
           </button>
         </div>
 
-        <div class="stat-row" data-reveal style="--d:.38s" aria-hidden="true">
+        <div class="stat-zone" data-reveal style="--d:.38s">
+        <canvas ref="waveCanvas" class="stat-wave" aria-hidden="true"></canvas>
+        <div class="stat-row" aria-hidden="true">
           <span class="stat"><span class="stat-key">tools</span> = <span class="stat-val">26</span></span>
           <span class="stat-sep">;</span>
           <span class="stat"><span class="stat-key">uac_prompts</span> = <span class="stat-val">0</span></span>
@@ -64,6 +66,7 @@
           <span class="stat"><span class="stat-key">commands</span> = <span class="stat-val">1</span></span>
           <span class="stat-sep">;</span>
           <span class="stat"><span class="stat-key">mirrors</span> = <span class="stat-val">4</span></span>
+        </div>
         </div>
 
         <div class="cta-row" data-reveal style="--d:.42s">
@@ -319,6 +322,75 @@ function pauseTerm() {
   typing.value = false
 }
 
+// ─── 示波器波形：stats 行背后的低噪声生命感（移植自 nocturne useWaveform）───
+const waveCanvas = ref(null)
+let waveRAF = 0
+let waveRO = null
+let waveIO = null
+let waveOn = false
+function initWave() {
+  const canvas = waveCanvas.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  let w = 0, h = 0
+  const resize = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const rect = canvas.getBoundingClientRect()
+    w = rect.width; h = rect.height
+    canvas.width = Math.max(1, Math.floor(w * dpr))
+    canvas.height = Math.max(1, Math.floor(h * dpr))
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  }
+  resize()
+  waveRO = new ResizeObserver(resize)
+  waveRO.observe(canvas)
+  const amp = window.matchMedia('(max-width: 640px)').matches ? 0.25 : 0.35
+  const draw = (t) => {
+    ctx.clearRect(0, 0, w, h)
+    const time = t * 0.001
+    const grad = ctx.createLinearGradient(0, 0, w, 0)
+    grad.addColorStop(0, '#3b82f6')
+    grad.addColorStop(0.5, '#8b5cf6')
+    grad.addColorStop(1, '#ec4899')
+    for (let l = 0; l < 3; l++) {
+      const phase = 1.7 + l * 0.9
+      const lineAmp = amp * (l === 0 ? 1 : 0.45) * (h / 2)
+      ctx.beginPath()
+      ctx.lineWidth = l === 0 ? 1.6 : 1
+      ctx.strokeStyle = grad
+      ctx.globalAlpha = l === 0 ? 0.35 : 0.12
+      const step = Math.max(2, w / 220)
+      for (let x = 0; x <= w; x += step) {
+        const nx = x / w
+        const y =
+          Math.sin(nx * 9 + time * 1.6 + phase) * 0.55 +
+          Math.sin(nx * 23 - time * 1.1 + phase * 1.3) * 0.28 +
+          Math.sin(nx * 47 + time * 2.3 + phase * 0.6) * 0.14
+        const py = h / 2 + y * lineAmp * Math.sin(nx * Math.PI)
+        if (x === 0) ctx.moveTo(x, py)
+        else ctx.lineTo(x, py)
+      }
+      ctx.stroke()
+    }
+    ctx.globalAlpha = 1
+    if (waveOn) waveRAF = requestAnimationFrame(draw)
+  }
+  if (reduceMotion) { draw(0); return }
+  // 滚出视口即停 rAF
+  waveIO = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        if (!waveOn) { waveOn = true; waveRAF = requestAnimationFrame(draw) }
+      } else {
+        waveOn = false
+        cancelAnimationFrame(waveRAF)
+      }
+    })
+  }, { threshold: 0 })
+  waveIO.observe(canvas)
+}
+
 // ─── Tilt on tool cards ───
 function onTilt(e) {
   const el = e.currentTarget
@@ -373,6 +445,7 @@ onMounted(async () => {
   await nextTick()
 
   reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  initWave()
 
   // cursor (desktop only；减弱动效时光标已由 CSS 隐藏，监听纯浪费)
   const canHover = window.matchMedia('(hover: hover)').matches
@@ -434,6 +507,10 @@ onUnmounted(() => {
   if (termIO) termIO.disconnect()
   if (termTimer) clearTimeout(termTimer)
   if (glitchTimer) clearTimeout(glitchTimer)
+  waveOn = false
+  if (waveRAF) cancelAnimationFrame(waveRAF)
+  if (waveRO) waveRO.disconnect()
+  if (waveIO) waveIO.disconnect()
   document.body.classList.remove('cursor-on', 'cursor-hover')
 })
 </script>
@@ -798,13 +875,22 @@ onUnmounted(() => {
 .install.copied .i-action { color: #10b981; border-color: rgba(16,185,129,.4); }
 .i-label { font-family: var(--vp-font-family-base); letter-spacing: .02em; }
 
-/* 终端风格数据行 */
+/* 终端风格数据行 + 背后的示波器波形 */
+.stat-zone { position: relative; margin-bottom: 26px; }
+.stat-wave {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(620px, 92%);
+  height: 84px;
+  pointer-events: none;
+}
 .stat-row {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: baseline;
   gap: 14px;
-  margin-bottom: 26px;
   font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
   font-size: .82rem;
   color: var(--text-dim);
