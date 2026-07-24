@@ -1,5 +1,5 @@
 ---
-title: "fnm Windows 安装与配置 - hudo"
+title: "fnm Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 fnm（Fast Node Manager），多版本 Node.js 切换，自动写入 PowerShell profile，无需手动配置。"
 head:
   - - meta

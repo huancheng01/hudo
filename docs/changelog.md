@@ -1,5 +1,5 @@
 ---
-title: "更新日志 - hudo"
+title: "更新日志"
 description: "hudo 版本更新历史记录，包含每个版本的新功能、优化改进和问题修复详情。"
 head:
   - - meta

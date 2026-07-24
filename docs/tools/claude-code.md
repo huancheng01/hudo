@@ -1,5 +1,5 @@
 ---
-title: "Claude Code 安装配置 - Windows 一键安装 AI 编程助手 - hudo"
+title: "Claude Code 安装配置 - Windows 一键安装 AI 编程助手"
 description: "使用 hudo 一键安装 Anthropic Claude Code CLI，AI 驱动的命令行编程助手，自动配置 Node.js 依赖和环境变量。"
 head:
   - - meta

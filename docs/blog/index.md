@@ -1,5 +1,5 @@
 ---
-title: 博客 - hudo
+title: 博客
 description: Windows 开发环境搭建教程、工具安装指南、开发效率提升技巧。
 ---
 

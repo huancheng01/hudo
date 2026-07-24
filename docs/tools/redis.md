@@ -1,5 +1,5 @@
 ---
-title: "Redis 安装配置 - Windows 一键安装 Redis 数据库 - hudo"
+title: "Redis 安装配置 - Windows 一键安装 Redis 数据库"
 description: "使用 hudo 一键安装 Windows 版 Redis 内存数据库，自动注册系统服务并配置环境变量，支持后台运行和开机自启。"
 head:
   - - meta

@@ -1,5 +1,5 @@
 ---
-title: "Oh My Posh + Nerd Font 安装配置 - Windows 终端美化一键完成 - hudo"
+title: "Oh My Posh + Nerd Font 安装配置 - Windows 终端美化一键完成"
 description: "使用 hudo 一键安装 Oh My Posh 终端主题引擎并自动安装注册 CaskaydiaCove Nerd Font 字体（用户级免管理员），自动写入 PowerShell profile。"
 head:
   - - meta

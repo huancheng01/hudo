@@ -1,5 +1,5 @@
 ---
-title: "IntelliJ IDEA 安装配置 - Windows 一键安装 IDEA - hudo"
+title: "IntelliJ IDEA 安装配置 - Windows 一键安装 IDEA"
 description: "使用 hudo 一键安装 IntelliJ IDEA（免费社区功能），免安装版解压即用，自动配置环境变量，Java/Kotlin 开发 IDE 开箱即用。"
 head:
   - - meta

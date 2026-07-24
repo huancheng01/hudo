@@ -1,5 +1,5 @@
 ---
-title: "GitHub CLI (gh) Windows 安装 - hudo"
+title: "GitHub CLI (gh) Windows 安装"
 description: "使用 hudo 在 Windows 上一键安装 GitHub CLI，自动配置环境变量，快速管理 PR、Issue 和 Release，提升 GitHub 工作流效率。"
 head:
   - - meta

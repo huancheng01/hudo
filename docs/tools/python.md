@@ -1,5 +1,5 @@
 ---
-title: "Python uv 安装配置 - Windows 一键安装 Python 环境 - hudo"
+title: "Python uv 安装配置 - Windows 一键安装 Python 环境"
 description: "使用 hudo 一键安装 uv Python 包管理器，自动配置环境变量，支持国内镜像加速下载，极速管理 Python 版本和虚拟环境。"
 head:
   - - meta

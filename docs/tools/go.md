@@ -1,5 +1,5 @@
 ---
-title: "Go (Golang) Windows 安装与配置 - hudo"
+title: "Go (Golang) Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Go 语言，自动配置 GOROOT、GOPATH 和 PATH 环境变量，支持国内 GOPROXY 镜像加速。"
 head:
   - - meta

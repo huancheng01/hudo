@@ -1,5 +1,5 @@
 ---
-title: "JDK (Java) Windows 安装与配置 - hudo"
+title: "JDK (Java) Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Eclipse Temurin JDK，自动配置 JAVA_HOME 和 PATH 环境变量，支持国内镜像加速下载。"
 head:
   - - meta

@@ -1,5 +1,5 @@
 ---
-title: "Rust Windows 安装与配置 - hudo"
+title: "Rust Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Rust 工具链（rustup），自动配置 PATH 和 CARGO_HOME，支持国内镜像源加速。"
 head:
   - - meta

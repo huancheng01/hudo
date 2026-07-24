@@ -1,5 +1,5 @@
 ---
-title: "PowerShell 7 安装配置 - Windows 一键安装 pwsh - hudo"
+title: "PowerShell 7 安装配置 - Windows 一键安装 pwsh"
 description: "使用 hudo 一键安装 PowerShell 7 便携版，免管理员权限，与系统自带的 Windows PowerShell 5.1 共存。"
 head:
   - - meta

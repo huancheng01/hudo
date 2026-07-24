@@ -1,5 +1,5 @@
 ---
-title: "Node.js Windows 安装与配置 - hudo"
+title: "Node.js Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Node.js，自动配置 PATH 和 npm 镜像，支持国内加速下载，无需手动设置环境变量。"
 head:
   - - meta

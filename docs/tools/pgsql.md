@@ -1,5 +1,5 @@
 ---
-title: "PostgreSQL 安装配置 - Windows 一键安装 PostgreSQL - hudo"
+title: "PostgreSQL 安装配置 - Windows 一键安装 PostgreSQL"
 description: "使用 hudo 一键安装 PostgreSQL 数据库，自动初始化数据目录、注册 Windows 服务并配置环境变量，开箱即用。"
 head:
   - - meta

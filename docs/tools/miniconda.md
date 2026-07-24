@@ -1,5 +1,5 @@
 ---
-title: "Miniconda 安装配置 - Windows 一键安装 Conda 环境 - hudo"
+title: "Miniconda 安装配置 - Windows 一键安装 Conda 环境"
 description: "使用 hudo 一键安装 Miniconda，自动配置环境变量和国内镜像源，适合科学计算、数据分析和机器学习开发场景。"
 head:
   - - meta

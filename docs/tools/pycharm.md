@@ -1,5 +1,5 @@
 ---
-title: "PyCharm 安装配置 - Windows 一键安装 PyCharm IDE - hudo"
+title: "PyCharm 安装配置 - Windows 一键安装 PyCharm IDE"
 description: "使用 hudo 一键安装 PyCharm Community Edition，自动配置环境变量和桌面快捷方式，Python 开发专业 IDE 开箱即用。"
 head:
   - - meta

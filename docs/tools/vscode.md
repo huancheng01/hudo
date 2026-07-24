@@ -1,5 +1,5 @@
 ---
-title: "VS Code 安装配置 - Windows 一键安装 Visual Studio Code - hudo"
+title: "VS Code 安装配置 - Windows 一键安装 Visual Studio Code"
 description: "使用 hudo 一键安装 VS Code 编辑器，自动配置 PATH 环境变量和右键菜单，支持命令行 code 命令直接打开项目。"
 head:
   - - meta

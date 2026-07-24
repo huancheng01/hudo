@@ -1,5 +1,5 @@
 ---
-title: "Chrome 安装 - Windows 一键静默安装 Google Chrome - hudo"
+title: "Chrome 安装 - Windows 一键静默安装 Google Chrome"
 description: "使用 hudo 一键静默安装 Google Chrome 浏览器，企业版 MSI 安装包，无弹窗无广告，适合批量部署开发环境。"
 head:
   - - meta

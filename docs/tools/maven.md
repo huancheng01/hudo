@@ -1,5 +1,5 @@
 ---
-title: "Maven Windows 安装与配置 - hudo"
+title: "Maven Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Apache Maven，自动配置 MAVEN_HOME 和 PATH 环境变量，支持阿里云镜像仓库加速。"
 head:
   - - meta

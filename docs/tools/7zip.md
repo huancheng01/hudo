@@ -1,5 +1,5 @@
 ---
-title: "7-Zip 安装配置 - Windows 一键安装 7-Zip 免管理员 - hudo"
+title: "7-Zip 安装配置 - Windows 一键安装 7-Zip 免管理员"
 description: "使用 hudo 一键安装 7-Zip 便携版，免管理员权限、不写注册表，命令行 7z 和图形界面 7zFM 开箱即用。"
 head:
   - - meta

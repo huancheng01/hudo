@@ -1,5 +1,5 @@
 ---
-title: "MinGW GCC 安装配置 - Windows 一键安装 C/C++ 编译器 - hudo"
+title: "MinGW GCC 安装配置 - Windows 一键安装 C/C++ 编译器"
 description: "使用 hudo 一键安装 MinGW-w64 GCC 编译器工具链，无需 MSYS2，自动配置 PATH 环境变量，支持 gcc/g++/make 命令。"
 head:
   - - meta

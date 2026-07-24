@@ -1,5 +1,5 @@
 ---
-title: "Gradle Windows 安装与配置 - hudo"
+title: "Gradle Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Gradle 构建工具，自动配置 GRADLE_HOME 和 PATH 环境变量，支持 Java、Kotlin、Android 项目。"
 head:
   - - meta

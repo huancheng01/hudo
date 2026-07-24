@@ -1,5 +1,5 @@
 ---
-title: "MySQL 安装配置 - Windows 一键安装 MySQL 数据库 - hudo"
+title: "MySQL 安装配置 - Windows 一键安装 MySQL 数据库"
 description: "使用 hudo 一键安装 MySQL Community Server，自动注册 Windows 服务、配置环境变量和 root 密码，免去繁琐的手动配置。"
 head:
   - - meta

@@ -1,5 +1,5 @@
 ---
-title: "Bun Windows 安装与配置 - hudo"
+title: "Bun Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Bun 运行时，自动配置环境变量，高性能 JavaScript/TypeScript 运行时与包管理器。"
 head:
   - - meta

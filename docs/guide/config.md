@@ -1,5 +1,5 @@
 ---
-title: "配置文件 - hudo 配置说明"
+title: "配置文件 - 安装目录、版本锁定、镜像源与代理"
 description: "hudo 配置文件详解：自定义安装目录、版本锁定、镜像源设置，通过 config.toml 灵活控制工具安装行为。"
 head:
   - - meta

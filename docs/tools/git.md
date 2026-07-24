@@ -1,5 +1,5 @@
 ---
-title: "Git Windows 安装与配置 - hudo"
+title: "Git Windows 安装与配置"
 description: "使用 hudo 在 Windows 上一键安装 Git，自动配置 PATH 环境变量，支持国内镜像加速下载，免去手动配置烦恼。"
 head:
   - - meta

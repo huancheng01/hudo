@@ -1,6 +1,6 @@
 ---
-title: "Windows 开发工具列表 - hudo 支持安装的全部工具"
-description: "hudo 支持一键安装的 20+ 款 Windows 开发工具完整列表，涵盖 Git、Node.js、JDK、Go、Rust 等，自动配置环境变量，支持国内镜像加速。"
+title: "Windows 开发工具列表 - 一键安装的全部 26 款工具"
+description: "hudo 支持一键安装的 26 款 Windows 开发工具完整列表，涵盖 Git、Node.js、JDK、Go、Rust 等，自动配置环境变量，支持国内镜像加速。"
 head:
   - - meta
     - name: keywords

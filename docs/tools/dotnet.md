@@ -1,5 +1,5 @@
 ---
-title: ".NET SDK 安装配置 - Windows 一键安装 .NET - hudo"
+title: ".NET SDK 安装配置 - Windows 一键安装 .NET"
 description: "使用 hudo 一键安装 .NET SDK（C#/F#），官方脚本用户级安装，自动配置 DOTNET_ROOT 与 PATH，默认最新 LTS。"
 head:
   - - meta

@@ -1,5 +1,5 @@
 ---
-title: "PowerToys 安装配置 - Windows 一键静默安装 PowerToys - hudo"
+title: "PowerToys 安装配置 - Windows 一键静默安装 PowerToys"
 description: "使用 hudo 一键静默安装微软 PowerToys 效率工具集（FancyZones、PowerRename、颜色拾取器等），用户级安装免管理员。"
 head:
   - - meta
