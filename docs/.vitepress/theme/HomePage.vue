@@ -24,6 +24,13 @@
 
     <!-- ─── Hero ─── -->
     <section class="hero">
+      <!-- 仪表角标：整页是一台运行中的仪器 -->
+      <div class="hud" aria-hidden="true">
+        <span class="hud-c hud-tl">SYS // HUDO v0.3.0</span>
+        <span class="hud-c hud-tr">PHASE 01 / ENV BOOTSTRAP</span>
+        <span class="hud-c hud-bl">26 TOOLS / 4 MIRRORS</span>
+        <span class="hud-c hud-br">UAC PROMPTS: 0 ▮</span>
+      </div>
       <div class="wrap">
         <a href="/changelog" class="badge" data-reveal>
           <span class="badge-dot"></span>
@@ -183,11 +190,15 @@
         <div class="cta" data-reveal>
           <div class="cta-beam"></div>
           <div class="cta-grid"></div>
+          <p class="cta-mono" aria-hidden="true">// system ready — awaiting input <span class="cta-caret">▮</span></p>
           <p class="cta-label">准备好了吗？</p>
           <h2 class="cta-title">一条命令，<br>开启你的 Windows 开发之旅。</h2>
           <div class="cta-btns">
-            <a href="/guide/quickstart" class="btn primary lg" data-magnet>
-              开始使用
+            <a href="/guide/quickstart" class="btn primary lg btn-boot" data-magnet>
+              <span class="swap">
+                <span class="swap-a">开始使用</span>
+                <span class="swap-b">&gt; ./bootstrap</span>
+              </span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
             <a href="/tools/" class="btn solid lg" data-magnet>浏览工具列表</a>
@@ -391,6 +402,21 @@ function initWave() {
   waveIO.observe(canvas)
 }
 
+// ─── stats 数字滚动定格 ───
+function countUp(zone) {
+  zone.querySelectorAll('.stat-val').forEach(el => {
+    const end = parseInt(el.textContent, 10)
+    if (!Number.isFinite(end)) return
+    const t0 = performance.now()
+    const tick = (t) => {
+      const p = Math.min((t - t0) / 300, 1)
+      el.textContent = String(Math.round(end * p))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  })
+}
+
 // ─── Tilt on tool cards ───
 function onTilt(e) {
   const el = e.currentTarget
@@ -465,6 +491,8 @@ onMounted(async () => {
     entries.forEach(en => {
       if (en.isIntersecting) {
         en.target.classList.add('in')
+        // stats 数值首次进视口 300ms 从 0 滚到终值（IO 已 unobserve，天然只播一次）
+        if (!reduceMotion && en.target.classList.contains('stat-zone')) countUp(en.target)
         if (en.target.hasAttribute('data-reveal-group')) {
           en.target.querySelectorAll(':scope > *').forEach((c, i) => {
             c.style.setProperty('--d', `${i * 0.04}s`)
@@ -728,6 +756,25 @@ onUnmounted(() => {
   text-align: center;
 }
 .hero .wrap { width: 100%; }
+
+/* 仪表角标（nocturne 面板排版范式） */
+.hud {
+  position: absolute;
+  inset: 86px 28px 20px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: rgba(96,165,250,.42);
+  user-select: none;
+}
+:root:not(.dark) .hud { color: rgba(37,99,235,.45); }
+.hud-c { position: absolute; white-space: nowrap; }
+.hud-tl { top: 0; left: 0; }
+.hud-tr { top: 0; right: 0; }
+.hud-bl { bottom: 0; left: 0; }
+.hud-br { bottom: 0; right: 0; }
+@media (max-width: 960px) { .hud { display: none; } }
 
 .badge {
   display: inline-flex;
@@ -1344,6 +1391,19 @@ onUnmounted(() => {
   -webkit-mask-image: radial-gradient(ellipse 60% 80% at 50% 50%, #000, transparent);
   opacity: .6;
 }
+.cta-mono {
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+  letter-spacing: .05em;
+}
+.cta-caret {
+  display: inline-block;
+  color: var(--brand);
+  animation: blink 1s step-end infinite;
+}
 .cta-label {
   position: relative;
   font-family: 'JetBrains Mono', monospace;
@@ -1352,6 +1412,28 @@ onUnmounted(() => {
   margin: 0 0 16px;
   letter-spacing: .06em;
 }
+
+/* 主按钮 hover 双 label 升降：'开始使用' ⇄ '> ./bootstrap'
+   inline-grid 同格叠放, 宽度锁定为两者较大值, hover 切换零抖动 */
+.swap {
+  display: inline-grid;
+  overflow: hidden;
+  text-align: center;
+}
+.swap-a, .swap-b {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  transition: transform .3s cubic-bezier(.2,.7,.1,1), opacity .3s;
+}
+.swap-b {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .88em;
+  align-self: center;
+  transform: translateY(130%);
+  opacity: 0;
+}
+.btn-boot:hover .swap-a { transform: translateY(-130%); opacity: 0; }
+.btn-boot:hover .swap-b { transform: none; opacity: 1; }
 .cta-title {
   position: relative;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
@@ -1410,5 +1492,8 @@ onUnmounted(() => {
     opacity: 1 !important;
     transform: none !important;
   }
+  /* label 不切换、光标实心不闪 */
+  .swap-b { display: none; }
+  .btn-boot:hover .swap-a { transform: none; opacity: 1; }
 }
 </style>
