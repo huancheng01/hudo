@@ -500,7 +500,8 @@ function countUp(zone) {
     if (!Number.isFinite(end)) return
     const t0 = performance.now()
     const tick = (t) => {
-      const p = Math.min((t - t0) / 300, 1)
+      // rAF 时间戳可能早于捕获 t0（帧起始时刻），负数不钳会闪出负值
+      const p = Math.min(Math.max((t - t0) / 300, 0), 1)
       el.textContent = String(Math.round(end * p))
       if (p < 1) requestAnimationFrame(tick)
     }
@@ -586,8 +587,15 @@ onMounted(async () => {
         if (!reduceMotion && en.target.classList.contains('stat-zone')) countUp(en.target)
         if (en.target.hasAttribute('data-scramble')) scrambleEl(en.target)
         if (en.target.hasAttribute('data-reveal-group')) {
-          en.target.querySelectorAll(':scope > *').forEach((c, i) => {
-            c.style.setProperty('--d', `${i * 0.04}s`)
+          // POST 自检式随机点亮：洗牌延迟替换顺序 stagger（26 卡总时长压到 0.8s 内）
+          const kids = en.target.querySelectorAll(':scope > *')
+          const order = Array.from(kids, (_, i) => i)
+          for (let i = order.length - 1; i > 0; i--) {
+            const j = (Math.random() * (i + 1)) | 0
+            ;[order[i], order[j]] = [order[j], order[i]]
+          }
+          kids.forEach((c, i) => {
+            c.style.setProperty('--d', `${(order[i] * 0.015).toFixed(3)}s`)
             c.classList.add('in')
           })
         }
@@ -818,8 +826,8 @@ onUnmounted(() => {
 :global(html.js) [data-reveal-group] > * {
   opacity: 0;
   transform: translateY(16px) scale(.98);
-  transition: opacity .7s cubic-bezier(.2,.7,.1,1) var(--d, 0s),
-              transform .7s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
+  transition: opacity .45s cubic-bezier(.2,.7,.1,1) var(--d, 0s),
+              transform .45s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
 }
 :global(html.js) [data-reveal-group] > *.in { opacity: 1; transform: none; }
 
@@ -1187,6 +1195,36 @@ onUnmounted(() => {
 }
 .tool:hover .tool-inner {
   border-color: rgba(96,165,250,.35);
+}
+/* POST 自检覆盖块：先瞬间点亮(暗底+品牌描边)停一拍再消隐露出卡片,
+   用 ::before 不注入 revealer DOM */
+.tool .tool-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: #101527;
+  box-shadow:
+    inset 0 0 0 1px rgba(96,165,250,.55),
+    inset 0 0 18px rgba(139,92,246,.18);
+  opacity: 0;
+  pointer-events: none;
+}
+:root:not(.dark) .tool .tool-inner::before {
+  background: #eef2fa;
+  box-shadow:
+    inset 0 0 0 1px rgba(37,99,235,.45),
+    inset 0 0 18px rgba(124,58,237,.14);
+}
+:global(html.js) .tool.in .tool-inner::before {
+  animation: postFlash .26s ease-out var(--d, 0s) both;
+}
+@keyframes postFlash {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  62%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 .tool-glow {
   position: absolute;
