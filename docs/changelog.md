@@ -9,7 +9,25 @@ head:
 
 # 更新日志
 
-## v0.3.0 <Badge type="tip" text="最新" />
+## v0.4.0 <Badge type="tip" text="最新" />
+
+**新功能**
+- 新增 6 款工具：IntelliJ IDEA、7-Zip、PowerShell 7、.NET SDK、PowerToys、Oh My Posh（捆绑 Nerd Font 与 profile 注入），支持工具总数达到 26 款
+- `hudo upgrade`：基于精确安装记录批量升级已装工具；MySQL/PostgreSQL/Redis/Miniconda 等数据在安装目录内的工具排除在外，避免误清空
+- 全局 `-y`/`--yes` 非交互模式：推进类确认自动确认，可选分支走安全默认，适合脚本化批量部署
+- 全局代理配置：作用于版本查询、下载、自更新全部网络出口
+- `install.ps1` 支持档案参数：新机器一条命令装 hudo 并自动导入档案、批量安装工具，无人值守还原整套开发环境
+- bun/uv/vscode/miniconda 支持版本锁定
+
+**优化**
+- MySQL 补动态版本查询，与 PostgreSQL/Redis 的版本解析链对齐
+- 接管入口提示更清晰：setup 图例、import 跳过行提示、list 汇总补充操作指引
+
+**修复**
+- 档案导出遗漏 7 个配置键，键表统一收敛为 config 单一来源
+- config.toml 键名按 serde rename 对齐文档，避免键名与文档不一致
+
+## v0.3.0
 
 **新功能**
 - Claude Code API 来源管理全面升级：Provider 支持查看详情与逐字段编辑（回车保留原值），API Key 改用不回显输入、展示时脱敏；添加后可一键切换；删除激活中的 Provider 时提示恢复默认
