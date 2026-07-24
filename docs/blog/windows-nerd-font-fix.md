@@ -24,6 +24,12 @@ keywords:
 
 ## 为什么终端图标会变成方框？
 
+先看症状长什么样——下面两张图是**同一个提示符**，唯一区别是终端字体（上：普通字体，图标全是方框；下：CaskaydiaCove Nerd Font，图标正常）：
+
+![终端图标显示为方框：字体不含 Nerd Font 图标字符的典型症状](/img/blog/terminal-omp-boxes.png)
+
+![切换 Nerd Font 后图标正常显示：文件夹、git 分支、领先提交数](/img/blog/terminal-omp-nerd.png)
+
 因为主题用到的图标字符根本不在你当前字体的字符集里。oh-my-posh、starship 这类提示符主题大量使用 Unicode **私有使用区（PUA）** 码位的字形——比如分支箭头是 U+E0B0，Git、Python 的图标来自 Font Awesome、Devicons、Powerline 等图标集，合计上万个字形。Consolas、微软雅黑这些常规字体没有这些码位，终端只能画一个空心方框（俗称 tofu）兜底。Nerd Font 就是把这些图标字形补进流行等宽字体后的"补丁版"，CaskaydiaCove 即微软 Cascadia Code 的 Nerd Font 版本。
 
 先做一个 10 秒自测，在 PowerShell 里执行：

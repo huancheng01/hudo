@@ -22,6 +22,10 @@ keywords:
 Windows 终端美化 = PowerShell 7（现代 shell）+ Oh My Posh（提示符引擎）+ Nerd Font（图标字体），三件缺一不可，网上大量教程失效就是因为只讲了其中一两件。手动装要五步、有三个经典坑；用 hudo 两条命令可以全自动完成：`hudo install pwsh` 装 PowerShell 7，`hudo install omp` 装引擎 + 36 个字体文件 + 写 profile。装完只剩一步手动操作：在终端设置里把字体切成 `CaskaydiaCove Nerd Font`。
 :::
 
+配置完成后的实际效果（Windows Terminal + jandedobbeleer 主题，git 仓库内自动显示分支与领先提交数）：
+
+![Windows 终端美化完成效果：Oh My Posh 提示符显示用户、目录、git 分支图标](/img/blog/terminal-omp-nerd.png)
+
 ## 为什么终端美化需要「三件套」？
 
 因为一个漂亮的终端提示符要同时满足三个条件：有现代 shell 承载、有引擎生成内容、有字体渲染图标——对应 PowerShell 7、Oh My Posh 和 Nerd Font，三者各管一段，谁缺了都会以不同的方式坏掉。
@@ -84,7 +88,11 @@ Windows Terminal：设置 → 你的配置文件 → 外观 → 字体 → 选 `
 
 ### 坑一：装的根本不是 Nerd Font
 
-症状是图标位置全是方块或问号。很多人装的是普通 Cascadia Code 或微软雅黑，它们没有图标字符。必须是名字里带「Nerd Font」的版本，排查细节见[这篇终端图标乱码修复指南](/blog/windows-nerd-font-fix)。
+症状是图标位置全是方块或问号——同一个提示符，字体不对时长这样：
+
+![终端字体不是 Nerd Font 时 Oh My Posh 图标全部显示为方块](/img/blog/terminal-omp-boxes.png)
+
+很多人装的是普通 Cascadia Code 或微软雅黑，它们没有图标字符。必须是名字里带「Nerd Font」的版本，排查细节见[这篇终端图标乱码修复指南](/blog/windows-nerd-font-fix)。
 
 ### 坑二：profile 没写，或写错了文件
 
