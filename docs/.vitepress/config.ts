@@ -4,12 +4,13 @@ const SITE = 'https://hudo.zexa.cc'
 const SITE_TITLE = 'hudo - Windows 开发环境一键引导工具'
 const SITE_DESC = '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 26 款开发工具，免管理员权限，自动配置环境变量，支持国内镜像加速。'
 
-// 生成与 sitemap 完全一致的页面绝对 URL（canonical 必须与 sitemap/内链形态一致）
+// 生成与 sitemap 完全一致的页面绝对 URL（canonical 必须与 sitemap/内链/线上服务形态一致；
+// Cloudflare Pages 把 .html 308 到无扩展名 URL，故全站统一 clean URL 形态 + cleanUrls: true）
 function pageUrl(page: string): string {
   const path = page.replace(/\.md$/, '')
   if (path === 'index') return `${SITE}/`
   if (path.endsWith('/index')) return `${SITE}/${path.slice(0, -'index'.length)}`
-  return `${SITE}/${path}.html`
+  return `${SITE}/${path}`
 }
 
 // 面包屑分区：有真实索引页的分区才给中间层级
@@ -22,6 +23,8 @@ export default defineConfig({
   title: 'hudo',
   description: SITE_DESC,
   lang: 'zh-CN',
+  // 与 Cloudflare Pages 的 URL 归一化行为对齐（平台把 .html 308 到无扩展名 URL）
+  cleanUrls: true,
   // sitemap lastmod 与页面"最后更新"时间均取 git 提交时间（新鲜度信号）
   lastUpdated: true,
 

@@ -10,35 +10,35 @@
 
 ## 文档
 
-- [什么是 hudo](https://hudo.zexa.cc/guide/what-is-hudo.html): 项目定位与能力总览
-- [安装 hudo](https://hudo.zexa.cc/guide/install.html): 安装方式与系统要求
-- [快速上手](https://hudo.zexa.cc/guide/quickstart.html): 安装/升级/卸载工具、非交互模式、新机一条命令还原环境
-- [配置文件](https://hudo.zexa.cc/guide/config.html): 安装目录、版本锁定、镜像源、代理设置
-- [配置档案](https://hudo.zexa.cc/guide/profile.html): 导出/导入环境，换机迁移
+- [什么是 hudo](https://hudo.zexa.cc/guide/what-is-hudo): 项目定位与能力总览
+- [安装 hudo](https://hudo.zexa.cc/guide/install): 安装方式与系统要求
+- [快速上手](https://hudo.zexa.cc/guide/quickstart): 安装/升级/卸载工具、非交互模式、新机一条命令还原环境
+- [配置文件](https://hudo.zexa.cc/guide/config): 安装目录、版本锁定、镜像源、代理设置
+- [配置档案](https://hudo.zexa.cc/guide/profile): 导出/导入环境，换机迁移
 - [工具列表](https://hudo.zexa.cc/tools/): 全部 26 款工具的安装说明
 
 ## 工具页
 
-- [Git](https://hudo.zexa.cc/tools/git.html): 一键安装 Git 并配置 PATH
-- [Node.js](https://hudo.zexa.cc/tools/nodejs.html): 官方预编译包安装，npm 开箱即用
-- [fnm](https://hudo.zexa.cc/tools/fnm.html): Node.js 多版本管理
-- [Python (uv)](https://hudo.zexa.cc/tools/python.html): uv 管理 Python 版本与虚拟环境
-- [JDK](https://hudo.zexa.cc/tools/jdk.html): Eclipse Temurin，自动配 JAVA_HOME
-- [MySQL](https://hudo.zexa.cc/tools/mysql.html): 自动初始化数据目录并注册 Windows 服务
-- [PostgreSQL](https://hudo.zexa.cc/tools/pgsql.html): 自动初始化并注册 Windows 服务
-- [VS Code](https://hudo.zexa.cc/tools/vscode.html): 便携版安装，配置右键菜单
-- [IntelliJ IDEA](https://hudo.zexa.cc/tools/idea.html): 免安装版解压即用
-- [PowerShell 7](https://hudo.zexa.cc/tools/pwsh.html): 便携版与系统 5.1 共存
-- [7-Zip](https://hudo.zexa.cc/tools/7zip.html): 便携解包免管理员
-- [Oh My Posh](https://hudo.zexa.cc/tools/omp.html): 终端主题引擎 + Nerd Font 字体一步到位
+- [Git](https://hudo.zexa.cc/tools/git): 一键安装 Git 并配置 PATH
+- [Node.js](https://hudo.zexa.cc/tools/nodejs): 官方预编译包安装，npm 开箱即用
+- [fnm](https://hudo.zexa.cc/tools/fnm): Node.js 多版本管理
+- [Python (uv)](https://hudo.zexa.cc/tools/python): uv 管理 Python 版本与虚拟环境
+- [JDK](https://hudo.zexa.cc/tools/jdk): Eclipse Temurin，自动配 JAVA_HOME
+- [MySQL](https://hudo.zexa.cc/tools/mysql): 自动初始化数据目录并注册 Windows 服务
+- [PostgreSQL](https://hudo.zexa.cc/tools/pgsql): 自动初始化并注册 Windows 服务
+- [VS Code](https://hudo.zexa.cc/tools/vscode): 便携版安装，配置右键菜单
+- [IntelliJ IDEA](https://hudo.zexa.cc/tools/idea): 免安装版解压即用
+- [PowerShell 7](https://hudo.zexa.cc/tools/pwsh): 便携版与系统 5.1 共存
+- [7-Zip](https://hudo.zexa.cc/tools/7zip): 便携解包免管理员
+- [Oh My Posh](https://hudo.zexa.cc/tools/omp): 终端主题引擎 + Nerd Font 字体一步到位
 
 ## 博客
 
-- [20 分钟配好完整开发环境](https://hudo.zexa.cc/blog/windows-dev-environment-setup.html): 新机装机完整流程
-- [换电脑一键迁移开发环境](https://hudo.zexa.cc/blog/windows-dev-env-migration.html): 环境档案导出/还原实战
-- [Windows 包管理器横评](https://hudo.zexa.cc/blog/windows-package-manager-compare.html): winget/Scoop/Chocolatey/hudo 对比
+- [20 分钟配好完整开发环境](https://hudo.zexa.cc/blog/windows-dev-environment-setup): 新机装机完整流程
+- [换电脑一键迁移开发环境](https://hudo.zexa.cc/blog/windows-dev-env-migration): 环境档案导出/还原实战
+- [Windows 包管理器横评](https://hudo.zexa.cc/blog/windows-package-manager-compare): winget/Scoop/Chocolatey/hudo 对比
 
 ## 其他
 
 - [GitHub 仓库](https://github.com/zexadev/hudo): 源码与 Releases
-- [更新日志](https://hudo.zexa.cc/changelog.html): 版本历史
+- [更新日志](https://hudo.zexa.cc/changelog): 版本历史
