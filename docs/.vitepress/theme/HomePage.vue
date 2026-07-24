@@ -25,11 +25,11 @@
     <!-- ─── Hero ─── -->
     <section class="hero">
       <div class="wrap">
-        <div class="badge" data-reveal>
+        <a href="/changelog" class="badge" data-reveal>
           <span class="badge-dot"></span>
           <span class="badge-text">v0.3.0 — MIT Licensed</span>
           <span class="badge-arrow">→</span>
-        </div>
+        </a>
 
         <h1 class="headline">
           <span class="line" data-reveal><span class="fill">Windows 开发环境</span></span>
@@ -44,7 +44,7 @@
         </p>
 
         <div class="install-row" data-reveal style="--d:.32s">
-          <div class="install" :class="{ copied }" @click="copy" data-magnet>
+          <button type="button" class="install" :class="{ copied }" @click="copy" aria-label="复制安装命令" data-magnet>
             <span class="i-gradient"></span>
             <span class="i-prompt">PS</span>
             <code class="i-cmd">irm hudo.zexa.cc/install.ps1 | iex</code>
@@ -53,7 +53,7 @@
               <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               <span class="i-label">{{ copied ? 'Copied' : 'Copy' }}</span>
             </span>
-          </div>
+          </button>
         </div>
 
         <div class="stat-row" data-reveal style="--d:.38s" aria-hidden="true">
@@ -62,6 +62,8 @@
           <span class="stat"><span class="stat-key">uac_prompts</span> = <span class="stat-val">0</span></span>
           <span class="stat-sep">;</span>
           <span class="stat"><span class="stat-key">commands</span> = <span class="stat-val">1</span></span>
+          <span class="stat-sep">;</span>
+          <span class="stat"><span class="stat-key">mirrors</span> = <span class="stat-val">4</span></span>
         </div>
 
         <div class="cta-row" data-reveal style="--d:.42s">
@@ -76,8 +78,9 @@
           </a>
         </div>
 
-        <!-- 活终端：真实 hudo 安装序列循环演示 -->
-        <div class="term-wrap hero-term" data-reveal style="--d:.55s" ref="termWrap">
+        <!-- 活终端：真实 hudo 安装序列循环演示（对屏幕阅读器隐藏，等价文案见下） -->
+        <p class="sr-only">演示：运行 hudo setup 依次安装 Git、Node.js、VS Code，自动配置环境变量，全程未弹出 UAC 窗口。</p>
+        <div class="term-wrap hero-term" data-reveal style="--d:.55s" ref="termWrap" aria-hidden="true">
           <div class="term-glow"></div>
           <div class="term">
             <div class="term-bar">
@@ -85,7 +88,7 @@
               <div class="term-title">PowerShell — hudo setup</div>
               <div class="term-spacer"/>
             </div>
-            <div class="term-body">
+            <div class="term-body" :class="{ fading: termFading }">
               <div v-for="(l, i) in termLines.slice(0, termVisible)" :key="`${termRun}-${i}`" class="tl" :class="l.k">
                 <span v-if="l.k==='cmd'" class="tl-prompt">PS&nbsp;C:\&gt;</span>
                 <template v-if="l.k==='bar'">
@@ -177,11 +180,11 @@
         <div class="cta" data-reveal>
           <div class="cta-beam"></div>
           <div class="cta-grid"></div>
-          <p class="cta-label">准备好了吗?</p>
-          <h2 class="cta-title">一条命令,<br>开启你的 Windows 开发之旅.</h2>
+          <p class="cta-label">准备好了吗？</p>
+          <h2 class="cta-title">一条命令，<br>开启你的 Windows 开发之旅。</h2>
           <div class="cta-btns">
             <a href="/guide/quickstart" class="btn primary lg" data-magnet>
-              阅读文档
+              开始使用
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
             <a href="/tools/" class="btn solid lg" data-magnet>浏览工具列表</a>
@@ -202,9 +205,11 @@ const termWrap = ref(null)
 
 const copied = ref(false)
 function copy() {
-  navigator.clipboard.writeText('irm hudo.zexa.cc/install.ps1 | iex')
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 1800)
+  // 写入被拒（权限/非安全上下文）时不假报 Copied
+  navigator.clipboard.writeText('irm hudo.zexa.cc/install.ps1 | iex').then(() => {
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 1800)
+  }).catch(() => {})
 }
 
 const marqueeWords = ['Git', 'GitHub CLI', 'Node.js', 'fnm', 'Bun', 'Rust', 'Go', '.NET', 'JDK', 'Maven', 'Gradle', 'Python (uv)', 'Miniconda', 'MySQL', 'Redis', 'PostgreSQL', 'VS Code', 'PyCharm', 'IntelliJ IDEA', 'MinGW', '7-Zip', 'PowerShell 7', 'PowerToys', 'Oh My Posh', 'Chrome', 'Claude Code']
@@ -213,6 +218,7 @@ const tools = [
   { name: 'Git', svg: `<svg viewBox="0 0 24 24" fill="#F03C2E"><path d="M13.09 23.549a1.54 1.54 0 0 1-2.18 0L.451 13.089a1.54 1.54 0 0 1 0-2.179l7.191-7.19 2.733 2.733a1.85 1.85 0 0 0 .964 2.326v6.66a1.849 1.849 0 1 0 1.54 0V8.957l2.508 2.508a1.85 1.85 0 1 0 1.09-1.09l-2.634-2.634a1.85 1.85 0 0 0-2.378-2.377L8.73 2.63 10.91.451a1.54 1.54 0 0 1 2.179 0l10.459 10.46a1.54 1.54 0 0 1 0 2.179z"/></svg>` },
   { name: 'GitHub CLI', svg: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>` },
   { name: 'Node.js', svg: `<svg viewBox="0 0 24 24" fill="#5FA04E"><path d="M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z"/></svg>` },
+  { name: 'fnm', svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><path d="M8.5 10.5h5.5m0 0l-2-2m2 2l-2 2M15.5 15h-5.5m0 0l2-2m-2 2l2 2"/></svg>` },
   { name: 'Bun', svg: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22.596c6.628 0 12-4.338 12-9.688 0-3.318-2.057-6.248-5.219-7.986-1.286-.715-2.297-1.357-3.139-1.89C14.058 2.025 13.08 1.404 12 1.404c-1.097 0-2.334.785-3.966 1.821a49.92 49.92 0 0 1-2.816 1.697C2.057 6.66 0 9.59 0 12.908c0 5.35 5.372 9.687 12 9.687v.001ZM10.599 4.715c.334-.759.503-1.58.498-2.409 0-.145.202-.187.23-.029.658 2.783-.902 4.162-2.057 4.624-.124.048-.199-.121-.103-.209a5.763 5.763 0 0 0 1.432-1.977Zm2.058-.102a5.82 5.82 0 0 0-.782-2.306v-.016c-.069-.123.086-.263.185-.172 1.962 2.111 1.307 4.067.556 5.051-.082.103-.23-.003-.189-.126a5.85 5.85 0 0 0 .23-2.431Zm1.776-.561a5.727 5.727 0 0 0-1.612-1.806v-.014c-.112-.085-.024-.274.114-.218 2.595 1.087 2.774 3.18 2.459 4.407a.116.116 0 0 1-.049.071.11.11 0 0 1-.153-.026.122.122 0 0 1-.022-.083 5.891 5.891 0 0 0-.737-2.331Zm-5.087.561c-.617.546-1.282.76-2.063 1-.117 0-.195-.078-.156-.181 1.752-.909 2.376-1.649 2.999-2.778 0 0 .155-.118.188.085 0 .304-.349 1.329-.968 1.874Zm4.945 11.237a2.957 2.957 0 0 1-.937 1.553c-.346.346-.8.565-1.286.62a2.178 2.178 0 0 1-1.327-.62 2.955 2.955 0 0 1-.925-1.553.244.244 0 0 1 .064-.198.234.234 0 0 1 .193-.069h3.965a.226.226 0 0 1 .19.07c.05.053.073.125.063.197Zm-5.458-2.176a1.862 1.862 0 0 1-2.384-.245 1.98 1.98 0 0 1-.233-2.447c.207-.319.503-.566.848-.713a1.84 1.84 0 0 1 1.092-.11c.366.075.703.261.967.531a1.98 1.98 0 0 1 .408 2.114 1.931 1.931 0 0 1-.698.869v.001Zm8.495.005a1.86 1.86 0 0 1-2.381-.253 1.964 1.964 0 0 1-.547-1.366c0-.384.11-.76.32-1.079.207-.319.503-.567.849-.713a1.844 1.844 0 0 1 1.093-.108c.367.076.704.262.968.534a1.98 1.98 0 0 1 .4 2.117 1.932 1.932 0 0 1-.702.868Z"/></svg>` },
   { name: 'Rust', svg: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.8346 11.7033l-1.0073-.6236a13.7268 13.7268 0 00-.0283-.2936l.8656-.8069a.3483.3483 0 00-.1154-.578l-1.1066-.414a8.4958 8.4958 0 00-.087-.2856l.6904-.9587a.3462.3462 0 00-.2257-.5446l-1.1663-.1894a9.3574 9.3574 0 00-.1407-.2622l.49-1.0761a.3437.3437 0 00-.0274-.3361.3486.3486 0 00-.3006-.154l-1.1845.0416a6.7444 6.7444 0 00-.1873-.2268l.2723-1.153a.3472.3472 0 00-.417-.4172l-1.1532.2724a14.0183 14.0183 0 00-.2278-.1873l.0415-1.1845a.3442.3442 0 00-.49-.328l-1.076.491c-.0872-.0476-.1742-.0952-.2623-.1407l-.1903-1.1673A.3483.3483 0 0016.256.955l-.9597.6905a8.4867 8.4867 0 00-.2855-.086l-.414-1.1066a.3483.3483 0 00-.5781-.1154l-.8069.8666a9.2936 9.2936 0 00-.2936-.0284L12.2946.1683a.3462.3462 0 00-.5892 0l-.6236 1.0073a13.7383 13.7383 0 00-.2936.0284L9.9803.3374a.3462.3462 0 00-.578.1154l-.4141 1.1065c-.0962.0274-.1903.0567-.2855.086L7.744.955a.3483.3483 0 00-.5447.2258L7.009 2.348a9.3574 9.3574 0 00-.2622.1407l-1.0762-.491a.3462.3462 0 00-.49.328l.0416 1.1845a7.9826 7.9826 0 00-.2278.1873L3.8413 3.425a.3472.3472 0 00-.4171.4171l.2713 1.1531c-.0628.075-.1255.1509-.1863.2268l-1.1845-.0415a.3462.3462 0 00-.328.49l.491 1.0761a9.167 9.167 0 00-.1407.2622l-1.1662.1894a.3483.3483 0 00-.2258.5446l.6904.9587a13.303 13.303 0 00-.087.2855l-1.1065.414a.3483.3483 0 00-.1155.5781l.8656.807a9.2936 9.2936 0 00-.0283.2935l-1.0073.6236a.3442.3442 0 000 .5892l1.0073.6236c.008.0982.0182.1964.0283.2936l-.8656.8079a.3462.3462 0 00.1155.578l1.1065.4141c.0273.0962.0567.1914.087.2855l-.6904.9587a.3452.3452 0 00.2268.5447l1.1662.1893c.0456.088.0922.1751.1408.2622l-.491 1.0762a.3462.3462 0 00.328.49l1.1834-.0415c.0618.0769.1235.1528.1873.2277l-.2713 1.1541a.3462.3462 0 00.4171.4161l1.153-.2713c.075.0638.151.1255.2279.1863l-.0415 1.1845a.3442.3442 0 00.49.327l1.0761-.49c.087.0486.1741.0951.2622.1407l.1903 1.1662a.3483.3483 0 00.5447.2268l.9587-.6904a9.299 9.299 0 00.2855.087l.414 1.1066a.3452.3452 0 00.5781.1154l.8079-.8656c.0972.0111.1954.0203.2936.0294l.6236 1.0073a.3472.3472 0 00.5892 0l.6236-1.0073c.0982-.0091.1964-.0183.2936-.0294l.8069.8656a.3483.3483 0 00.578-.1154l.4141-1.1066a8.4626 8.4626 0 00.2855-.087l.9587.6904a.3452.3452 0 00.5447-.2268l.1903-1.1662c.088-.0456.1751-.0931.2622-.1407l1.0762.49a.3472.3472 0 00.49-.327l-.0415-1.1845a6.7267 6.7267 0 00.2267-.1863l1.1531.2713a.3472.3472 0 00.4171-.416l-.2713-1.1542c.0628-.0749.1255-.1508.1863-.2278l1.1845.0415a.3442.3442 0 00.328-.49l-.49-1.076c.0475-.0872.0951-.1742.1407-.2623l1.1662-.1893a.3483.3483 0 00.2258-.5447l-.6904-.9587.087-.2855 1.1066-.414a.3462.3462 0 00.1154-.5781l-.8656-.8079c.0101-.0972.0202-.1954.0283-.2936l1.0073-.6236a.3442.3442 0 000-.5892zm-6.7413 8.3551a.7138.7138 0 01.2986-1.396.714.714 0 11-.2997 1.396zm-.3422-2.3142a.649.649 0 00-.7715.5l-.3573 1.6685c-1.1035.501-2.3285.7795-3.6193.7795a8.7368 8.7368 0 01-3.6951-.814l-.3574-1.6684a.648.648 0 00-.7714-.499l-1.473.3158a8.7216 8.7216 0 01-.7613-.898h7.1676c.081 0 .1356-.0141.1356-.088v-2.536c0-.074-.0536-.0881-.1356-.0881h-2.0966v-1.6077h2.2677c.2065 0 1.1065.0587 1.394 1.2088.0901.3533.2875 1.5044.4232 1.8729.1346.413.6833 1.2381 1.2685 1.2381h3.5716a.7492.7492 0 00.1296-.0131 8.7874 8.7874 0 01-.8119.9526zM6.8369 20.024a.714.714 0 11-.2997-1.396.714.714 0 01.2997 1.396zM4.1177 8.9972a.7137.7137 0 11-1.304.5791.7137.7137 0 011.304-.579zm-.8352 1.9813l1.5347-.6824a.65.65 0 00.33-.8585l-.3158-.7147h1.2432v5.6025H3.5669a8.7753 8.7753 0 01-.2834-3.348zm6.7343-.5437V8.7836h2.9601c.153 0 1.0792.1772 1.0792.8697 0 .575-.7107.7815-1.2948.7815zm10.7574 1.4862c0 .2187-.008.4363-.0243.651h-.9c-.09 0-.1265.0586-.1265.1477v.413c0 .973-.5487 1.1846-1.0296 1.2382-.4576.0517-.9648-.1913-1.0275-.4717-.2704-1.5186-.7198-1.8436-1.4305-2.4034.8817-.5599 1.799-1.386 1.799-2.4915 0-1.1936-.819-1.9458-1.3769-2.3153-.7825-.5163-1.6491-.6195-1.883-.6195H5.4682a8.7651 8.7651 0 014.907-2.7699l1.0974 1.151a.648.648 0 00.9182.0213l1.227-1.1743a8.7753 8.7753 0 016.0044 4.2762l-.8403 1.8982a.652.652 0 00.33.8585l1.6178.7188c.0283.2875.0425.577.0425.8717zm-9.3006-9.5993a.7128.7128 0 11.984 1.0316.7137.7137 0 01-.984-1.0316zm8.3389 6.71a.7107.7107 0 01.9395-.3625.7137.7137 0 11-.9405.3635z"/></svg>` },
   { name: 'Go', svg: `<svg viewBox="0 0 24 24" fill="#00ADD8"><path d="M1.811 10.231c-.047 0-.058-.023-.035-.059l.246-.315c.023-.035.081-.058.128-.058h4.172c.046 0 .058.035.035.07l-.199.303c-.023.036-.082.07-.117.07zM.047 11.306c-.047 0-.059-.023-.035-.058l.245-.316c.023-.035.082-.058.129-.058h5.328c.047 0 .07.035.058.07l-.093.28c-.012.047-.058.07-.105.07zm2.828 1.075c-.047 0-.059-.035-.035-.07l.163-.292c.023-.035.07-.07.117-.07h2.337c.047 0 .07.035.07.082l-.023.28c0 .047-.047.082-.082.082zm12.129-2.36c-.736.187-1.239.327-1.963.514-.176.046-.187.058-.34-.117-.174-.199-.303-.327-.548-.444-.737-.362-1.45-.257-2.115.175-.795.514-1.204 1.274-1.192 2.22.011.935.654 1.706 1.577 1.835.795.105 1.46-.175 1.987-.77.105-.13.198-.27.315-.434H10.47c-.245 0-.304-.152-.222-.35.152-.362.432-.97.596-1.274a.315.315 0 01.292-.187h4.253c-.023.316-.023.631-.07.947a4.983 4.983 0 01-.958 2.29c-.841 1.11-1.94 1.8-3.33 1.986-1.145.152-2.209-.07-3.143-.77-.865-.655-1.356-1.52-1.484-2.595-.152-1.274.222-2.419.993-3.424.83-1.086 1.928-1.776 3.272-2.02 1.098-.2 2.15-.07 3.096.571.62.41 1.063.97 1.356 1.648.07.105.023.164-.117.2m3.868 6.461c-1.064-.024-2.034-.328-2.852-1.029a3.665 3.665 0 01-1.262-2.255c-.21-1.32.152-2.489.947-3.529.853-1.122 1.881-1.706 3.272-1.95 1.192-.21 2.314-.095 3.33.595.923.63 1.496 1.484 1.648 2.605.198 1.578-.257 2.863-1.344 3.962-.771.783-1.718 1.273-2.805 1.495-.315.06-.63.07-.934.106zm2.78-4.72c-.011-.153-.011-.27-.034-.387-.21-1.157-1.274-1.81-2.384-1.554-1.087.245-1.788.935-2.045 2.033-.21.912.234 1.835 1.075 2.21.643.28 1.285.244 1.905-.07.923-.48 1.425-1.228 1.484-2.233z"/></svg>` },
@@ -238,12 +244,12 @@ const tools = [
 ]
 
 const features = [
-  { title: '秒级安装 · 可脚本化', desc: '一条命令装好 hudo,交互菜单勾选工具,自动下载/解压/配环境变量;所有命令支持 -y 非交互,可无人值守。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>` },
-  { title: '免管理员 · 零污染', desc: '统一安装到你选的目录,写用户级环境变量,不弹 UAC 不污染注册表;只管理自己安装的工具,绝不越界。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>` },
-  { title: '一键升级 · 版本锁定', desc: 'hudo upgrade 基于精确安装记录对比并升级全部工具;versions 配置锁定版本号,环境可复现。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>` },
-  { title: '镜像加速 · 代理支持', desc: '内置 npmmirror/TUNA/USTC/华为云等镜像回退,支持全局代理配置。大陆网络也能流畅安装。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>` },
-  { title: '换机一键还原', desc: 'hudo export 导出工具、版本与配置;新机器一条安装命令直接还原整套环境,团队标准化不再是难题。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>` },
-  { title: '开源免费', desc: '基于 MIT 协议开源,Rust 编写,单文件二进制分发。没有付费墙,没有订阅。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>` },
+  { title: '秒级安装 · 可脚本化', desc: '一条命令装好 hudo，交互菜单勾选工具，自动下载、解压、配环境变量；所有命令支持 -y 非交互，可无人值守。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>` },
+  { title: '免管理员 · 零污染', desc: '统一安装到你选的目录，写用户级环境变量，不弹 UAC 不污染注册表；只管理自己安装的工具，绝不越界。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>` },
+  { title: '一键升级 · 版本锁定', desc: 'hudo upgrade 基于精确安装记录对比并升级全部工具；versions 配置锁定版本号，环境可复现。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>` },
+  { title: '镜像加速 · 代理支持', desc: '内置 npmmirror、TUNA、USTC、华为云等镜像回退，支持全局代理配置。大陆网络也能流畅安装。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>` },
+  { title: '换机一键还原', desc: 'hudo export 导出工具、版本与配置；新机器一条安装命令直接还原整套环境，团队标准化不再是难题。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>` },
+  { title: '开源免费', desc: '基于 MIT 协议开源，Rust 编写，单文件二进制分发。没有付费墙，没有订阅。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>` },
 ]
 
 // ─── 活终端：复刻真实 hudo 安装输出的循环演示 ───
@@ -256,36 +262,53 @@ const termLines = ref([
   { k: 'ok',   t: '✓ Git 2.53.0 安装完成' },
   { k: 'env',  t: 'PATH += D:\\hudo\\tools\\git\\cmd' },
   { k: 'step', t: '[2/3] 安装 Node.js' },
-  { k: 'bar',  t: 'node-v24-win-x64.zip' },
+  { k: 'bar',  t: 'node-v24.18.0-win-x64.zip' },
   { k: 'ok',   t: '✓ Node.js v24.18.0 安装完成' },
   { k: 'env',  t: 'PATH += D:\\hudo\\lang\\node' },
   { k: 'step', t: '[3/3] 安装 VS Code' },
   { k: 'bar',  t: 'vscode-win32-x64.zip' },
   { k: 'ok',   t: '✓ VS Code 1.130.0 安装完成' },
+  { k: 'env',  t: 'PATH += D:\\hudo\\ide\\vscode\\bin' },
   { k: 'sum',  t: '✓ 3 个工具安装完成 · 全程未弹出 UAC' },
 ])
 const termVisible = ref(0)
 const termRun = ref(0)
 const typing = ref(false)
+const termFading = ref(false)
 let termTimer = null
+let reduceMotion = false
 function runTerm() {
+  // 减弱动效：一次性静态展示完整成功输出（信息量最大的一帧），不循环
+  if (reduceMotion) {
+    termVisible.value = termLines.value.length
+    typing.value = false
+    return
+  }
   if (typing.value) return
   typing.value = true
   termVisible.value = 0
+  termFading.value = false
   const step = () => {
     if (termVisible.value < termLines.value.length) {
       const next = termLines.value[termVisible.value]
       termVisible.value++
-      // 进度条行播完动画再走下一行；汇总框整块快出；其余匀速
+      // 进度条行播完动画再走下一行；步骤行稍作停顿；其余匀速
       const delay = next.k === 'bar' ? 1050 : next.k === 'step' ? 320 : 190
       termTimer = setTimeout(step, delay)
     } else {
       typing.value = false
-      // 停留后清屏重播，形成"一直在装机"的循环
-      termTimer = setTimeout(() => { termRun.value++; runTerm() }, 3200)
+      // 结论帧多停留，淡出后再清屏重播（避免空白硬切）
+      termTimer = setTimeout(() => {
+        termFading.value = true
+        termTimer = setTimeout(() => { termRun.value++; runTerm() }, 260)
+      }, 6000)
     }
   }
   step()
+}
+function pauseTerm() {
+  clearTimeout(termTimer)
+  typing.value = false
 }
 
 // ─── Tilt on tool cards ───
@@ -336,12 +359,16 @@ function tickRing() {
 }
 
 let io = null
+let termIO = null
+let termStarted = false
 onMounted(async () => {
   await nextTick()
 
-  // cursor (desktop only)
+  reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  // cursor (desktop only；减弱动效时光标已由 CSS 隐藏，监听纯浪费)
   const canHover = window.matchMedia('(hover: hover)').matches
-  if (canHover) {
+  if (canHover && !reduceMotion) {
     document.body.classList.add('cursor-on')
     window.addEventListener('mousemove', moveCursor, { passive: true })
     tickRing()
@@ -363,20 +390,40 @@ onMounted(async () => {
             c.classList.add('in')
           })
         }
-        // terminal trigger
-        if (en.target === termWrap.value) runTerm()
         io.unobserve(en.target)
       }
     })
   }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 })
 
   document.querySelectorAll('[data-reveal], [data-reveal-group]').forEach(el => io.observe(el))
+
+  // 终端循环用常驻 observer：首轮等入场动画完成再开拍；离开视口暂停，重入从头播
+  if (reduceMotion) {
+    termVisible.value = termLines.value.length
+  } else if (termWrap.value) {
+    termIO = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          if (!termStarted) {
+            termStarted = true
+            termTimer = setTimeout(runTerm, 900)
+          } else if (!typing.value) {
+            runTerm()
+          }
+        } else {
+          pauseTerm()
+        }
+      })
+    }, { threshold: 0.1 })
+    termIO.observe(termWrap.value)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', moveCursor)
   if (rafId) cancelAnimationFrame(rafId)
   if (io) io.disconnect()
+  if (termIO) termIO.disconnect()
   if (termTimer) clearTimeout(termTimer)
   document.body.classList.remove('cursor-on', 'cursor-hover')
 })
@@ -386,6 +433,8 @@ onUnmounted(() => {
 /* ───────────── root ───────────── */
 .home {
   position: relative;
+  /* clip 而非 hidden：hidden 会把 .home 变成滚动容器；元凶是 term-glow 的 inset:-60px 装饰层 */
+  overflow-x: clip;
   color: var(--vp-c-text-1);
   font-feature-settings: "ss01", "ss02", "cv11";
   --brand: #60a5fa;
@@ -395,8 +444,22 @@ onUnmounted(() => {
   --text-dim: rgba(255,255,255,.55);
 }
 :root:not(.dark) .home {
+  --brand: #2563eb;
+  --brand-2: #7c3aed;
+  --brand-3: #db2777;
   --line: rgba(15,23,42,.08);
   --text-dim: rgba(15,23,42,.6);
+}
+
+/* 屏幕阅读器专用文案 */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .wrap {
@@ -466,8 +529,8 @@ onUnmounted(() => {
   background: radial-gradient(closest-side, rgba(167,139,250,.24), transparent);
   animation-delay: -11s;
 }
-:root:not(.dark) .beam-1 { background: radial-gradient(closest-side, rgba(59,130,246,.18), transparent); }
-:root:not(.dark) .beam-2 { background: radial-gradient(closest-side, rgba(147,51,234,.14), transparent); }
+:root:not(.dark) .beam-1 { background: radial-gradient(closest-side, rgba(59,130,246,.30), transparent); }
+:root:not(.dark) .beam-2 { background: radial-gradient(closest-side, rgba(147,51,234,.24), transparent); }
 
 @keyframes drift {
   0%   { transform: translate(0, 0) scale(1); }
@@ -533,36 +596,37 @@ onUnmounted(() => {
   background: rgba(96,165,250,.08);
   border-color: rgba(96,165,250,.8);
 }
-.cursor-hover .cursor-dot { transform-origin: center; }
 
-/* ───────────── reveal ───────────── */
-[data-reveal] {
+/* ───────────── reveal ─────────────
+   隐藏基态用 html.js 门控：无 JS / 爬虫 / 慢网首帧下内容默认可见 */
+:global(html.js) [data-reveal] {
   opacity: 0;
   transform: translateY(22px);
   transition: opacity .9s cubic-bezier(.2,.7,.1,1) var(--d, 0s),
               transform .9s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
 }
-[data-reveal].in { opacity: 1; transform: none; }
+/* .in 规则同样带门控前缀：否则隐藏规则(多一个 html 类型选择器)优先级更高，.in 永远赢不了 */
+:global(html.js) [data-reveal].in { opacity: 1; transform: none; }
 
-[data-reveal-group] > * {
+:global(html.js) [data-reveal-group] > * {
   opacity: 0;
   transform: translateY(16px) scale(.98);
   transition: opacity .7s cubic-bezier(.2,.7,.1,1) var(--d, 0s),
               transform .7s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
 }
-[data-reveal-group] > *.in { opacity: 1; transform: none; }
+:global(html.js) [data-reveal-group] > *.in { opacity: 1; transform: none; }
 
 /* headline line reveal */
 .line {
   display: block;
   overflow: hidden;
 }
-.line .fill {
+:global(html.js) .line .fill {
   display: inline-block;
   transform: translateY(100%);
   transition: transform 1.1s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
 }
-.line.in .fill { transform: none; }
+:global(html.js) .line.in .fill { transform: none; }
 .line.in .fill:nth-child(2) { transition-delay: calc(var(--d) + .08s); }
 .line.in .fill:nth-child(3) { transition-delay: calc(var(--d) + .16s); }
 .line.in .fill:nth-child(4) { transition-delay: calc(var(--d) + .24s); }
@@ -593,7 +657,10 @@ onUnmounted(() => {
   border: 1px solid var(--line);
   border-radius: 100px;
   backdrop-filter: blur(10px);
+  text-decoration: none;
+  transition: border-color .25s, color .25s;
 }
+.badge:hover { border-color: var(--brand); color: var(--vp-c-text-1); }
 .badge-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
@@ -615,12 +682,20 @@ onUnmounted(() => {
   letter-spacing: -0.045em;
   margin: 0 0 28px;
   color: var(--vp-c-text-1);
+  /* 中文词组（如"开发环境"）不许被劈开留孤字 */
+  word-break: keep-all;
 }
 .gradient {
   background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+/* 亮色主题用更深的品牌渐变，白底上对比度才够 */
+:root:not(.dark) .gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 .dot { color: var(--brand); }
 
@@ -644,6 +719,7 @@ onUnmounted(() => {
   position: relative;
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   gap: 14px;
   padding: 14px 8px 14px 20px;
   background: var(--vp-c-bg-soft);
@@ -654,22 +730,45 @@ onUnmounted(() => {
   cursor: pointer;
   overflow: hidden;
   transition: border-color .3s;
+  /* button 化后的外观重置 */
+  appearance: none;
+  font: inherit;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  text-align: inherit;
+  color: inherit;
 }
 .install:hover { border-color: rgba(96,165,250,.4); }
+/* 键盘焦点可见（自定义光标不服务键盘用户） */
+.install:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+/* 旋转的是渐变角度而非元素几何：元素 rotate 会让描边层扫过内容造成穿模；
+   节奏为扫一圈后静止（把持续注意力让给活终端）；不支持 @property 的浏览器退化为静态描边 */
+@property --ang {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
 .i-gradient {
   position: absolute;
   inset: -1px;
   border-radius: 14px;
   padding: 1px;
-  background: conic-gradient(from 180deg, transparent 0%, rgba(96,165,250,.8) 20%, rgba(167,139,250,.7) 40%, rgba(244,114,182,.6) 50%, transparent 70%);
+  background: conic-gradient(from var(--ang), transparent 0%, rgba(96,165,250,.8) 20%, rgba(167,139,250,.7) 40%, rgba(244,114,182,.6) 50%, transparent 70%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: spin 4s linear infinite;
+  animation: spin 8s ease-in-out infinite;
   opacity: .8;
 }
-@keyframes spin { to { transform: rotate(1turn); } }
+@keyframes spin {
+  0%   { --ang: 0deg; }
+  35%  { --ang: 1turn; }
+  100% { --ang: 1turn; }
+}
 
 .i-prompt { color: var(--brand-2); font-weight: 700; user-select: none; }
 .i-cmd { color: var(--vp-c-text-1); font-weight: 500; }
@@ -1011,7 +1110,7 @@ onUnmounted(() => {
   flex: 1;
   text-align: center;
   font-size: .72rem;
-  color: #4a4e5e;
+  color: #6b7288;
   font-family: var(--vp-font-family-base);
   letter-spacing: .02em;
 }
@@ -1023,20 +1122,25 @@ onUnmounted(() => {
   color: #c9d1d9;
   font-size: .84rem;
   line-height: 1.75;
+  transition: opacity .25s ease;
 }
+.term-body.fading { opacity: 0; }
 .tl {
   display: flex;
   align-items: center;
   gap: 10px;
   animation: tlIn .25s ease-out;
+  /* flex 项默认 min-width:auto，nowrap 的进度条文件名会撑破终端并推宽整页 */
+  min-width: 0;
 }
+.tl-text { min-width: 0; overflow-wrap: anywhere; }
 @keyframes tlIn {
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: none; }
 }
 .tl-prompt { color: #a78bfa; font-weight: 600; white-space: nowrap; }
 .tl.cmd .tl-text  { color: #e2e8f0; font-weight: 600; }
-.tl.dim .tl-text  { color: #4a4e5e; }
+.tl.dim .tl-text  { color: #8b95ab; }
 .tl.step .tl-text { color: #60a5fa; font-weight: 700; margin-top: 4px; }
 .tl.ok .tl-text   { color: #34d399; }
 .tl.env .tl-text  { color: #8b95ab; }
@@ -1079,8 +1183,10 @@ onUnmounted(() => {
   to   { width: 100%; }
 }
 .tl-bar-text {
+  flex: 1;
+  min-width: 0;
   font-size: .72rem;
-  color: #4a4e5e;
+  color: #8b95ab;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1099,15 +1205,17 @@ onUnmounted(() => {
 }
 .cta-beam {
   position: absolute;
-  top: 0; left: -30%;
+  top: 0; left: -65%;
   width: 60%;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--brand), transparent);
-  animation: beamSweep 4s ease-in-out infinite;
+  animation: beamSweep 8s ease-in-out infinite;
 }
+/* 起始帧整条在卡片外（含亮心），扫过后停顿，避免凭空闪现 */
 @keyframes beamSweep {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(260%); }
+  0%, 12% { transform: translateX(0); }
+  55%     { transform: translateX(300%); }
+  100%    { transform: translateX(300%); }
 }
 .cta-grid {
   position: absolute;
@@ -1152,9 +1260,12 @@ onUnmounted(() => {
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
   .hero { padding: 110px 0 60px; min-height: auto; }
-  .headline { letter-spacing: -0.03em; }
-  .install { font-size: .78rem; padding: 12px 6px 12px 14px; gap: 10px; }
+  .headline { letter-spacing: -0.03em; font-size: clamp(2.15rem, 10vw, 2.6rem); }
+  /* 命令必须单行完整可见：Copy 只留图标，字号随视口收缩保证 34 字符恰好放下 */
+  .install { font-size: min(.78rem, 2.9vw); padding: 12px 6px 12px 12px; gap: 8px; }
   .i-action { padding: 5px 8px; }
+  .i-label { display: none; }
+  .i-cmd { white-space: nowrap; }
   .stat-row { flex-wrap: wrap; gap: 8px; font-size: .74rem; }
   .cta-row { margin-bottom: 40px; }
   .term-body { min-height: 380px; font-size: .74rem; padding: 16px 14px; }
@@ -1166,6 +1277,11 @@ onUnmounted(() => {
   .feat-body  { padding: 28px 24px; }
   .sec { padding: 80px 0; }
   .cta { padding: 56px 24px; }
+}
+
+@media (max-width: 400px) {
+  .i-prompt { display: none; }
+  .install { font-size: .72rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

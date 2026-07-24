@@ -30,6 +30,8 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    // 首页入场动画的隐藏基态以 html.js 为门控：无 JS/爬虫/慢网首帧下内容默认可见
+    ['script', {}, 'document.documentElement.classList.add("js")'],
     // SEO meta
     ['meta', { name: 'keywords', content: 'hudo, Windows开发环境, 一键安装, 开发工具, Git安装, Node.js安装, JDK安装, Rust安装, Python环境, Go开发环境, MySQL安装, 包管理器, 免管理员, dev tools, Windows development' }],
     ['meta', { name: 'author', content: 'Zexa' }],
