@@ -14,6 +14,7 @@
 
     <!-- Backdrop layers -->
     <div class="bg">
+      <canvas ref="fluidCanvas" class="fluid" aria-hidden="true"></canvas>
       <div class="grid"></div>
       <div class="beam beam-1"></div>
       <div class="beam beam-2"></div>
@@ -242,6 +243,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { createFluid } from './fluid'
 
 const root = ref(null)
 const cursorDot = ref(null)
@@ -632,9 +634,41 @@ function onSpot(e) {
   el.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
+// ─── GPU 流体暗流背景（大件, 保险丝式挂载, 失败即回退现有 beam/orb）───
+const fluidCanvas = ref(null)
+let fluid = null
+let themeObs = null
+function tryFluid() {
+  if (fluid || reduceMotion) return
+  if (!window.matchMedia('(hover: hover)').matches) return
+  if (!window.matchMedia('(min-width: 768px)').matches) return
+  if (!document.documentElement.classList.contains('dark')) return
+  if (!fluidCanvas.value) return
+  fluid = createFluid(fluidCanvas.value, {
+    onLive: () => {
+      if (fluidCanvas.value) fluidCanvas.value.classList.add('on')
+      if (root.value) root.value.classList.add('fluid-live')
+    },
+    // 保险丝熔断（平均帧时超标自毁）→ 恢复静态背景
+    onFallback: () => {
+      fluid = null
+      if (fluidCanvas.value) fluidCanvas.value.classList.remove('on')
+      if (root.value) root.value.classList.remove('fluid-live')
+    },
+  })
+}
+function dropFluid() {
+  if (!fluid) return
+  fluid.destroy()
+  fluid = null
+  if (fluidCanvas.value) fluidCanvas.value.classList.remove('on')
+  if (root.value) root.value.classList.remove('fluid-live')
+}
+
 // ─── Custom cursor + magnet ───
 let cx = 0, cy = 0, rx = 0, ry = 0, rafId = 0
 function moveCursor(e) {
+  const px = cx, py = cy
   cx = e.clientX; cy = e.clientY
   if (cursorDot.value) {
     cursorDot.value.style.transform = `translate3d(${cx}px, ${cy}px, 0)`
@@ -644,6 +678,8 @@ function moveCursor(e) {
     root.value.style.setProperty('--gx', `${cx}px`)
     root.value.style.setProperty('--gy', `${cy}px`)
   }
+  // 第三层联动: 鼠标在流体场注入 splat
+  if (fluid) fluid.pointer(cx, cy, cx - px, cy - py)
 }
 function tickRing() {
   rx += (cx - rx) * 0.18
@@ -665,6 +701,14 @@ onMounted(async () => {
   buildSignal()
   // 字体/图片就绪后布局会微移, 重建一次锚点
   window.addEventListener('load', buildSignal, { once: true })
+
+  // 流体背景不进首屏 critical path, 空闲后再挂; 主题切换实时挂/卸
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 600))
+  idle(tryFluid)
+  themeObs = new MutationObserver(() => {
+    document.documentElement.classList.contains('dark') ? tryFluid() : dropFluid()
+  })
+  themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   window.addEventListener('resize', onSigResize, { passive: true })
   if (!reduceMotion) window.addEventListener('scroll', onSigScroll, { passive: true })
 
@@ -741,6 +785,8 @@ onUnmounted(() => {
   if (termIO) termIO.disconnect()
   if (termTimer) clearTimeout(termTimer)
   if (glitchTimer) clearTimeout(glitchTimer)
+  dropFluid()
+  if (themeObs) themeObs.disconnect()
   scrAlive = false
   waveOn = false
   if (waveRAF) cancelAnimationFrame(waveRAF)
@@ -771,6 +817,20 @@ onUnmounted(() => {
   --line: rgba(15,23,42,.08);
   --text-dim: rgba(15,23,42,.6);
 }
+
+/* ───────────── GPU 流体暗流 ───────────── */
+.fluid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.fluid.on { opacity: 1; }
+/* 流体活着时静态光斑退场（熔断/浅色时自动回归） */
+.home.fluid-live .beam,
+.home.fluid-live .orb { display: none; }
 
 /* ───────────── 信号走线 ───────────── */
 .signal {
