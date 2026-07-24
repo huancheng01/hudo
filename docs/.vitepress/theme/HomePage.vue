@@ -56,21 +56,47 @@
           </div>
         </div>
 
+        <div class="stat-row" data-reveal style="--d:.38s" aria-hidden="true">
+          <span class="stat"><span class="stat-key">tools</span> = <span class="stat-val">26</span></span>
+          <span class="stat-sep">;</span>
+          <span class="stat"><span class="stat-key">uac_prompts</span> = <span class="stat-val">0</span></span>
+          <span class="stat-sep">;</span>
+          <span class="stat"><span class="stat-key">commands</span> = <span class="stat-val">1</span></span>
+        </div>
+
         <div class="cta-row" data-reveal style="--d:.42s">
           <a href="/guide/quickstart" class="btn primary" data-magnet>
             <span>开始使用</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
-          <a href="https://github.com/zexadev/hudo" target="_blank" class="btn ghost" data-magnet>
+          <a href="https://github.com/zexadev/hudo" target="_blank" class="btn solid" data-magnet>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
             <span>GitHub</span>
             <span class="star-count">★ Star</span>
           </a>
         </div>
 
-        <div class="scroll-hint" data-reveal style="--d:.7s">
-          <span class="scroll-line"></span>
-          <span>SCROLL</span>
+        <!-- 活终端：真实 hudo 安装序列循环演示 -->
+        <div class="term-wrap hero-term" data-reveal style="--d:.55s" ref="termWrap">
+          <div class="term-glow"></div>
+          <div class="term">
+            <div class="term-bar">
+              <div class="term-dots"><span/><span/><span/></div>
+              <div class="term-title">PowerShell — hudo setup</div>
+              <div class="term-spacer"/>
+            </div>
+            <div class="term-body">
+              <div v-for="(l, i) in termLines.slice(0, termVisible)" :key="`${termRun}-${i}`" class="tl" :class="l.k">
+                <span v-if="l.k==='cmd'" class="tl-prompt">PS&nbsp;C:\&gt;</span>
+                <template v-if="l.k==='bar'">
+                  <div class="tl-bar-track"><div class="tl-bar-fill"></div></div>
+                  <span class="tl-bar-text">{{ l.t }}</span>
+                </template>
+                <span v-else class="tl-text">{{ l.t }}</span>
+                <span v-if="i===termVisible-1 && typing && l.k!=='bar'" class="caret">▍</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -145,38 +171,6 @@
       </div>
     </section>
 
-    <!-- ─── Terminal Demo ─── -->
-    <section class="sec demo">
-      <div class="wrap">
-        <div class="sec-head">
-          <span class="sec-label" data-reveal>// 03  实际效果</span>
-          <h2 class="sec-title" data-reveal style="--d:.08s">交互式<span class="gradient">工具选择</span></h2>
-        </div>
-
-        <div class="term-wrap" data-reveal ref="termWrap">
-          <div class="term-glow"></div>
-          <div class="term">
-            <div class="term-bar">
-              <div class="term-dots"><span/><span/><span/></div>
-              <div class="term-title">Administrator: PowerShell — hudo</div>
-              <div class="term-spacer"/>
-            </div>
-            <div class="term-body">
-              <div v-for="(l, i) in termLines.slice(0, termVisible)" :key="i" class="tl" :class="l.k">
-                <span v-if="l.k==='cmd'" class="tl-prompt">PS&nbsp;C:\&gt;</span>
-                <span class="tl-text">{{ l.t }}</span>
-                <span v-if="i===termVisible-1 && typing" class="caret">▍</span>
-              </div>
-              <div v-if="termVisible >= termLines.length" class="tl-bar">
-                <div class="tl-bar-track"><div class="tl-bar-fill"></div></div>
-                <span class="tl-bar-text">Installing Rust 1.84.0 · 68%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ─── CTA ─── -->
     <section class="sec cta-sec">
       <div class="wrap">
@@ -190,7 +184,7 @@
               阅读文档
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
-            <a href="/tools/" class="btn outline lg" data-magnet>浏览工具列表</a>
+            <a href="/tools/" class="btn solid lg" data-magnet>浏览工具列表</a>
           </div>
         </div>
       </div>
@@ -252,30 +246,43 @@ const features = [
   { title: '开源免费', desc: '基于 MIT 协议开源,Rust 编写,单文件二进制分发。没有付费墙,没有订阅。', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>` },
 ]
 
-// ─── Terminal typewriter ───
+// ─── 活终端：复刻真实 hudo 安装输出的循环演示 ───
+// 行类型: cmd=命令行 dim=灰注 step=步骤 get=下载 bar=进度条 ok=成功 env=环境变量 box=汇总框
 const termLines = ref([
-  { k: 'cmd', t: 'hudo' },
-  { k: 'dim', t: 'hudo — The Chaos Bootstrapper' },
-  { k: 'txt', t: 'Select tools to install:' },
-  { k: 'on',  t: '◉  Git            2.47.1' },
-  { k: 'on',  t: '◉  Node.js        22.13.0' },
-  { k: 'on',  t: '◉  Rust           1.84.0' },
-  { k: 'off', t: '○  JDK            21.0.5' },
-  { k: 'on',  t: '◉  VS Code        1.96.4' },
-  { k: 'on',  t: '◉  Python (uv)    0.5.15' },
+  { k: 'cmd',  t: 'hudo setup' },
+  { k: 'dim',  t: '已选择 3 个工具: Git, Node.js, VS Code' },
+  { k: 'step', t: '[1/3] 安装 Git' },
+  { k: 'bar',  t: 'Git-2.53.0-64-bit.exe' },
+  { k: 'ok',   t: '✓ Git 2.53.0 安装完成' },
+  { k: 'env',  t: 'PATH += D:\\hudo\\tools\\git\\cmd' },
+  { k: 'step', t: '[2/3] 安装 Node.js' },
+  { k: 'bar',  t: 'node-v24-win-x64.zip' },
+  { k: 'ok',   t: '✓ Node.js v24.18.0 安装完成' },
+  { k: 'env',  t: 'PATH += D:\\hudo\\lang\\node' },
+  { k: 'step', t: '[3/3] 安装 VS Code' },
+  { k: 'bar',  t: 'vscode-win32-x64.zip' },
+  { k: 'ok',   t: '✓ VS Code 1.130.0 安装完成' },
+  { k: 'sum',  t: '✓ 3 个工具安装完成 · 全程未弹出 UAC' },
 ])
 const termVisible = ref(0)
+const termRun = ref(0)
 const typing = ref(false)
 let termTimer = null
 function runTerm() {
-  if (termVisible.value > 0) return
+  if (typing.value) return
   typing.value = true
+  termVisible.value = 0
   const step = () => {
     if (termVisible.value < termLines.value.length) {
+      const next = termLines.value[termVisible.value]
       termVisible.value++
-      termTimer = setTimeout(step, 180)
+      // 进度条行播完动画再走下一行；汇总框整块快出；其余匀速
+      const delay = next.k === 'bar' ? 1050 : next.k === 'step' ? 320 : 190
+      termTimer = setTimeout(step, delay)
     } else {
       typing.value = false
+      // 停留后清屏重播，形成"一直在装机"的循环
+      termTimer = setTimeout(() => { termRun.value++; runTerm() }, 3200)
     }
   }
   step()
@@ -312,6 +319,11 @@ function moveCursor(e) {
   cx = e.clientX; cy = e.clientY
   if (cursorDot.value) {
     cursorDot.value.style.transform = `translate3d(${cx}px, ${cy}px, 0)`
+  }
+  // 背景网格鼠标高亮共用同一坐标（fixed 层，clientX/Y 即可）
+  if (root.value) {
+    root.value.style.setProperty('--gx', `${cx}px`)
+    root.value.style.setProperty('--gy', `${cy}px`)
   }
 }
 function tickRing() {
@@ -414,6 +426,24 @@ onUnmounted(() => {
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 80%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 80%);
+}
+
+/* 鼠标附近的网格亮起：同一网格图案的高亮层，径向 mask 跟随光标 */
+.grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(96,165,250,.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,.22) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(240px circle at var(--gx, -500px) var(--gy, -500px), #000, transparent);
+  -webkit-mask-image: radial-gradient(240px circle at var(--gx, -500px) var(--gy, -500px), #000, transparent);
+}
+:root:not(.dark) .grid::after {
+  background-image:
+    linear-gradient(rgba(37,99,235,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,.16) 1px, transparent 1px);
 }
 
 .beam {
@@ -541,7 +571,7 @@ onUnmounted(() => {
 .hero {
   position: relative;
   z-index: 1;
-  padding: 160px 0 80px;
+  padding: 130px 0 72px;
   min-height: 92vh;
   display: flex;
   align-items: center;
@@ -660,12 +690,28 @@ onUnmounted(() => {
 .install.copied .i-action { color: #10b981; border-color: rgba(16,185,129,.4); }
 .i-label { font-family: var(--vp-font-family-base); letter-spacing: .02em; }
 
+/* 终端风格数据行 */
+.stat-row {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 26px;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: .82rem;
+  color: var(--text-dim);
+}
+.stat-key { color: var(--brand); }
+.stat-val { color: var(--vp-c-text-1); font-weight: 700; }
+.stat-sep { opacity: .35; }
+
 /* buttons */
 .cta-row {
   display: flex;
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-bottom: 56px;
 }
 .btn {
   position: relative;
@@ -702,52 +748,31 @@ onUnmounted(() => {
   box-shadow: 0 8px 28px -8px rgba(15,23,42,.5);
 }
 
-.btn.ghost {
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-1);
-  border-color: var(--line);
+/* 次级按钮：填充色块（不用描边/幽灵按钮） */
+.btn.solid {
+  background: #1e2637;
+  color: #e2e8f0;
 }
-.btn.ghost:hover { border-color: var(--text-dim); background: var(--vp-c-bg-alt); }
+.btn.solid:hover { background: #273044; box-shadow: 0 8px 24px -10px rgba(96,165,250,.35); }
+:root:not(.dark) .btn.solid {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+:root:not(.dark) .btn.solid:hover { background: #d3dae4; box-shadow: 0 8px 24px -10px rgba(15,23,42,.3); }
 .star-count {
   padding-left: 10px;
   margin-left: 2px;
-  border-left: 1px solid var(--line);
-  color: var(--text-dim);
+  border-left: 1px solid rgba(148,163,184,.35);
+  color: inherit;
+  opacity: .75;
   font-size: .78rem;
   font-weight: 500;
 }
 
-.btn.outline {
-  background: transparent;
-  color: var(--vp-c-text-1);
-  border-color: var(--line);
-}
-.btn.outline:hover { border-color: var(--brand); color: var(--brand); }
-
-/* scroll hint */
-.scroll-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 48px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .25em;
-  color: var(--text-dim);
-}
-.scroll-line {
-  width: 1px;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, var(--text-dim), transparent);
-  animation: scrollLine 2s ease-in-out infinite;
-}
-@keyframes scrollLine {
-  0%,100% { transform: scaleY(1); opacity: .4; }
-  50%     { transform: scaleY(1.3); opacity: 1; }
+/* hero 内嵌活终端 */
+.hero-term {
+  margin-top: 8px;
+  text-align: left;
 }
 
 /* ───────────── marquee ───────────── */
@@ -993,28 +1018,36 @@ onUnmounted(() => {
 .term-spacer { width: 52px; }
 
 .term-body {
-  padding: 24px 28px;
-  min-height: 280px;
+  padding: 22px 26px;
+  min-height: 420px;
   color: #c9d1d9;
   font-size: .84rem;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 .tl {
   display: flex;
   align-items: center;
   gap: 10px;
-  animation: tlIn .3s ease-out;
+  animation: tlIn .25s ease-out;
 }
 @keyframes tlIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: none; }
 }
 .tl-prompt { color: #a78bfa; font-weight: 600; white-space: nowrap; }
-.tl.dim .tl-text { color: #4a4e5e; }
-.tl.txt .tl-text { color: #c9d1d9; margin-top: 6px; }
-.tl.on .tl-text  { color: #e2e8f0; }
-.tl.on .tl-text::first-letter { color: #60a5fa; }
-.tl.off .tl-text { color: #4a4e5e; }
+.tl.cmd .tl-text  { color: #e2e8f0; font-weight: 600; }
+.tl.dim .tl-text  { color: #4a4e5e; }
+.tl.step .tl-text { color: #60a5fa; font-weight: 700; margin-top: 4px; }
+.tl.ok .tl-text   { color: #34d399; }
+.tl.env .tl-text  { color: #8b95ab; }
+.tl.sum { margin-top: 14px; }
+.tl.sum .tl-text {
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,.35);
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: rgba(52,211,153,.06);
+}
 .caret {
   display: inline-block;
   width: 8px;
@@ -1023,36 +1056,34 @@ onUnmounted(() => {
 }
 @keyframes blink { 50% { opacity: 0; } }
 
-.tl-bar {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  animation: tlIn .4s ease-out .2s both;
-}
+/* 行内下载进度条：每次出现从 0 冲到 100% */
+.tl.bar { padding-left: 18px; }
 .tl-bar-track {
-  flex: 1;
+  width: 42%;
+  max-width: 300px;
   height: 4px;
   background: #141725;
   border-radius: 3px;
   overflow: hidden;
+  flex: none;
 }
 .tl-bar-fill {
   width: 0;
   height: 100%;
   background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
   border-radius: 3px;
-  animation: fill 3s cubic-bezier(.3,.7,.3,1) forwards;
+  animation: fill .9s cubic-bezier(.25,.6,.3,1) forwards;
 }
 @keyframes fill {
   from { width: 0; }
-  to   { width: 68%; }
+  to   { width: 100%; }
 }
 .tl-bar-text {
   font-size: .72rem;
   color: #4a4e5e;
   white-space: nowrap;
-  font-family: var(--vp-font-family-base);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ───────────── CTA ───────────── */
@@ -1120,17 +1151,21 @@ onUnmounted(() => {
 }
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
-  .hero { padding: 120px 0 60px; min-height: auto; }
+  .hero { padding: 110px 0 60px; min-height: auto; }
   .headline { letter-spacing: -0.03em; }
   .install { font-size: .78rem; padding: 12px 6px 12px 14px; gap: 10px; }
   .i-action { padding: 5px 8px; }
+  .stat-row { flex-wrap: wrap; gap: 8px; font-size: .74rem; }
+  .cta-row { margin-bottom: 40px; }
+  .term-body { min-height: 380px; font-size: .74rem; padding: 16px 14px; }
+  .tl.bar { padding-left: 10px; }
+  .tl-bar-track { width: 34%; }
   .tools-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .tool { aspect-ratio: 1.15; }
   .feat-grid  { grid-template-columns: 1fr; }
   .feat-body  { padding: 28px 24px; }
   .sec { padding: 80px 0; }
   .cta { padding: 56px 24px; }
-  .scroll-hint { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
