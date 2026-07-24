@@ -103,17 +103,21 @@ SSH 私钥是唯一的例外，可以随 `.ssh` 目录迁移；但更稳妥的�
 
 ## 数据库数据怎么迁：mysqldump 怎么用？
 
-用逻辑导出导入，不要直接拷数据目录。数据目录的磁盘格式跨版本不保证兼容，拷过去起不来是常态；逻辑导出生成的是纯 SQL 文本，版本安全。旧电脑导出：
+用逻辑导出导入，不要直接拷数据目录。数据目录的磁盘格式跨版本不保证兼容，拷过去起不来是常态；逻辑导出生成的是纯 SQL 文本，版本安全。
+
+注意一个 PowerShell 专属的坑：**不要用 `>` 重定向导出**——PowerShell 5.1 的 `>` 会把输出转成 UTF-16 编码，导出的 SQL 文件 `mysql` 读不回去；`<` 输入重定向则是 PowerShell 的保留操作符，直接报解析错误。正确做法是用 mysqldump 自带的 `--result-file` 参数导出（绕开 shell 重定向，编码由 mysqldump 自己控制）：
 
 ```powershell
-mysqldump --all-databases -u root -p > all.sql
+mysqldump --all-databases -u root -p --result-file=all.sql
 ```
 
-新电脑先装好同一主版本的 [MySQL](/tools/mysql)（8.x 对 8.x），再导入：
+新电脑先装好同一主版本的 [MySQL](/tools/mysql)（8.x 对 8.x），导入时用 `source` 命令（同样不依赖 shell 重定向，PowerShell 和 CMD 里都能跑）：
 
 ```powershell
-mysql -u root -p < all.sql
+mysql -u root -p -e "source all.sql"
 ```
+
+如果你习惯经典的 `<` 重定向写法，把命令包进 CMD 执行也可以：`cmd /c "mysql -u root -p < all.sql"`。
 
 PostgreSQL 对应 `pg_dumpall -U postgres > all.sql`，同样用 `psql` 导入。Redis 里如果只是缓存，不用迁；确有需要持久数据就在旧机执行 `SAVE` 后把 `dump.rdb` 拷到新机数据目录。注意：无论 winget 还是 hudo，任何工具迁移方案都不含数据库数据，这一步永远要单独做。
 
