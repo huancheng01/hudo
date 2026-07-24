@@ -39,8 +39,8 @@
         </a>
 
         <h1 class="headline">
-          <span class="line" data-reveal><span class="fill">Windows 开发环境</span></span>
-          <span class="line" data-reveal style="--d:.08s">
+          <span class="line" data-scramble><span class="fill">Windows 开发环境</span></span>
+          <span class="line" data-scramble data-sd="160">
             <span class="fill gradient">从混沌</span><span class="fill">，到</span><span class="fill gradient">秩序</span><span class="fill dot">.</span>
           </span>
         </h1>
@@ -144,7 +144,7 @@
       <div class="wrap">
         <div class="sec-head">
           <span class="sec-label" data-reveal>// 01  支持工具</span>
-          <h2 class="sec-title" data-reveal style="--d:.08s">
+          <h2 class="sec-title" data-scramble>
             覆盖你的<span class="gradient">完整工具链</span>
           </h2>
           <p class="sec-desc" data-reveal style="--d:.16s">从 Git 到 IntelliJ IDEA，26 款开发工具一站式管理。</p>
@@ -174,7 +174,7 @@
       <div class="wrap">
         <div class="sec-head">
           <span class="sec-label" data-reveal>// 02  核心特性</span>
-          <h2 class="sec-title" data-reveal style="--d:.08s">为 Windows 开发者<span class="gradient">重新设计</span></h2>
+          <h2 class="sec-title" data-scramble>为 Windows 开发者<span class="gradient">重新设计</span></h2>
         </div>
 
         <div class="feat-grid">
@@ -208,7 +208,7 @@
           <div class="cta-grid"></div>
           <p class="cta-mono" aria-hidden="true">// system ready — awaiting input <span class="cta-caret">▮</span></p>
           <p class="cta-label">准备好了吗？</p>
-          <h2 class="cta-title">一条命令，<br>开启你的 Windows 开发之旅。</h2>
+          <h2 class="cta-title" data-scramble>一条命令，<br>开启你的 Windows 开发之旅。</h2>
           <div class="cta-btns">
             <a href="/guide/quickstart" class="btn primary lg btn-boot" data-magnet>
               <span class="swap">
@@ -424,6 +424,75 @@ function initWave() {
   waveIO.observe(canvas)
 }
 
+// ─── 标题字符 scramble decode ───
+// 元素始终从真实文本渲染(LCP/无 JS 均安全), 进视口后字符经字符池
+// 跳动并从左到右定格, 结束把原文本节点原样放回(渐变 span 结构不动)
+const POOL_A = '01<>/\\|=+*#$%'
+const POOL_C = '混沌装令环境序秩启命工具'
+const CJK_RE = /[⺀-鿿豈-﫿]/
+const SCRAMBLE_RE = /[0-9A-Za-z⺀-鿿豈-﫿]/
+let scrAlive = true
+function scrambleEl(el) {
+  if (reduceMotion || el.dataset.scrambled) return
+  el.dataset.scrambled = '1'
+  const run = () => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+    const nodes = []
+    let tn
+    while ((tn = walker.nextNode())) if (tn.textContent.trim()) nodes.push(tn)
+    const jobs = []
+    const chars = []
+    nodes.forEach(node => {
+      const text = node.textContent
+      const wrap = document.createElement('span')
+      for (const ch of text) {
+        if (!SCRAMBLE_RE.test(ch)) {
+          wrap.appendChild(document.createTextNode(ch))
+          continue
+        }
+        const s = document.createElement('span')
+        s.className = 'scr-c'
+        s.textContent = ch
+        s.dataset.ch = ch
+        wrap.appendChild(s)
+        chars.push(s)
+      }
+      node.parentNode.replaceChild(wrap, node)
+      jobs.push({ wrap, text })
+    })
+    // 先量出每个字符的真实宽度再锁死: 用 1ch/1em 估宽会改变比例字形排版
+    const widths = chars.map(s => s.getBoundingClientRect().width)
+    chars.forEach((s, i) => {
+      s.style.width = widths[i].toFixed(2) + 'px'
+      s.dataset.lock = String((i / chars.length) * 560 + Math.random() * 80)
+    })
+    const t0 = performance.now()
+    let lastFlick = 0
+    const frame = (now) => {
+      const t = now - t0
+      let pending = false
+      const flick = now - lastFlick > 40
+      if (flick) lastFlick = now
+      for (const s of chars) {
+        if (t >= +s.dataset.lock) {
+          if (s.textContent !== s.dataset.ch) s.textContent = s.dataset.ch
+        } else {
+          pending = true
+          if (flick) {
+            const pool = CJK_RE.test(s.dataset.ch) ? POOL_C : POOL_A
+            s.textContent = pool[(Math.random() * pool.length) | 0]
+          }
+        }
+      }
+      if (pending && t < 800 && scrAlive) requestAnimationFrame(frame)
+      else jobs.forEach(j => j.wrap.replaceWith(document.createTextNode(j.text)))
+    }
+    requestAnimationFrame(frame)
+  }
+  const sd = +el.dataset.sd || 0
+  sd ? setTimeout(run, sd) : run()
+}
+
 // ─── stats 数字滚动定格 ───
 function countUp(zone) {
   zone.querySelectorAll('.stat-val').forEach(el => {
@@ -515,6 +584,7 @@ onMounted(async () => {
         en.target.classList.add('in')
         // stats 数值首次进视口 300ms 从 0 滚到终值（IO 已 unobserve，天然只播一次）
         if (!reduceMotion && en.target.classList.contains('stat-zone')) countUp(en.target)
+        if (en.target.hasAttribute('data-scramble')) scrambleEl(en.target)
         if (en.target.hasAttribute('data-reveal-group')) {
           en.target.querySelectorAll(':scope > *').forEach((c, i) => {
             c.style.setProperty('--d', `${i * 0.04}s`)
@@ -526,7 +596,7 @@ onMounted(async () => {
     })
   }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 })
 
-  document.querySelectorAll('[data-reveal], [data-reveal-group]').forEach(el => io.observe(el))
+  document.querySelectorAll('[data-reveal], [data-reveal-group], [data-scramble]').forEach(el => io.observe(el))
 
   // 终端循环用常驻 observer：首轮等入场动画完成再开拍；离开视口暂停，重入从头播
   if (reduceMotion) {
@@ -557,6 +627,7 @@ onUnmounted(() => {
   if (termIO) termIO.disconnect()
   if (termTimer) clearTimeout(termTimer)
   if (glitchTimer) clearTimeout(glitchTimer)
+  scrAlive = false
   waveOn = false
   if (waveRAF) cancelAnimationFrame(waveRAF)
   if (waveRO) waveRO.disconnect()
@@ -752,20 +823,11 @@ onUnmounted(() => {
 }
 :global(html.js) [data-reveal-group] > *.in { opacity: 1; transform: none; }
 
-/* headline line reveal */
-.line {
-  display: block;
-  overflow: hidden;
-}
-:global(html.js) .line .fill {
-  display: inline-block;
-  transform: translateY(100%);
-  transition: transform 1.1s cubic-bezier(.2,.7,.1,1) var(--d, 0s);
-}
-:global(html.js) .line.in .fill { transform: none; }
-.line.in .fill:nth-child(2) { transition-delay: calc(var(--d) + .08s); }
-.line.in .fill:nth-child(3) { transition-delay: calc(var(--d) + .16s); }
-.line.in .fill:nth-child(4) { transition-delay: calc(var(--d) + .24s); }
+/* headline：滑升揭示已被 scramble decode 替换，行保持始终可见 */
+.line { display: block; }
+
+/* scramble 字符：宽度由 JS 量出真实字宽后锁死，跳动期间行宽零抖动 */
+.scr-c { display: inline-block; text-align: center; }
 
 /* ───────────── hero ───────────── */
 .hero {
@@ -1549,7 +1611,7 @@ onUnmounted(() => {
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  [data-reveal], [data-reveal-group] > *, .line .fill {
+  [data-reveal], [data-reveal-group] > * {
     opacity: 1 !important;
     transform: none !important;
   }
