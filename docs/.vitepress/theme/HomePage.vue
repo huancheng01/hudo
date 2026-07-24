@@ -88,7 +88,7 @@
               <div class="term-title">PowerShell — hudo setup</div>
               <div class="term-spacer"/>
             </div>
-            <div class="term-body" :class="{ fading: termFading }">
+            <div class="term-body" :class="{ fading: termFading, glitch: termGlitch }">
               <div v-for="(l, i) in termLines.slice(0, termVisible)" :key="`${termRun}-${i}`" class="tl" :class="l.k">
                 <span v-if="l.k==='cmd'" class="tl-prompt">PS&nbsp;C:\&gt;</span>
                 <template v-if="l.k==='bar'">
@@ -275,7 +275,9 @@ const termVisible = ref(0)
 const termRun = ref(0)
 const typing = ref(false)
 const termFading = ref(false)
+const termGlitch = ref(false)
 let termTimer = null
+let glitchTimer = null
 let reduceMotion = false
 function runTerm() {
   // 减弱动效：一次性静态展示完整成功输出（信息量最大的一帧），不循环
@@ -292,6 +294,12 @@ function runTerm() {
     if (termVisible.value < termLines.value.length) {
       const next = termLines.value[termVisible.value]
       termVisible.value++
+      // 步骤行落屏瞬间给整块屏一次 0.3s 信号抖动
+      if (next.k === 'step') {
+        termGlitch.value = true
+        clearTimeout(glitchTimer)
+        glitchTimer = setTimeout(() => { termGlitch.value = false }, 300)
+      }
       // 进度条行播完动画再走下一行；步骤行稍作停顿；其余匀速
       const delay = next.k === 'bar' ? 1050 : next.k === 'step' ? 320 : 190
       termTimer = setTimeout(step, delay)
@@ -425,6 +433,7 @@ onUnmounted(() => {
   if (io) io.disconnect()
   if (termIO) termIO.disconnect()
   if (termTimer) clearTimeout(termTimer)
+  if (glitchTimer) clearTimeout(glitchTimer)
   document.body.classList.remove('cursor-on', 'cursor-hover')
 })
 </script>
@@ -1117,6 +1126,7 @@ onUnmounted(() => {
 .term-spacer { width: 52px; }
 
 .term-body {
+  position: relative;
   padding: 22px 26px;
   min-height: 420px;
   color: #c9d1d9;
@@ -1125,6 +1135,26 @@ onUnmounted(() => {
   transition: opacity .25s ease;
 }
 .term-body.fading { opacity: 0; }
+/* CRT 磷光表层（crt-display 着色器公式的 CSS 翻译）：
+   扫描线周期钉 3px——2px 在 Windows 125%/150% 缩放下会出摩尔纹 */
+.term-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.10)),
+    rgba(59,130,246,.03);
+}
+/* 安装步进瞬间的信号抖动：只做亚像素色差+微位移，不用 clip-path
+   （撕裂条会把其余内容瞬间藏掉，动态文本又没法用伪元素复制出撕裂层） */
+.term-body.glitch { animation: crtGlitch .28s steps(3, end); }
+@keyframes crtGlitch {
+  0%, 100% { transform: none; text-shadow: none; }
+  33% { transform: translateX(2px);  text-shadow: -.4px 0 rgba(59,130,246,.7), .4px 0 rgba(236,72,153,.7); }
+  66% { transform: translateX(-2px); text-shadow: .4px 0 rgba(59,130,246,.7), -.4px 0 rgba(236,72,153,.7); }
+}
 .tl {
   display: flex;
   align-items: center;
