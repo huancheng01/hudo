@@ -253,6 +253,11 @@ export default defineConfig({
       if (frontmatter.date) {
         article['datePublished'] = frontmatter.date
       }
+      // dateModified 取 git 最后提交时间（lastUpdated: true 提供，ms 时间戳），真实的新鲜度信号
+      const lastUpdated = context.pageData.lastUpdated
+      if (lastUpdated) {
+        article['dateModified'] = new Date(lastUpdated).toISOString()
+      }
       head.push(['script', { type: 'application/ld+json' }, JSON.stringify(article)])
     }
     // 工具页不再输出 HowTo schema：Google 已于 2023-09 停用 HowTo 富结果，属无效投入
