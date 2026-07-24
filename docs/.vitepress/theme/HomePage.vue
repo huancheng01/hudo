@@ -22,6 +22,21 @@
       <div class="grain"></div>
     </div>
 
+    <!-- 信号走线：随滚动通电，从终端一路汇入 CTA（仅 ≥1200px） -->
+    <svg class="signal" ref="signalSvg" aria-hidden="true">
+      <defs>
+        <linearGradient id="hudoSigGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3b82f6"/>
+          <stop offset=".5" stop-color="#8b5cf6"/>
+          <stop offset="1" stop-color="#ec4899"/>
+        </linearGradient>
+      </defs>
+      <path ref="sigGlow" class="sig-glow"/>
+      <path ref="sigLine" class="sig-line"/>
+      <circle ref="sigDot" class="sig-dot" r="4"/>
+      <circle ref="sigPulse" class="sig-pulse" r="9"/>
+    </svg>
+
     <!-- ─── Hero ─── -->
     <section class="hero">
       <!-- 仪表角标：整页是一台运行中的仪器 -->
@@ -493,6 +508,89 @@ function scrambleEl(el) {
   sd ? setTimeout(run, sd) : run()
 }
 
+// ─── 信号走线：dashoffset 随滚动画线（tttise 机制去 GSAP 化）───
+const signalSvg = ref(null)
+const sigLine = ref(null)
+const sigGlow = ref(null)
+const sigDot = ref(null)
+const sigPulse = ref(null)
+let sigLen = 0
+let sigStartY = 0
+let sigEndY = 1
+let sigTick = false
+function buildSignal() {
+  const svg = signalSvg.value
+  const home = root.value
+  if (!svg || !home || !window.matchMedia('(min-width: 1200px)').matches) return
+  const term = home.querySelector('.term-wrap')
+  const tools = home.querySelector('.tools-grid')
+  const feats = home.querySelector('.feat-grid')
+  const cta = home.querySelector('.cta')
+  if (!term || !tools || !feats || !cta) return
+  // 锚点全部动态读取, path 不写死坐标——区块增删/resize 自动跟随
+  const topOf = el => el.getBoundingClientRect().top + window.scrollY
+  const W = home.clientWidth
+  const termB = topOf(term) + term.offsetHeight
+  const toolsR = tools.getBoundingClientRect()
+  const featsR = feats.getBoundingClientRect()
+  const toolsT = topOf(tools), toolsB = toolsT + toolsR.height
+  const featsT = topOf(feats), featsB = featsT + featsR.height
+  const ctaT = topOf(cta)
+  const cx = W / 2
+  const lx = Math.max(36, toolsR.left - 44)
+  const rx = Math.min(W - 36, featsR.right + 44)
+  const H = ctaT + 60
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+  svg.style.height = H + 'px'
+  const d = `M ${cx} ${termB + 24}
+    C ${cx} ${termB + 150}, ${lx} ${toolsT - 170}, ${lx} ${toolsT - 10}
+    L ${lx} ${toolsB + 10}
+    C ${lx} ${toolsB + 150}, ${rx} ${featsT - 150}, ${rx} ${featsT - 10}
+    L ${rx} ${featsB + 10}
+    C ${rx} ${featsB + 130}, ${cx} ${ctaT - 130}, ${cx} ${ctaT + 6}`
+  sigLine.value.setAttribute('d', d)
+  sigGlow.value.setAttribute('d', d)
+  sigLen = sigLine.value.getTotalLength()
+  sigLine.value.style.strokeDasharray = sigLen
+  sigGlow.value.style.strokeDasharray = sigLen
+  const end = sigLine.value.getPointAtLength(sigLen)
+  sigPulse.value.setAttribute('cx', end.x)
+  sigPulse.value.setAttribute('cy', end.y)
+  if (reduceMotion) {
+    // 静态画满, 弱化呈现
+    sigLine.value.style.strokeDashoffset = 0
+    sigGlow.value.style.strokeDashoffset = 0
+    svg.style.opacity = .4
+    sigDot.value.style.opacity = 0
+    return
+  }
+  sigStartY = termB - window.innerHeight * 0.8
+  sigEndY = ctaT - window.innerHeight * 0.6
+  updateSignal()
+}
+function updateSignal() {
+  if (!sigLine.value || !sigLen) return
+  const p = Math.min(Math.max((window.scrollY - sigStartY) / (sigEndY - sigStartY), 0), 1)
+  const off = sigLen * (1 - p)
+  sigLine.value.style.strokeDashoffset = off
+  sigGlow.value.style.strokeDashoffset = off
+  const pt = sigLine.value.getPointAtLength(sigLen * p)
+  sigDot.value.setAttribute('cx', pt.x)
+  sigDot.value.setAttribute('cy', pt.y)
+  sigDot.value.style.opacity = p > 0.01 && p < 0.99 ? 1 : 0
+  sigPulse.value.classList.toggle('on', p >= 0.99)
+}
+function onSigScroll() {
+  if (sigTick) return
+  sigTick = true
+  requestAnimationFrame(() => { sigTick = false; updateSignal() })
+}
+function onSigResize() {
+  if (sigTick) return
+  sigTick = true
+  requestAnimationFrame(() => { sigTick = false; buildSignal() })
+}
+
 // ─── stats 数字滚动定格 ───
 function countUp(zone) {
   zone.querySelectorAll('.stat-val').forEach(el => {
@@ -564,6 +662,11 @@ onMounted(async () => {
 
   reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   initWave()
+  buildSignal()
+  // 字体/图片就绪后布局会微移, 重建一次锚点
+  window.addEventListener('load', buildSignal, { once: true })
+  window.addEventListener('resize', onSigResize, { passive: true })
+  if (!reduceMotion) window.addEventListener('scroll', onSigScroll, { passive: true })
 
   // cursor (desktop only；减弱动效时光标已由 CSS 隐藏，监听纯浪费)
   const canHover = window.matchMedia('(hover: hover)').matches
@@ -630,6 +733,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', moveCursor)
+  window.removeEventListener('load', buildSignal)
+  window.removeEventListener('resize', onSigResize)
+  window.removeEventListener('scroll', onSigScroll)
   if (rafId) cancelAnimationFrame(rafId)
   if (io) io.disconnect()
   if (termIO) termIO.disconnect()
@@ -665,6 +771,52 @@ onUnmounted(() => {
   --line: rgba(15,23,42,.08);
   --text-dim: rgba(15,23,42,.6);
 }
+
+/* ───────────── 信号走线 ───────────── */
+.signal {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 0;
+  display: none;
+}
+@media (min-width: 1200px) { .signal { display: block; } }
+.sig-line {
+  fill: none;
+  stroke: url(#hudoSigGrad);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.sig-glow {
+  /* 同 path 叠一条宽线做辉光, 不用 CSS filter 省 paint */
+  fill: none;
+  stroke: url(#hudoSigGrad);
+  stroke-width: 14;
+  stroke-linecap: round;
+  opacity: .14;
+}
+.sig-dot {
+  fill: #fff;
+  filter: drop-shadow(0 0 6px rgba(139,92,246,.9));
+  opacity: 0;
+  transition: opacity .2s;
+}
+.sig-pulse {
+  fill: none;
+  stroke: #8b5cf6;
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.sig-pulse.on { animation: sigPulse 1.6s ease-out infinite; }
+@keyframes sigPulse {
+  0%   { opacity: .7; transform: scale(.4); }
+  100% { opacity: 0;  transform: scale(1.7); }
+}
+/* 信号线是定位元素, 会盖过静态区块内容——所有内容区必须提到它上层 */
+.sec, .marquee, .cta-sec { position: relative; z-index: 1; }
 
 /* 屏幕阅读器专用文案 */
 .sr-only {
