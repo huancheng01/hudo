@@ -80,8 +80,10 @@ hudo 装的是免安装版：下载链接直接取 JetBrains 官方 API 的最�
 需要锁定版本（比如团队统一环境）时，编辑 `%USERPROFILE%\.hudo\config.toml`：
 
 ```toml
+[java]
+version = "21"    # JDK 主版本号（注意：JDK 用独立的 [java] 段，不在 [versions] 里）
+
 [versions]
-jdk = "21"        # JDK 主版本号
 maven = "3.9.9"   # 不填则取官网最新
 idea = "2025.3"   # 不填则取官网最新
 ```
@@ -119,7 +121,7 @@ JDK 必须在 Maven 之前——Maven 是 Java 程序，hudo 安装时会检测 
 
 ### 项目要 JDK 17，怎么不装 21？
 
-在 `%USERPROFILE%\.hudo\config.toml` 里写 `[versions]` 下的 `jdk = "17"`，再执行 `hudo install jdk`。Maven 和 IDEA 同理可在[配置文件](/guide/config)锁定版本。
+执行 `hudo config set java.version 17`（或在 `%USERPROFILE%\.hudo\config.toml` 的 `[java]` 段写 `version = "17"`），再执行 `hudo install jdk`。Maven 和 IDEA 则在 `[versions]` 段锁定，见[配置文件](/guide/config)。
 
 ### 整个过程需要管理员权限吗？
 

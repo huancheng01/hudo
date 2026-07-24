@@ -35,8 +35,8 @@ hudo uninstall jdk
 ## 配置文件版本
 
 ```toml
-[versions]
-jdk = "21"   # 主版本号，不填则使用 LTS 默认版本
+[java]
+version = "21"   # 主版本号，不填则使用 LTS 默认版本（JDK 用独立的 [java] 段）
 ```
 
 ## hudo 安装优势
@@ -54,7 +54,7 @@ jdk = "21"   # 主版本号，不填则使用 LTS 默认版本
 
 **Q: 如何安装 JDK 17 而不是 JDK 21？**
 
-在[配置文件](/guide/config) `~/.hudo/config.toml` 中设置 `[versions]` 下的 `jdk = "17"` 即可指定主版本号。
+执行 `hudo config set java.version 17`，或在[配置文件](/guide/config) `~/.hudo/config.toml` 的 `[java]` 段设置 `version = "17"` 即可指定主版本号。
 
 **Q: hudo 安装的 JDK 和 Oracle JDK 有什么区别？**
 
