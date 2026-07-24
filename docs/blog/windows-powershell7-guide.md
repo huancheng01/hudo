@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: PowerShell 7 是干嘛的？要不要升级？与 Windows PowerShell 5.1 的区别和共存关系
-description: PowerShell 7（pwsh）与 Windows 自带的 PowerShell 5.1 是两个独立程序，安装后共存、互不覆盖。对照表讲清两者区别：&&/|| 操作符、三元运算符、ForEach-Object -Parallel 并行、跨平台，以及 5.1 仅剩安全维护的现状；给出 winget、官方 MSI、hudo 免管理员便携版三种安装方式和 Windows Terminal 设默认终端的方法。
+description: PowerShell 7 和系统自带的 5.1 是两个程序，可以共存。对照讲清区别（&&、三元、并行、跨平台）、谁该升级，附 winget、MSI、hudo 三种安装方式。
 keywords:
   - PowerShell 7 是干嘛用的
   - PowerShell 7 和 5.1 区别

@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: .NET SDK 安装教程：环境变量、多版本共存与 global.json 一次讲清
-description: Windows 下 .NET SDK 安装完整教程：对比官方安装器、winget 与 hudo 用户级免管理员安装三种方式，讲清 DOTNET_ROOT 与 PATH 两个环境变量的分工、多个 SDK 版本共存的原理，以及用 global.json 的 version 与 rollForward 字段锁定项目 SDK 版本的写法，附 STS 与 LTS 选择建议。
+description: Windows 安装 .NET SDK：官方安装器、winget、hudo 免管理员三种方式对比，讲清 DOTNET_ROOT 环境变量、多版本共存原理与 global.json 锁定写法。
 keywords:
   - .NET SDK 安装教程
   - .NET SDK 多版本共存

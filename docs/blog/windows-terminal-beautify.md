@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: "Windows 终端美化保姆级教程（2026）：PowerShell 7 + Oh My Posh + Nerd Font 一步到位"
-description: Windows 终端美化完整教程：从 PowerShell 7、Oh My Posh 到 Nerd Font 字体，讲清手动安装的五个步骤和三个最常见的坑（字体没装、profile 没写、终端字体没切换），并给出 hudo 两条命令的一键方案——装引擎、装 36 个字体文件、写 profile 全自动完成，免管理员权限，适用于 Windows Terminal 与 VS Code。
+description: Windows 终端美化教程：PowerShell 7 + Oh My Posh + Nerd Font 三件套完整配置，讲清字体、profile、终端关联三个坑，hudo 两条命令一键装齐，免管理员。
 keywords:
   - Windows 终端美化
   - Oh My Posh 安装

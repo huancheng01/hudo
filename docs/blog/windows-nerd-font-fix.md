@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: 终端图标乱码、显示方框怎么办？Nerd Font 从装字体到终端关联彻底解决
-description: 终端图标显示为方框、乱码？根源只有三类：Nerd Font 没装、终端没关联字体、旧版同名字体冲突。按三层排查解决：设置里确认 CaskaydiaCove 是否已装、Windows Terminal 与 VS Code 的字体设置路径、v2/v3 旧字体清理重装，也可用 hudo install omp 免管理员一键装齐 36 个字体文件。
+description: 终端图标乱码、显示方框的三层排查：Nerd Font 没装、终端没关联字体、旧版本冲突。附 Windows Terminal 与 VS Code 的字体设置路径和一键安装方案。
 keywords:
   - oh-my-posh 乱码
   - 终端图标方框

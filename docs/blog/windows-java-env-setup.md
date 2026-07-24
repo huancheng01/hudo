@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: Java 开发环境搭建 2026：一条命令装齐 JDK + Maven + IntelliJ IDEA
-description: Windows Java 环境搭建完整教程：拆解手动装 JDK 配 JAVA_HOME、Maven 配 settings.xml 镜像、IDEA 安装的四步之痛，用 hudo 三条命令装齐 JDK 21 + Maven + IntelliJ IDEA，环境变量与阿里云镜像全自动，含 IDEA 2025.3 免费层说明。
+description: Windows Java 环境搭建：JDK 21 + Maven + IntelliJ IDEA 三条命令装齐，JAVA_HOME 与阿里云镜像 settings.xml 全自动，含 IDEA 免费层说明。
 keywords:
   - java环境搭建
   - idea安装教程及环境配置

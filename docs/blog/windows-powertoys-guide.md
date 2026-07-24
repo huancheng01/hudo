@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: PowerToys 值得装吗？开发者最常用的 5 个功能与静默安装方法
-description: PowerToys 值得装吗？这篇 PowerToys 使用教程精选开发者最常用的 5 个功能——FancyZones 窗口布局、PowerToys Run 快速启动、PowerRename 批量重命名、Text Extractor 屏幕取词、颜色拾取器，逐一讲清快捷键与用法，并对比微软商店、winget、hudo 三种安装方式，附用户级静默安装免管理员的做法与常见问题。
+description: PowerToys 值得装吗？精选开发者最常用的 5 个功能：FancyZones、Run、PowerRename、屏幕取词、拾色器，附用户级静默安装免管理员的方法。
 keywords:
   - PowerToys 使用教程
   - PowerToys 功能

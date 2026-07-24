@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: Windows 环境变量彻底讲清：PATH、用户变量与系统变量的区别、改完不生效怎么办
-description: 讲清 Windows 环境变量怎么设置：用户变量与系统变量的区别（HKCU 与 HKLM 存储位置、优先级、PATH 拼接规则）、图形界面、setx、PowerShell、注册表四种设置方法，以及环境变量改完不生效的三个原因，附 PATH 顺序踩坑与 Microsoft Store python 别名劫持的解决办法。
+description: Windows 环境变量讲清：用户变量与系统变量的区别、四种设置方法、PATH 顺序坑，以及改完不生效的三个原因——终端不刷新、进程继承、广播机制。
 keywords:
   - 环境变量怎么设置
   - Windows 环境变量

@@ -2,7 +2,7 @@
 date: 2026-07-24
 author: Zexa
 title: 7z 命令行完全速查：压缩、解压、加密、分卷、排除文件（含 PowerShell 脚本示例）
-description: 7z 命令行速查手册：涵盖 a 压缩、x 解压、l 列表、t 测试、-p 加密与 -mhe 隐藏文件名、-v 分卷、-x! 排除文件、-mx 压缩级别等 7zip 命令行参数，每条附可复制示例；另有批量压缩子目录与定时加密备份两个 PowerShell 脚本，以及用 hudo 免管理员安装 7-Zip 并自动配置 PATH 的方法。
+description: 7z 命令行速查：a 压缩、x 解压、-p 加密、-v 分卷、-x! 排除、-mx 压缩级别，每条附可复制示例，含批量压缩与定时备份两个 PowerShell 脚本。
 keywords:
   - 7zip命令行参数
   - 7z 解压 命令
