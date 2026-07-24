@@ -61,7 +61,7 @@ irm https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
 hudo install dotnet
 ```
 
-它调用官方 `dotnet-install.ps1` 做用户级安装，装到 `{安装盘}:\hudo\lang\dotnet\`，自动写入 `DOTNET_ROOT` 和 PATH（用户级环境变量，写 HKCU，免管理员），版本默认跟随最新活跃 LTS。hudo 是 Windows 开发环境引导工具，同样的方式还能装 Git、Node.js、JDK 等共 27 款工具。
+它调用官方 `dotnet-install.ps1` 做用户级安装，装到 `{安装盘}:\hudo\lang\dotnet\`，自动写入 `DOTNET_ROOT` 和 PATH（用户级环境变量，写 HKCU，免管理员），版本默认跟随最新活跃 LTS。hudo 是 Windows 开发环境引导工具，同样的方式还能装 Git、Node.js、JDK 等共 26 款工具。
 
 ## DOTNET_ROOT 和 PATH 各自管什么？
 
@@ -133,4 +133,4 @@ dotnet --list-sdks
 ## 相关阅读
 
 - [.NET SDK 工具页：hudo 安装命令、目录约定与版本锁定配置参考](/tools/dotnet)
-- [新电脑用 hudo 20 分钟配好完整 Windows 开发环境（27 款工具一键装）](/blog/windows-dev-environment-setup)
+- [新电脑用 hudo 20 分钟配好完整 Windows 开发环境（26 款工具一键装）](/blog/windows-dev-environment-setup)

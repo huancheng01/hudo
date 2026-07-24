@@ -96,7 +96,7 @@ Windows Terminal：设置 → 你的配置文件 → 外观 → 字体 → 选 `
 
 ## 如何用 hudo 两条命令一步到位？
 
-先装 [hudo](https://hudo.zexa.cc)（一个支持 27 款工具的 Windows 开发环境引导工具），再执行两条安装命令，上面五步里的四步就全自动完成了。
+先装 [hudo](https://hudo.zexa.cc)（一个支持 26 款工具的 Windows 开发环境引导工具），再执行两条安装命令，上面五步里的四步就全自动完成了。
 
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex

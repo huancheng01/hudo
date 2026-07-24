@@ -2,7 +2,7 @@ import { defineConfig, type HeadConfig } from 'vitepress'
 
 const SITE = 'https://hudo.zexa.cc'
 const SITE_TITLE = 'hudo - Windows 开发环境一键引导工具'
-const SITE_DESC = '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 27 款开发工具，免管理员权限，自动配置环境变量，支持国内镜像加速。'
+const SITE_DESC = '一条命令安装 Git、Node.js、Rust、Go、JDK、Python 等 26 款开发工具，免管理员权限，自动配置环境变量，支持国内镜像加速。'
 
 // 生成与 sitemap 完全一致的页面绝对 URL（canonical 必须与 sitemap/内链形态一致）
 function pageUrl(page: string): string {
@@ -48,7 +48,7 @@ export default defineConfig({
       'name': 'hudo',
       'applicationCategory': 'DeveloperApplication',
       'operatingSystem': 'Windows',
-      'description': 'Windows 开发环境一键引导工具：一条命令安装 27 款开发工具（Git/Node.js/Rust/Go/JDK/Python/MySQL 等），免管理员权限，自动配置环境变量，支持国内镜像与环境档案一键还原。',
+      'description': 'Windows 开发环境一键引导工具：一条命令安装 26 款开发工具（Git/Node.js/Rust/Go/JDK/Python/MySQL 等），免管理员权限，自动配置环境变量，支持国内镜像与环境档案一键还原。',
       'url': SITE,
       'downloadUrl': 'https://github.com/zexadev/hudo/releases',
       'author': {

@@ -49,7 +49,7 @@ keywords:
 
 ## hudo 三条命令分别做了什么？
 
-每条命令 = 下载 + 解压 + 环境变量 + 该工具的专属配置，装完即用。hudo 是支持 27 款工具的 Windows 开发环境引导工具，先安装它：
+每条命令 = 下载 + 解压 + 环境变量 + 该工具的专属配置，装完即用。hudo 是支持 26 款工具的 Windows 开发环境引导工具，先安装它：
 
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex

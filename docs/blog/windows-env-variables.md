@@ -132,7 +132,7 @@ Get-Command git -All     # PowerShell 等价命令
 
 ## 不想手动管这些？hudo 的做法
 
-[hudo](/guide/what-is-hudo) 安装工具时自动把环境变量写到用户级 `HKCU\Environment`——27 款工具全程免管理员权限（数据库服务注册除外），写完立即广播 WM_SETTINGCHANGE，卸载时再从 PATH 里逆向清掉对应目录，`JAVA_HOME` 这类变量也在装 [JDK](/tools/jdk) 时顺手配好：
+[hudo](/guide/what-is-hudo) 安装工具时自动把环境变量写到用户级 `HKCU\Environment`——26 款工具全程免管理员权限（数据库服务注册除外），写完立即广播 WM_SETTINGCHANGE，卸载时再从 PATH 里逆向清掉对应目录，`JAVA_HOME` 这类变量也在装 [JDK](/tools/jdk) 时顺手配好：
 
 ```powershell
 irm hudo.zexa.cc/install.ps1 | iex
@@ -164,6 +164,6 @@ PowerShell 里重读注册表拼接后赋给 `$env:Path`（命令见上文）。
 
 ## 相关阅读
 
-- [什么是 hudo：一条命令装好 27 款 Windows 开发工具](/guide/what-is-hudo)
+- [什么是 hudo：一条命令装好 26 款 Windows 开发工具](/guide/what-is-hudo)
 - [新电脑 20 分钟配好完整 Windows 开发环境的实战流程](/blog/windows-dev-environment-setup)
 - [Windows 安装 Git 并自动配置 PATH 与用户信息的完整教程](/blog/windows-git-install)

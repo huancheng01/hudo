@@ -138,7 +138,7 @@ irm hudo.zexa.cc/install.ps1 | iex
   - `ide/` — IDE（vscode, pycharm）
   - `cache/` — 下载缓存
 
-### 支持的工具（27 个）
+### 支持的工具（26 个）
 | 分类 | 工具 ID |
 |------|---------|
 | 版本控制 | git, gh |

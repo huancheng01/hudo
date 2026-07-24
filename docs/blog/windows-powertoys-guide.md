@@ -79,7 +79,7 @@ hudo 调用的正是官方 UserSetup 安装器做静默安装，免管理员、�
 powertoys = "0.100.2"   # 不填则自动安装最新版
 ```
 
-卸载同样一条命令（`hudo uninstall powertoys`），hudo 会先停止 PowerToys 进程再执行静默卸载。装新机时，PowerToys 通常和 [Git](/tools/git)、[Node.js](/tools/nodejs)、[VS Code](/tools/vscode) 一起进装机清单——hudo 支持的 27 款工具可以在一次交互式菜单里全部装完。
+卸载同样一条命令（`hudo uninstall powertoys`），hudo 会先停止 PowerToys 进程再执行静默卸载。装新机时，PowerToys 通常和 [Git](/tools/git)、[Node.js](/tools/nodejs)、[VS Code](/tools/vscode) 一起进装机清单——hudo 支持的 26 款工具可以在一次交互式菜单里全部装完。
 
 ## 常见问题
 

@@ -92,7 +92,7 @@ winget install --id Microsoft.PowerShell --source winget
 
 ### 方式三：hudo 便携版（免管理员）
 
-如果你的账户没有管理员权限，或者不想在注册表里留痕迹，可以用 [hudo](https://hudo.zexa.cc)——一个支持 27 款工具一键安装的 Windows 开发环境引导工具：
+如果你的账户没有管理员权限，或者不想在注册表里留痕迹，可以用 [hudo](https://hudo.zexa.cc)——一个支持 26 款工具一键安装的 Windows 开发环境引导工具：
 
 ```powershell
 # 先装 hudo（如果还没有）

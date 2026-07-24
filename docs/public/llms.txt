@@ -1,10 +1,10 @@
 # hudo
 
-> hudo（混沌）是 Windows 开发环境一键引导工具：一条 PowerShell 命令安装 27 款开发工具（Git、Node.js、Rust、Go、JDK、Python、MySQL、VS Code 等）并自动配置环境变量。免管理员权限、内置国内镜像加速、支持环境档案导出/导入实现换机一条命令还原。Rust 编写，MIT 开源。
+> hudo（混沌）是 Windows 开发环境一键引导工具：一条 PowerShell 命令安装 26 款开发工具（Git、Node.js、Rust、Go、JDK、Python、MySQL、VS Code 等）并自动配置环境变量。免管理员权限、内置国内镜像加速、支持环境档案导出/导入实现换机一条命令还原。Rust 编写，MIT 开源。
 
 安装：`irm hudo.zexa.cc/install.ps1 | iex`
 
-支持的 27 款工具：git, gh (GitHub CLI), nodejs, fnm, bun, uv (Python), miniconda, go, rust, jdk, maven, gradle, dotnet (.NET SDK), c (MinGW-w64), mysql, pgsql (PostgreSQL), redis, vscode, pycharm, idea (IntelliJ IDEA), 7zip, pwsh (PowerShell 7), powertoys, omp (Oh My Posh + Nerd Font), chrome, claude-code
+支持的 26 款工具：git, gh (GitHub CLI), nodejs, fnm, bun, uv (Python), miniconda, go, rust, jdk, maven, gradle, dotnet (.NET SDK), c (MinGW-w64), mysql, pgsql (PostgreSQL), redis, vscode, pycharm, idea (IntelliJ IDEA), 7zip, pwsh (PowerShell 7), powertoys, omp (Oh My Posh + Nerd Font), chrome, claude-code
 
 常用命令：`hudo setup`（交互多选安装）、`hudo install <tool>`、`hudo upgrade`（升级已装工具）、`hudo export` / `hudo import <file>`（环境档案）、`-y`（非交互模式）
 
@@ -15,7 +15,7 @@
 - [快速上手](https://hudo.zexa.cc/guide/quickstart.html): 安装/升级/卸载工具、非交互模式、新机一条命令还原环境
 - [配置文件](https://hudo.zexa.cc/guide/config.html): 安装目录、版本锁定、镜像源、代理设置
 - [配置档案](https://hudo.zexa.cc/guide/profile.html): 导出/导入环境，换机迁移
-- [工具列表](https://hudo.zexa.cc/tools/): 全部 27 款工具的安装说明
+- [工具列表](https://hudo.zexa.cc/tools/): 全部 26 款工具的安装说明
 
 ## 工具页
 

@@ -39,7 +39,7 @@
         </h1>
 
         <p class="sub" data-reveal style="--d:.22s">
-          一条命令，装好 27 款开发工具，配好环境变量。<br class="md-only">
+          一条命令，装好 26 款开发工具，配好环境变量。<br class="md-only">
           免管理员权限，告别手动下载、PATH 冲突、注册表污染。
         </p>
 
@@ -92,7 +92,7 @@
           <h2 class="sec-title" data-reveal style="--d:.08s">
             覆盖你的<span class="gradient">完整工具链</span>
           </h2>
-          <p class="sec-desc" data-reveal style="--d:.16s">从 Git 到 IntelliJ IDEA，27 款开发工具一站式管理。</p>
+          <p class="sec-desc" data-reveal style="--d:.16s">从 Git 到 IntelliJ IDEA，26 款开发工具一站式管理。</p>
         </div>
 
         <div class="tools-grid" data-reveal-group>

@@ -2,9 +2,9 @@
 
 **Windows 开发环境一键引导工具** · [官网与文档 hudo.zexa.cc](https://hudo.zexa.cc)
 
-一条命令装好 27 款开发工具（Git、Node.js、Rust、Go、JDK、Python、MySQL、VS Code 等），自动配置环境变量。免管理员权限、国内镜像自动回退、环境档案换机一键还原。
+一条命令装好 26 款开发工具（Git、Node.js、Rust、Go、JDK、Python、MySQL、VS Code 等），自动配置环境变量。免管理员权限、国内镜像自动回退、环境档案换机一键还原。
 
-> **hudo** is a one-command Windows dev environment bootstrapper: installs 27 developer tools (Git, Node.js, Rust, Go, JDK, Python, MySQL, VS Code, ...) with automatic PATH/env configuration, no admin rights required, China-mirror fallback, and profile export/import for one-command machine migration. Docs: [hudo.zexa.cc](https://hudo.zexa.cc)
+> **hudo** is a one-command Windows dev environment bootstrapper: installs 26 developer tools (Git, Node.js, Rust, Go, JDK, Python, MySQL, VS Code, ...) with automatic PATH/env configuration, no admin rights required, China-mirror fallback, and profile export/import for one-command machine migration. Docs: [hudo.zexa.cc](https://hudo.zexa.cc)
 
 ---
 
@@ -49,7 +49,7 @@ hudo
 
 ---
 
-## 支持的工具（27 个）
+## 支持的工具（26 个）
 
 ### 工具
 | ID | 工具 | 说明 |
