@@ -745,6 +745,11 @@ onMounted(async () => {
             c.style.setProperty('--d', `${(order[i] * 0.015).toFixed(3)}s`)
             c.classList.add('in')
           })
+          // 覆盖块两相: 点亮(各卡按 --d 错峰) → 停一拍 → 摘类错峰回落
+          if (!reduceMotion) {
+            en.target.classList.add('post')
+            setTimeout(() => en.target.classList.remove('post'), 550)
+          }
         }
         io.unobserve(en.target)
       }
@@ -1408,8 +1413,11 @@ onUnmounted(() => {
 .tool:hover .tool-inner {
   border-color: rgba(96,165,250,.35);
 }
-/* POST 自检覆盖块：先瞬间点亮(暗底+品牌描边)停一拍再消隐露出卡片,
-   用 ::before 不注入 revealer DOM */
+/* POST 自检覆盖块：先瞬间点亮(暗底+品牌描边)停一拍再消隐露出卡片。
+   禁用 CSS animation：这批伪元素上挂 keyframes 动画会让本机 D3D11
+   Chromium 整站所有页面停止绘制(白/黑屏, DOM 正常仅 paint 失效,
+   逐提交+逐 hunk 二分实证 A/B 稳定复现), 改用 transition 双相:
+   JS 给网格挂 .post 点亮, 停一拍后摘除类回落, 延迟仍走 var(--d) */
 .tool .tool-inner::before {
   content: '';
   position: absolute;
@@ -1422,6 +1430,7 @@ onUnmounted(() => {
     inset 0 0 18px rgba(139,92,246,.18);
   opacity: 0;
   pointer-events: none;
+  transition: opacity .16s ease-out var(--d, 0s);
 }
 :root:not(.dark) .tool .tool-inner::before {
   background: #eef2fa;
@@ -1429,15 +1438,7 @@ onUnmounted(() => {
     inset 0 0 0 1px rgba(37,99,235,.45),
     inset 0 0 18px rgba(124,58,237,.14);
 }
-:global(html.js) .tool.in .tool-inner::before {
-  animation: postFlash .26s ease-out var(--d, 0s) both;
-}
-@keyframes postFlash {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  62%  { opacity: 1; }
-  100% { opacity: 0; }
-}
+:global(html.js) .tools-grid.post .tool .tool-inner::before { opacity: 1; }
 .tool-glow {
   position: absolute;
   inset: 0;
