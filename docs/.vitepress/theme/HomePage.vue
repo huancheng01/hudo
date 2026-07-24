@@ -96,7 +96,23 @@
             <div class="term-bar">
               <div class="term-dots"><span/><span/><span/></div>
               <div class="term-title">PowerShell — hudo setup</div>
-              <div class="term-spacer"/>
+              <div class="term-status">
+                <span class="term-label">
+                  <span class="term-label-a" :class="{ on: !termDone }">installing…</span>
+                  <span class="term-label-b" :class="{ on: termDone }">system ready</span>
+                </span>
+                <svg class="ring" width="18" height="18" viewBox="0 0 18 18">
+                  <defs>
+                    <linearGradient id="hudoRingGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#3b82f6"/>
+                      <stop offset=".5" stop-color="#8b5cf6"/>
+                      <stop offset="1" stop-color="#ec4899"/>
+                    </linearGradient>
+                  </defs>
+                  <circle class="ring-track" cx="9" cy="9" r="7"/>
+                  <circle class="ring-fill" cx="9" cy="9" r="7" :style="{ strokeDashoffset: ringOffset }"/>
+                </svg>
+              </div>
             </div>
             <div class="term-body" :class="{ fading: termFading, glitch: termGlitch }">
               <div v-for="(l, i) in termLines.slice(0, termVisible)" :key="`${termRun}-${i}`" class="tl" :class="l.k">
@@ -210,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 const root = ref(null)
 const cursorDot = ref(null)
@@ -332,6 +348,12 @@ function pauseTerm() {
   clearTimeout(termTimer)
   typing.value = false
 }
+
+// ─── 标题栏进度环：进度是可见行的纯推导，循环重播/离屏重入天然归零不错拍 ───
+const RING_C = 2 * Math.PI * 7
+const termOk = computed(() => termLines.value.slice(0, termVisible.value).filter(l => l.k === 'ok').length)
+const termDone = computed(() => termLines.value.slice(0, termVisible.value).some(l => l.k === 'sum'))
+const ringOffset = computed(() => RING_C * (1 - termOk.value / 3))
 
 // ─── 示波器波形：stats 行背后的低噪声生命感（移植自 nocturne useWaveform）───
 const waveCanvas = ref(null)
@@ -1256,7 +1278,46 @@ onUnmounted(() => {
   font-family: var(--vp-font-family-base);
   letter-spacing: .02em;
 }
-.term-spacer { width: 52px; }
+/* 标题栏右侧：进度环 + installing/system ready 双 label */
+.term-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 52px;
+  justify-content: flex-end;
+}
+.term-label {
+  display: inline-grid;
+  overflow: hidden;
+  font-size: .66rem;
+  letter-spacing: .04em;
+  line-height: 1.4;
+}
+.term-label > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  opacity: 0;
+  transition: transform .35s cubic-bezier(.2,.7,.1,1), opacity .35s;
+}
+.term-label-a { color: #8b95ab; transform: translateY(-120%); }
+.term-label-b { color: #10b981; transform: translateY(120%); }
+.term-label > span.on { transform: none; opacity: 1; }
+/* 呼吸只在可见态挂，否则隐藏 label 会被动画中途拉出来闪现 */
+.term-label-a.on { animation: labelBreath 1.6s ease-in-out infinite; }
+@keyframes labelBreath { 50% { opacity: .45; } }
+.ring { flex: none; }
+.ring-track { fill: none; stroke: #2b2b2b; stroke-width: 2; }
+.ring-fill {
+  fill: none;
+  stroke: url(#hudoRingGrad);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 43.98;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  /* 顿挫急停：分段推进而非匀速 */
+  transition: stroke-dashoffset .6s cubic-bezier(.9,0,.1,1);
+}
 
 .term-body {
   position: relative;
