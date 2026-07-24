@@ -11,18 +11,22 @@ head:
 
 ## 系统要求
 
-- Windows 10 / 11
-- PowerShell 5.1 或更高版本
+- Windows 10 / 11（x64）
+- PowerShell 5.1 或更高版本（系统自带）
 
 ## 一键安装
 
 打开 PowerShell，运行：
 
 ```powershell
-irm https://raw.githubusercontent.com/zexadev/hudo/master/install.ps1 | iex
+irm hudo.zexa.cc/install.ps1 | iex
 ```
 
-安装完成后，`hudo` 命令即可在新终端中使用。
+安装完成后，`hudo` 命令即可在新终端中使用。无需管理员权限。
+
+::: tip 新机一条命令还原环境
+如果你有旧机器导出的环境档案，安装时带上 `HUDO_PROFILE` 环境变量，装完 hudo 会自动导入档案并批量安装工具，见[配置档案](/guide/profile)。
+:::
 
 ## 安装位置
 
@@ -30,7 +34,7 @@ irm https://raw.githubusercontent.com/zexadev/hudo/master/install.ps1 | iex
 |------|------|
 | hudo 可执行文件 | `%USERPROFILE%\.hudo\bin\hudo.exe` |
 | 配置文件 | `%USERPROFILE%\.hudo\config.toml` |
-| 安装记录 | `%USERPROFILE%\.hudo\state.json` |
+| 安装记录 | `{安装根目录}\state.json`（如 `D:\hudo\state.json`） |
 
 工具安装到你选择的盘（如 `D:\hudo\tools\`），不占用 C 盘。
 
